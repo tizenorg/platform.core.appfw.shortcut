@@ -54,6 +54,8 @@ We can use this for adding a package shortcut with additional information. <br/>
 @endcode
 
 <h2 class="pg">Error code</h1>
+<h3 class="pg">1.	-EINVAL</h1>
+<h3 class="pg">1.	-EFAULT</h1>
 @code
 @endcode
 */
