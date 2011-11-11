@@ -53,7 +53,7 @@ We can use this for adding a package shortcut with additional information. <br/>
 @code
 @endcode
 
-<h2 class="pg">Notification</h1>
+<h2 class="pg">Error code</h1>
 @code
 @endcode
 */
