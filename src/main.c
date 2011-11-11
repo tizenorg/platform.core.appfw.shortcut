@@ -671,14 +671,18 @@ int init_server(void)
 
 
 
-EAPI void shortcut_set_request_cb(request_cb_t request_cb, void *data)
+EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 {
+	int ret;
 	s_info.server_cb.request_cb = request_cb;
 	s_info.server_cb.data = data;
 
-	if (init_server() != 0) {
+	ret = init_server();
+	if (ret != 0) {
 		LOGE("Failed to initialize the server\n");
 	}
+
+	return ret;
 }
 
 

@@ -123,7 +123,7 @@ enum {
  *
  * @endcode
  */
-extern void shortcut_set_request_cb(request_cb_t request_cb, void *data);
+extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
 
 /**
  * @brief The application, which supporting the add_to_home feature, should to invoke this.
