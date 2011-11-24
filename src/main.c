@@ -110,8 +110,10 @@ gboolean check_reply_service(int conn_fd, struct connection_state *state)
 	struct client_cb *client_cb = state->data;
 
 	if (client_cb->result_cb) {
-		/* If the callback return FAILURE, remove itself from the callback list */
-		client_cb->result_cb(state->packet.head.data.ack.ret, state->from_pid, client_cb->data);
+		/* If the callback return FAILURE,
+		 * remove itself from the callback list */
+		client_cb->result_cb(state->packet.head.data.ack.ret,
+					state->from_pid, client_cb->data);
 	}
 
 	state->state = BEGIN;
@@ -137,17 +139,15 @@ gboolean do_reply_service(int conn_fd, struct connection_state *state)
 		char *exec;
 		char *icon;
 
-		if (state->packet.head.data.req.field_size.pkgname) {
+		if (state->packet.head.data.req.field_size.pkgname)
 			pkgname = state->payload;
-		} else {
+		else
 			pkgname = NULL;
-		}
 
-		if (state->packet.head.data.req.field_size.name) {
+		if (state->packet.head.data.req.field_size.name)
 			name = state->payload + state->packet.head.data.req.field_size.pkgname;
-		} else {
+		else
 			name = NULL;
-		}
 
 		if (state->packet.head.data.req.field_size.exec) {
 			exec = state->payload + state->packet.head.data.req.field_size.pkgname;
@@ -210,12 +210,12 @@ gboolean filling_payload(int conn_fd, struct connection_state *state)
 			state->payload + state->length,
 			state->packet.head.payload_size - state->length,
 			&check_pid);
-		if (ret < 0) {
+		if (ret < 0)
 			return FALSE;
-		}
 
 		if (state->from_pid != check_pid) {
-			LOGD("PID is not matched (%d, expected %d)\n", check_pid, state->from_pid);
+			LOGD("PID is not matched (%d, expected %d)\n",
+						check_pid, state->from_pid);
 			return FALSE;
 		}
 
@@ -237,29 +237,27 @@ gboolean deal_error_packet(int conn_fd, struct connection_state *state)
 {
 	if (state->length < state->packet.head.payload_size) {
 		int ret;
-		char *buffer;
+		char *buf;
 		int check_pid;
 
-		buffer = alloca(state->packet.head.payload_size - state->length);
+		buf = alloca(state->packet.head.payload_size - state->length);
 
 		ret = secom_recv(conn_fd,
-			buffer,
+			buf,
 			state->packet.head.payload_size - state->length,
 			&check_pid);
-		if (ret < 0) {
+		if (ret < 0)
 			return FALSE;
-		}
 
-		if (check_pid != state->from_pid) {
-			LOGD("PID is not matched (%d, expected %d)\n", check_pid, state->from_pid);
-		}
+		if (check_pid != state->from_pid)
+			LOGD("PID is not matched (%d, expected %d)\n",
+						check_pid, state->from_pid);
 
 		state->length += ret;
 	}
 
-	if (state->length < state->packet.head.payload_size) {
+	if (state->length < state->packet.head.payload_size)
 		return TRUE;
-	}
 
 	/* Now, drop this connection */
 	return FALSE;
@@ -278,34 +276,31 @@ gboolean filling_header(int conn_fd, struct connection_state *state)
 			((char*)&state->packet) + state->length, 
 			sizeof(state->packet) - state->length,
 			&check_pid);
-		if (ret < 0) {
+		if (ret < 0)
 			return FALSE;
-		}
 
-		if (state->from_pid == 0) {
+		if (state->from_pid == 0)
 			state->from_pid = check_pid;
-		}
 
 		if (state->from_pid != check_pid) {
-			LOGD("PID is not matched (%d, expected %d)\n", check_pid, state->from_pid);
+			LOGD("PID is not matched (%d, expected %d)\n",
+						check_pid, state->from_pid);
 			return FALSE;
 		}
 
 		state->length += ret;
 	}
 
-	if (state->length < sizeof(state->packet)) {
+	if (state->length < sizeof(state->packet))
 		return TRUE;
-	}
 
 	if (state->packet.head.type == PACKET_ACK) {
 		state->length = 0;
 
-		if (state->packet.head.payload_size) {
+		if (state->packet.head.payload_size)
 			state->state = ERROR;
-		} else {
+		else
 			state->state = END;
-		}
 	} else if (state->packet.head.type == PACKET_REQ) {
 		/* Let's take the next part. */
 		state->state = PAYLOAD;
@@ -351,8 +346,10 @@ gboolean client_connection_cb(GIOChannel *src, GIOCondition cond, gpointer data)
 
 	if (read_size == 0) {
 		if (client_cb->result_cb) {
-			/* If the callback return FAILURE, remove itself from the callback list */
-			client_cb->result_cb(-ECONNABORTED, state->from_pid, client_cb->data);
+			/* If the callback return FAILURE,
+			 * remove itself from the callback list */
+			client_cb->result_cb(-ECONNABORTED,
+					state->from_pid, client_cb->data);
 		}
 		ret = FALSE;
 		goto out;
@@ -372,9 +369,8 @@ gboolean client_connection_cb(GIOChannel *src, GIOCondition cond, gpointer data)
 		break;
 	}
 
-	if (state->state == END) {
+	if (state->state == END)
 		ret = check_reply_service(conn_fd, state);
-	}
 
 out:
 	if (ret == FALSE) {
@@ -425,7 +421,8 @@ gboolean connection_cb(GIOChannel *src, GIOCondition cond, gpointer data)
 		ret = filling_payload(conn_fd, state);
 		break;
 	default:
-		LOGE("[%s:%d] Invalid state(%x)\n", __func__, __LINE__, state->state);
+		LOGE("[%s:%d] Invalid state(%x)\n",
+					__func__, __LINE__, state->state);
 		ret = FALSE;
 		break;
 	}
@@ -444,9 +441,8 @@ out:
 	if (ret == FALSE) {
 		secom_put_connection_handle(conn_fd);
 
-		if (state->payload) {
+		if (state->payload)
 			free(state->payload);
-		}
 
 		free(state);
 	}
@@ -482,16 +478,16 @@ gboolean accept_cb(GIOChannel *src, GIOCondition cond, gpointer data)
 
 	connection_fd = secom_get_connection_handle(server_fd);
 	if (connection_fd < 0) {
-		/* Error log will be printed from get_connection_handle function */
+		/* Error log will be printed from
+		 * get_connection_handle function */
 		return FALSE;
 	}
 
-	if (fcntl(connection_fd, F_SETFD, FD_CLOEXEC) < 0) {
+	if (fcntl(connection_fd, F_SETFD, FD_CLOEXEC) < 0)
 		LOGE("Error: %s\n", strerror(errno));
-	}
-	if (fcntl(connection_fd, F_SETFL, O_NONBLOCK) < 0) {
+
+	if (fcntl(connection_fd, F_SETFL, O_NONBLOCK) < 0)
 		LOGE("Error: %s\n", strerror(errno));
-	}
 
 	gio = g_io_channel_unix_new(connection_fd);
 	if (!gio) {
@@ -508,7 +504,9 @@ gboolean accept_cb(GIOChannel *src, GIOCondition cond, gpointer data)
 	}
 
 	state->state = BEGIN;
-	id = g_io_add_watch(gio, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL, (GIOFunc)connection_cb, state);
+	id = g_io_add_watch(gio,
+			G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL,
+			(GIOFunc)connection_cb, state);
 	if (id < 0) {
 		GError *err = NULL;
 		LOGE("Failed to create g_io watch\n");
@@ -525,8 +523,8 @@ gboolean accept_cb(GIOChannel *src, GIOCondition cond, gpointer data)
 
 
 
-static inline
-int init_client(struct client_cb *client_cb, const char *packet, int packet_size)
+static inline int init_client(struct client_cb *client_cb,
+					const char *packet, int packet_size)
 {
 	GIOChannel *gio;
 	guint id;
@@ -539,12 +537,11 @@ int init_client(struct client_cb *client_cb, const char *packet, int packet_size
 		return -EFAULT;
 	}
 
-	if (fcntl(client_fd, F_SETFD, FD_CLOEXEC) < 0) {
+	if (fcntl(client_fd, F_SETFD, FD_CLOEXEC) < 0)
 		LOGE("Error: %s\n", strerror(errno));
-	}
-	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
+
+	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0)
 		LOGE("Error: %s\n", strerror(errno));
-	}
 
 	gio = g_io_channel_unix_new(client_fd);
 	if (!gio) {
@@ -561,7 +558,9 @@ int init_client(struct client_cb *client_cb, const char *packet, int packet_size
 
 	state->data = client_cb;
 
-	id = g_io_add_watch(gio, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL, (GIOFunc)client_connection_cb, state);
+	id = g_io_add_watch(gio,
+		G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL,
+		(GIOFunc)client_connection_cb, state);
 	if (id < 0) {
 		GError *err = NULL;
 		LOGE("Failed to create g_io watch\n");
@@ -576,7 +575,8 @@ int init_client(struct client_cb *client_cb, const char *packet, int packet_size
 
 	if (secom_send(client_fd, packet, packet_size) != packet_size) {
 		GError *err = NULL;
-		LOGE("Failed to send all packet (g_io_channel is not cleared now\n");
+		LOGE("Failed to send all packet "
+			"(g_io_channel is not cleared now\n");
 		free(state);
 		g_io_channel_shutdown(gio, TRUE, &err);
 		close(client_fd);
@@ -600,12 +600,13 @@ int init_server(void)
 	}
 
 	if (pthread_mutex_lock(&s_info.server_mutex) != 0) {
-		LOGE("[%s:%d] Failed to get lock (%s)\n", __func__, __LINE__, strerror(errno));
+		LOGE("[%s:%d] Failed to get lock (%s)\n",
+					__func__, __LINE__, strerror(errno));
 		return -EFAULT;
 	}
 
-	if (sd_listen_fds(1) == 1
-	    && sd_is_socket_unix(SD_LISTEN_FDS_START, SOCK_STREAM, -1, s_info.socket_file, 0) > 0) {
+	if (sd_listen_fds(1) == 1 && sd_is_socket_unix(SD_LISTEN_FDS_START,
+		    		SOCK_STREAM, -1, s_info.socket_file, 0) > 0) {
 		s_info.server_fd = SD_LISTEN_FDS_START;
 	} else {
 		unlink(s_info.socket_file);
@@ -614,30 +615,31 @@ int init_server(void)
 
 	if (s_info.server_fd < 0) {
 		LOGE("Failed to open a socket (%s)\n", strerror(errno));
-		if (pthread_mutex_unlock(&s_info.server_mutex) != 0) {
-			LOGE("[%s:%d] Failed to do unlock mutex (%s)\n", __func__, __LINE__, strerror(errno));
-		}
+		if (pthread_mutex_unlock(&s_info.server_mutex) != 0)
+			LOGE("[%s:%d] Failed to do unlock mutex (%s)\n",
+					__func__, __LINE__, strerror(errno));
 		return -EFAULT;
 	}
 
-	if (fcntl(s_info.server_fd, F_SETFD, FD_CLOEXEC) < 0) {
+	if (fcntl(s_info.server_fd, F_SETFD, FD_CLOEXEC) < 0)
 		LOGE("Error: %s\n", strerror(errno));
-	}
-	if (fcntl(s_info.server_fd, F_SETFL, O_NONBLOCK) < 0) {
+
+	if (fcntl(s_info.server_fd, F_SETFL, O_NONBLOCK) < 0)
 		LOGE("Error: %s\n", strerror(errno));
-	}
 
 	gio = g_io_channel_unix_new(s_info.server_fd);
 	if (!gio) {
 		close(s_info.server_fd);
 		s_info.server_fd = -1;
-		if (pthread_mutex_unlock(&s_info.server_mutex) != 0) {
-			LOGE("[%s:%d] Failed to do unlock mutex (%s)\n", __func__, __LINE__, strerror(errno));
-		}
+		if (pthread_mutex_unlock(&s_info.server_mutex) != 0)
+			LOGE("[%s:%d] Failed to do unlock mutex (%s)\n",
+					__func__, __LINE__, strerror(errno));
 		return -EFAULT;
 	}
 
-	id = g_io_add_watch(gio, G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL, (GIOFunc)accept_cb, NULL);
+	id = g_io_add_watch(gio,
+			G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL,
+			(GIOFunc)accept_cb, NULL);
 	if (id < 0) {
 		GError *err = NULL;
 		LOGE("Failed to create g_io watch\n");
@@ -645,9 +647,10 @@ int init_server(void)
 		g_io_channel_shutdown(gio, TRUE, &err);
 		close(s_info.server_fd);
 		s_info.server_fd = -1;
-		if (pthread_mutex_unlock(&s_info.server_mutex) != 0) {
-			LOGE("[%s:%d] Failed to do unlock mutex (%s)\n", __func__, __LINE__, strerror(errno));
-		}
+		if (pthread_mutex_unlock(&s_info.server_mutex) != 0)
+			LOGE("[%s:%d] Failed to do unlock mutex (%s)\n",
+					__func__, __LINE__, strerror(errno));
+
 		return -EFAULT;
 	}
 
@@ -656,7 +659,8 @@ int init_server(void)
 	if (pthread_mutex_unlock(&s_info.server_mutex) != 0) {
 		GError *err = NULL;
 		g_io_channel_shutdown(gio, TRUE, &err);
-		LOGE("[%s:%d] Failed to do unlock mutex (%s)\n", __func__, __LINE__, strerror(errno));
+		LOGE("[%s:%d] Failed to do unlock mutex (%s)\n",
+					__func__, __LINE__, strerror(errno));
 		/* NOTE:
 		 * We couldn't make a lock for this statements.
 		 * We already meet the unrecoverble error

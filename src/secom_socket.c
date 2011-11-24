@@ -57,20 +57,20 @@ int secom_create_client(const char *peer)
 	int on = 1;
 
 	handle = create_socket(peer, &addr);
-	if (handle < 0) return handle;
+	if (handle < 0)
+		return handle;
 
 	state = connect(handle, (struct sockaddr*)&addr, sizeof(addr));
 	if (state < 0) {
 		LOGE("Failed to connect to server [%s] %s\n", peer, strerror(errno));
-		if (close(handle) < 0) {
+		if (close(handle) < 0)
 			LOGE("Failed to close a handle\n");
-		}
+
 		return -1;
 	}
 
-	if (setsockopt(handle, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on)) < 0) {
+	if (setsockopt(handle, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on)) < 0)
 		LOGE("Failed to change sock opt : %s\n", strerror(errno));
-	}
 
 	return handle;
 }
