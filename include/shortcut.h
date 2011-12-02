@@ -1,7 +1,7 @@
 /*
- * [shortcut]
+ * [libslp-shortcut]
  *
- * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
+ * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Contact: Sung-jae Park <nicesj.park@samsung.com>,
  *          Youngjoo Park <yjoo93.park@samsung.com>
