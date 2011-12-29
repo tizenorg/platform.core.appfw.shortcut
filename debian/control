@@ -2,7 +2,7 @@ Source: libslp-shortcut
 Section: libs
 Priority: optional
 Maintainer: Sung-jae Park <nicesj.park@samsung.com>, Young-joo Park <yjoo93.park@samsung.com>
-Build-Depends: debhelper (>= 5), libglib2.0-dev, dlog-dev, libsystemd-daemon-dev
+Build-Depends: debhelper (>= 5), libglib2.0-dev, dlog-dev
 Standards-Version: 3.7.2
 
 Package: libslp-shortcut-0

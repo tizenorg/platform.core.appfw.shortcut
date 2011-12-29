@@ -1,3 +1,12 @@
+libslp-shortcut (0.0.2) unstable; urgency=low
+
+  * Git: slp/pkgs/s/shortcut
+  * Tag: libslp-shortcut_0.0.2
+
+  Remove unnecessary package dependency
+
+ -- Sung-jae Park <nicesj.park@samsung.com>  Thu, 29 Dec 2011 14:43:58 +0900
+
 libslp-shortcut (0.0.1) unstable; urgency=low
 
   * Initial Release.
