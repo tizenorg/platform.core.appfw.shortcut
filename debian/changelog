@@ -1,3 +1,10 @@
+libslp-shortcut (0.0.3) unstable; urgency=low
+
+  * Git: slp/pkgs/s/shortcut
+  * Tag: libslp-shortcut_0.0.3
+
+ -- Sung-jae Park <nicesj.park@samsung.com>  Fri, 30 Dec 2011 11:02:37 +0900
+
 libslp-shortcut (0.0.2) unstable; urgency=low
 
   * Git: slp/pkgs/s/shortcut
