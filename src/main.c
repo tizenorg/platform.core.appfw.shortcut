@@ -33,7 +33,6 @@
 
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <sd-daemon.h>
 
 
 
@@ -626,13 +625,8 @@ int init_server(void)
 		return -EFAULT;
 	}
 
-	if (sd_listen_fds(1) == 1 && sd_is_socket_unix(SD_LISTEN_FDS_START,
-		    		SOCK_STREAM, -1, s_info.socket_file, 0) > 0) {
-		s_info.server_fd = SD_LISTEN_FDS_START;
-	} else {
-		unlink(s_info.socket_file);
-		s_info.server_fd = secom_create_server(s_info.socket_file);
-	}
+	unlink(s_info.socket_file);
+	s_info.server_fd = secom_create_server(s_info.socket_file);
 
 	if (s_info.server_fd < 0) {
 		LOGE("Failed to open a socket (%s)\n", strerror(errno));
