@@ -260,20 +260,25 @@ gboolean deal_error_packet(int conn_fd, struct connection_state *state)
 		char *buf;
 		int check_pid;
 
-		buf = alloca(state->packet.head.payload_size - state->length);
+		buf = malloc(state->packet.head.payload_size - state->length);
+		if (!buf)
+			return FALSE;
 
 		ret = secom_recv(conn_fd,
 			buf,
 			state->packet.head.payload_size - state->length,
 			&check_pid);
-		if (ret < 0)
+		if (ret < 0) {
+			free(buf);
 			return FALSE;
+		}
 
 		if (check_pid != state->from_pid)
 			LOGD("PID is not matched (%d, expected %d)\n",
 						check_pid, state->from_pid);
 
 		state->length += ret;
+		free(buf);
 	}
 
 	if (state->length < state->packet.head.payload_size)
@@ -725,7 +730,7 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 
 	packet_size = sizeof(*packet) + name_len + exec_len + icon_len + pkgname_len + 1;
 
-	packet = alloca(packet_size);
+	packet = malloc(packet_size);
 	if (!packet) {
 		LOGE("Heap: %s\n", strerror(errno));
 		return -ENOMEM;
@@ -753,6 +758,7 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	client_cb = malloc(sizeof(*client_cb));
 	if (!client_cb) {
 		LOGE("Heap: %s\n", strerror(errno));
+		free(packet);
 		return -ENOMEM;
 	}
 
@@ -762,9 +768,11 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	if (init_client(client_cb, (const char*)packet, packet_size) < 0) {
 		LOGE("Failed to init client FD\n");
 		free(client_cb);
+		free(packet);
 		return -EFAULT;
 	}
 
+	free(packet);
 	return 0;
 }
 
