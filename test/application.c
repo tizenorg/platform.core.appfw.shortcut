@@ -33,7 +33,7 @@ static Eina_Bool shortcut_add_cb(void *data)
 {
 	int ret;
 
-	ret = shortcut_add_to_home("MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", result_cb, NULL);
+	ret = shortcut_add_to_home("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", result_cb, NULL);
 	printf("Client: shortcut_add_to_home returns: %d\n", ret);
 
 	return ECORE_CALLBACK_RENEW;

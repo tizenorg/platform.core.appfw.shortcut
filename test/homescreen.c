@@ -22,7 +22,7 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
-int shortcut_request_cb(const char *name, int type, const char *exec, const char *icon, int pid, void *data)
+int shortcut_request_cb(const char *pkgname, const char *name, int type, const char *exec, const char *icon, int pid, void *data)
 {
 	printf("SERVER: name: %s, type: %d, exec: %s, icon: %s, pid: %d, data: %p\n",
 		name, type, exec, icon, pid, data);
