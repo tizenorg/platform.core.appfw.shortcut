@@ -17,6 +17,10 @@
 #ifndef __SHORTCUT_H__
 #define __SHORTCUT_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @addtogroup APPLICATION_FRAMEWORK
  * @{
@@ -206,6 +210,10 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @endcode
  */
 extern int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 /* @}
