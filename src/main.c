@@ -716,7 +716,6 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	int packet_size;
 	char *payload;
 	struct client_cb *client_cb;
-	int client_fd;
 
 	pkgname_len = pkgname ? strlen(pkgname) + 1 : 0;
 	name_len = name ? strlen(name) + 1 : 0;
