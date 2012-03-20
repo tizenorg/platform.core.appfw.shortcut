@@ -29,23 +29,22 @@ Requires:   %{name} = %{version}-%{release}
 %setup -q
 
 %build
-cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
 make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
 %make_install
 
-
 %post
-/sbin/ldconfig
 
-%postun -p /sbin/ldconfig
+%postun
 
 %files
-/usr/lib/*.so*
+%defattr(-,root,root,-)
+${_libdir}/*.so*
 
 %files devel
+%defattr(-,root,root,-)
 /usr/include/shortcut/SLP_shortcut_PG.h
 /usr/include/shortcut/shortcut.h
-/usr/lib/pkgconfig/shortcut.pc
+${_libdir}/pkgconfig/shortcut.pc
