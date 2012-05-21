@@ -29,6 +29,7 @@ Requires:   %{name} = %{version}-%{release}
 %setup -q
 
 %build
+cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
 make %{?jobs:-j%jobs}
 
 %install
