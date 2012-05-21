@@ -1,4 +1,4 @@
-Name: libslp-shortcut
+Name: libshortcut
 Summary:    Shortcut add feature supporting library
 Version:    0.0.7
 Release:    0
@@ -46,6 +46,6 @@ rm -rf %{buildroot}
 
 %files devel
 %defattr(-,root,root,-)
-/usr/include/shortcut/SLP_shortcut_PG.h
+/usr/include/shortcut/shortcut_PG.h
 /usr/include/shortcut/shortcut.h
 /usr/lib/pkgconfig/shortcut.pc

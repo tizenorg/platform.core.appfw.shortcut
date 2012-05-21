@@ -1,5 +1,5 @@
 /*
- * libslp-shortcut-0
+ * libshortcut
  *
  * Copyright (c) 2000 - 2012 Samsung Electronics Co., Ltd All Rights Reserved
  *
@@ -21,7 +21,7 @@
  *  @{
 
  <h1 class="pg">Introduction</h1>
- Shortcut is a communication interfaces for homescreen and applications. To enable the add_to_home feature. Shortcut(libslp-shortcut) uses socket for IPC.
+ Shortcut is a communication interfaces for homescreen and applications. To enable the add_to_home feature. Shortcut(libshortcut) uses socket for IPC.
 
  @image html SLP_Shortcut_PG_image01.png
 

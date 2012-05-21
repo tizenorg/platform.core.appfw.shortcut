@@ -99,7 +99,7 @@ binary-arch: build install
 #	dh_installinfo
 	dh_installman
 	dh_link
-	dh_strip --dbg-package=libslp-shortcut-dbg
+	dh_strip --dbg-package=libshortcut-dbg
 	dh_compress
 	dh_fixperms
 #	dh_perl
