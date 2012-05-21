@@ -1,6 +1,6 @@
-Name:	    shortcut
+Name: libslp-shortcut-0
 Summary:    Shortcut add feature supporting library
-Version:    0.0.5
+Version:    0.0.7
 Release:    0
 Group:      main/devel
 License:    SAMSUNG
