@@ -1,4 +1,4 @@
-Name: libslp-shortcut-0
+Name: libslp-shortcut
 Summary:    Shortcut add feature supporting library
 Version:    0.0.7
 Release:    0
