@@ -42,10 +42,10 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-${_libdir}/*.so*
+/usr/lib/*.so*
 
 %files devel
 %defattr(-,root,root,-)
 /usr/include/shortcut/SLP_shortcut_PG.h
 /usr/include/shortcut/shortcut.h
-${_libdir}/pkgconfig/shortcut.pc
+/usr/lib/pkgconfig/shortcut.pc
