@@ -53,7 +53,7 @@ extern "C" {
  * @post None
  * @remarks None
  */
-typedef int (*request_cb_t)(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, int pid, void *data);
+typedef int (*request_cb_t)(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, int pid, double period, void *data);
 
 /**
  * @brief This function prototype is used to define for receiving the result of add_to_home.
@@ -79,7 +79,7 @@ typedef int (*result_cb_t)(int ret, int pid, void *data);
 enum {
 	SHORTCUT_PACKAGE = 0x0, /**< Launch the package using given pakcage name. */
 	SHORTCUT_DATA = 0x01, /**< Launch the related package with given data(content_info). */
-	SHORTCUT_FILE = 0x02, /** < Launch the related package with given filename(content_info). */
+	SHORTCUT_FILE = 0x02, /**< Launch the related package with given filename(content_info). */
 };
 
 /**
@@ -210,6 +210,8 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @endcode
  */
 extern int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
+
+extern int shortcut_add_to_home_with_period(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
 
 #ifdef __cplusplus
 }

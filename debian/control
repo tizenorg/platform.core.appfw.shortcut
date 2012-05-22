@@ -8,22 +8,21 @@ Standards-Version: 3.7.2
 Package: libshortcut
 Section: libs
 Architecture: any
+Provides: libslp-shortcut-0
+Replaces: libslp-shortcut-0
+Conflicts: libslp-shortcut-0
 Depends: ${shlibs:Depends}, ${misc:Depends}, libglib2.0-0, libdlog-0
 Description: Shortcut service supporting library (shared object)
 
 Package: libshortcut-dev
 Section: libs
 Architecture: any
-Depends: libshortcut-0 (= ${Source-Version})
+Depends: libshortcut (= ${Source-Version})
 Description: Shortcut (Add to home) service supporting library (development)
-XB-Generate-Docs: yes 
 
 Package: libshortcut-dbg
 Section: debug
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libshortcut-0 (= ${Source-Version})
+Depends: ${misc:Depends}, libshortcut (= ${Source-Version})
 Description: Shortcut service supporting library (unstripped)
-
-
-
 

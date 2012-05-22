@@ -32,7 +32,8 @@
 
 
 #define EAPI __attribute__((visibility("default")))
-
+#define LIVEBOX_FLAG	0x0100
+#define TYPE_MASK	0x000F
 
 
 extern int errno;
@@ -153,6 +154,7 @@ gboolean do_reply_service(int conn_fd, struct connection_state *state)
 		char *name;
 		char *exec;
 		char *icon;
+		double period;
 
 		if (state->packet.head.data.req.field_size.pkgname)
 			pkgname = state->payload;
@@ -179,20 +181,33 @@ gboolean do_reply_service(int conn_fd, struct connection_state *state)
 			icon = NULL;
 		}
 
-		LOGD("Pkgname: [%s] Type: [%x], Name: [%s], Exec: [%s], Icon: [%s]\n",
+		if (state->packet.head.data.req.shortcut_type & LIVEBOX_FLAG) {
+			char *tmp;
+			tmp = state->payload + state->packet.head.data.req.field_size.pkgname;
+			tmp += state->packet.head.data.req.field_size.name;
+			tmp += state->packet.head.data.req.field_size.exec;
+			tmp += state->packet.head.data.req.field_size.icon;
+			memcpy(&period, tmp, sizeof(period));
+		} else {
+			period = -1.0f;
+		}
+
+		LOGD("Pkgname: [%s] Type: [%x], Name: [%s], Exec: [%s], Icon: [%s], Period: [%lf]\n",
 				pkgname,
 				state->packet.head.data.req.shortcut_type,
 				name,
 				exec,
-				icon);
+				icon,
+				period);
 
 		ret = s_info.server_cb.request_cb(
 				pkgname,
 				name,
-				state->packet.head.data.req.shortcut_type,
+				state->packet.head.data.req.shortcut_type & TYPE_MASK,
 				exec,
 				icon,
 				state->from_pid,
+				period,
 				s_info.server_cb.data);
 	}
 
@@ -706,7 +721,7 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 
 
 
-EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
+EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	int pkgname_len;
@@ -719,7 +734,7 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 
 	pkgname_len = pkgname ? strlen(pkgname) + 1 : 0;
 	name_len = name ? strlen(name) + 1 : 0;
-	exec_len = content_info ? strlen(content_info) + 1 : 0;
+	exec_len = content ? strlen(content) + 1 : 0;
 	icon_len = icon ? strlen(icon) + 1 : 0;
 
 	packet_size = sizeof(*packet) + name_len + exec_len + icon_len + pkgname_len + 1;
@@ -745,9 +760,77 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	payload += pkgname_len;
 	strncpy(payload, name, name_len);
 	payload += name_len;
-	strncpy(payload, content_info, exec_len);
+	strncpy(payload, content, exec_len);
 	payload += exec_len;
 	strncpy(payload, icon, icon_len);
+
+	client_cb = malloc(sizeof(*client_cb));
+	if (!client_cb) {
+		LOGE("Heap: %s\n", strerror(errno));
+		free(packet);
+		return -ENOMEM;
+	}
+
+	client_cb->result_cb = result_cb;
+	client_cb->data = data;
+
+	if (init_client(client_cb, (const char*)packet, packet_size) < 0) {
+		LOGE("Failed to init client FD\n");
+		free(client_cb);
+		free(packet);
+		return -EFAULT;
+	}
+
+	free(packet);
+	return 0;
+}
+
+
+
+EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+{
+	struct packet *packet;
+	int pkgname_len;
+	int name_len;
+	int exec_len;
+	int icon_len;
+	int packet_size;
+	char *payload;
+	struct client_cb *client_cb;
+
+	pkgname_len = pkgname ? strlen(pkgname) + 1 : 0;
+	name_len = name ? strlen(name) + 1 : 0;
+	exec_len = content ? strlen(content) + 1 : 0;
+	icon_len = icon ? strlen(icon) + 1 : 0;
+
+	packet_size = sizeof(*packet) + name_len + exec_len + icon_len + pkgname_len + sizeof(period) + 1;
+
+	packet = malloc(packet_size);
+	if (!packet) {
+		LOGE("Heap: %s\n", strerror(errno));
+		return -ENOMEM;
+	}
+
+	packet->head.seq = s_info.seq++;
+	packet->head.type = PACKET_REQ;
+	packet->head.data.req.shortcut_type = LIVEBOX_FLAG | type;
+	packet->head.data.req.field_size.pkgname = pkgname_len;
+	packet->head.data.req.field_size.name = name_len;
+	packet->head.data.req.field_size.exec = exec_len;
+	packet->head.data.req.field_size.icon = icon_len;
+	packet->head.payload_size = sizeof(period) + pkgname_len + name_len + exec_len + icon_len + 1;
+
+	payload = packet->payload;
+
+	strncpy(payload, pkgname, pkgname_len);
+	payload += pkgname_len;
+	strncpy(payload, name, name_len);
+	payload += name_len;
+	strncpy(payload, content, exec_len);
+	payload += exec_len;
+	strncpy(payload, icon, icon_len);
+	payload += icon_len;
+	memcpy(payload, &period, sizeof(period));
 
 	client_cb = malloc(sizeof(*client_cb));
 	if (!client_cb) {

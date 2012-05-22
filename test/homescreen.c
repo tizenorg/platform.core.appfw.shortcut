@@ -18,16 +18,15 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
-int shortcut_request_cb(const char *pkgname, const char *name, int type, const char *exec, const char *icon, int pid, void *data)
+int shortcut_request_cb(const char *pkgname, const char *name, int type, const char *exec, const char *icon, int pid, double period, void *data)
 {
-	printf("SERVER: name: %s, type: %d, exec: %s, icon: %s, pid: %d, data: %p\n",
-		name, type, exec, icon, pid, data);
+	printf("SERVER: name: %s, type: %d, exec: %s, icon: %s, pid: %d, data: %p, period: %lf\n",
+		name, type, exec, icon, pid, data, period);
 	return 0;
 }
 
 int elm_main(int argc, char *argv[])
 {
-	int ret;
 	shortcut_set_request_cb(shortcut_request_cb, NULL);
 
 	elm_run();
