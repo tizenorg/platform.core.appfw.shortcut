@@ -18,11 +18,17 @@ Package: libshortcut-dev
 Section: libs
 Architecture: any
 Depends: libshortcut (= ${Source-Version})
+Provides: libslp-shortcut-dev
+Replaces: libslp-shortcut-dev
+Conflicts: libslp-shortcut-dev
 Description: Shortcut (Add to home) service supporting library (development)
 
 Package: libshortcut-dbg
 Section: debug
 Architecture: any
+Provides: libslp-shortcut-dbg
+Replaces: libslp-shortcut-dbg
+Conflicts: libslp-shortcut-dbg
 Depends: ${misc:Depends}, libshortcut (= ${Source-Version})
 Description: Shortcut service supporting library (unstripped)
 
