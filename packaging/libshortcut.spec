@@ -12,6 +12,8 @@ Requires(postun): /sbin/ldconfig
 BuildRequires: cmake, gettext-tools
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(dlog)
+BuildRequires: pkgconfig(db-util)
+BuildRequires: pkgconfig(sqlite3)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.
@@ -43,6 +45,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 /usr/lib/*.so*
+/usr/bin/shortcut_service_register
 
 %files devel
 %defattr(-,root,root,-)

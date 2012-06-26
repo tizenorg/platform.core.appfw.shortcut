@@ -17,28 +17,25 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <errno.h>
-#include <glib.h>
-#include <dlog.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-
-#include <secom_socket.h>
-#include <shortcut.h>
-
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 
+#include <dlog.h>
+#include <glib.h>
+#include <db-util.h>
 
+#include "secom_socket.h"
+#include "shortcut.h"
+#include "dlist.h"
 
 #define EAPI __attribute__((visibility("default")))
 #define LIVEBOX_FLAG	0x0100
 #define TYPE_MASK	0x000F
 
-
-extern int errno;
-
-
+int errno;
 
 struct server_cb {
 	request_cb_t request_cb;
@@ -55,6 +52,8 @@ struct client_cb {
 
 
 static struct info {
+	const char *dbfile;
+	sqlite3 *handle;
 	pthread_mutex_t server_mutex;
 	int server_fd;
 	const char *socket_file;
@@ -65,6 +64,8 @@ static struct info {
 	.server_fd = -1,
 	.socket_file = "/tmp/.shortcut",
 	.seq = 0,
+	.dbfile = "/opt/dbspace/.shortcut_service.db",
+	.handle = NULL,
 };
 
 
@@ -851,6 +852,68 @@ EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name,
 
 	free(packet);
 	return 0;
+}
+
+
+
+EAPI const int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *name, const char *param, void *data), void *data)
+{
+	sqlite3_stmt *stmt;
+	const char *query;
+	const unsigned char *name;
+	const unsigned char *service;
+	int ret;
+	int cnt;
+
+	if (pkgname) {
+		query = "SELECT pkgname, name, service FROM shortcut_service WHERE pkgname = ?";
+		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+		if (ret != SQLITE_OK) {
+			return -EIO;
+		}
+
+		ret = sqlite3_bind_text(stmt, 1, pkgname, -1, NULL);
+		if (ret != SQLITE_OK) {
+			sqlite3_finalize(stmt);
+			return -EIO;
+		}
+	} else {
+		query = "SELECT pkgname, name, service FROM shortcut_service";
+		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+		if (ret != SQLITE_OK) {
+			return -EIO;
+		}
+	}
+
+	cnt = 0;
+	while (SQLITE_ROW == sqlite3_step(stmt)) {
+		pkgname = sqlite3_column_text(stmt, 0);
+		if (!pkgname) {
+			LOGE("Failed to get package name\n");
+			continue;
+		}
+
+		name = sqlite3_column_text(stmt, 1);
+		if (!name) {
+			LOGE("Failed to get name\n");
+			continue;
+		}
+
+		service = sqlite3_column_text(stmt, 2);
+		if (!service) {
+			LOGE("Failed to get service\n");
+			continue;
+		}
+
+		cnt++;
+		if (cb(pkgname, name, service, data) < 0)
+			break;
+	}
+
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return cnt;
 }
 
 

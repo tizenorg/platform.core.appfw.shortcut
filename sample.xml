@@ -1,0 +1,5 @@
+<shortcuts>
+	<shortcut pkgname="com.samsung.myapp" name="MSG_ID1" service="SERVICE INFORMATION 1" />
+	<shortcut pkgname="com.samsung.myapp-gadget" name="MSG_ID2" service="SERVICE INFORMATION 2" />
+	<shortcut pkgname="com.samsung.myapp" name="MSG_ID3" service="SERVICE INFORMATION 3" />
+</shortcuts>
