@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary:    Shortcut add feature supporting library
-Version:    0.0.7
+Version:    0.1.0
 Release:    0
 Group:      main/devel
 License:    SAMSUNG
@@ -14,6 +14,7 @@ BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(sqlite3)
+BuildRequires: pkgconfig(com-core)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.

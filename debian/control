@@ -2,7 +2,7 @@ Source: shortcut
 Section: libs
 Priority: optional
 Maintainer: Sung-jae Park <nicesj.park@samsung.com>, Young-joo Park <yjoo93.park@samsung.com>
-Build-Depends: debhelper (>= 5), libglib2.0-dev, dlog-dev, libxml2, libslp-db-util-dev
+Build-Depends: debhelper (>= 5), libglib2.0-dev, dlog-dev, libxml2, libslp-db-util-dev, libcom-core-dev
 Standards-Version: 3.7.2
 
 Package: libshortcut
@@ -11,7 +11,7 @@ Architecture: any
 Provides: libslp-shortcut-0
 Replaces: libslp-shortcut-0
 Conflicts: libslp-shortcut-0
-Depends: ${shlibs:Depends}, ${misc:Depends}, libglib2.0-0, libdlog-0
+Depends: ${shlibs:Depends}, ${misc:Depends}, libglib2.0-0, libdlog-0, libcom-core
 Description: Shortcut service supporting library (shared object)
 
 Package: libshortcut-dev
