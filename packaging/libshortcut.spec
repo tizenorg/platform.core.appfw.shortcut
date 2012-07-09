@@ -15,6 +15,7 @@ BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(com-core)
+BuildRequires: pkgconfig(libxml-2.0)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.
@@ -46,7 +47,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 /usr/lib/*.so*
-/usr/bin/shortcut_service_register
+/usr/etc/package-manager/parserlib
 
 %files devel
 %defattr(-,root,root,-)

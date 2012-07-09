@@ -59,17 +59,19 @@ static struct info {
 		int (*request_cb)(const char *pkgname, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, void *data);
 		void *data;
 	} server_cb;
+	int initialized;
 } s_info = {
 	.server_fd = -1,
 	.client_fd = -1,
 	.socket_file = "/tmp/.shortcut",
 	.dbfile = "/opt/dbspace/.shortcut_service.db",
 	.handle = NULL,
+	.initialized = 0,
 };
 
 
 
-static struct packet *add_shortcut_handler(pid_t pid, int handle, struct packet *packet)
+static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *pkgname;
 	const char *name;
@@ -98,7 +100,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, struct packet 
 
 
 
-static struct packet *add_livebox_handler(pid_t pid, int handle, struct packet *packet)
+static struct packet *add_livebox_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *pkgname;
 	const char *name;
@@ -148,8 +150,10 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 	s_info.server_cb.request_cb = request_cb;
 	s_info.server_cb.data = data;
 
-	if (s_info.server_fd < 0)
+	if (s_info.server_fd < 0) {
+		unlink(s_info.socket_file);	/* Delete previous socket file for creating a new server socket */
 		s_info.server_fd = com_core_packet_server_init(s_info.socket_file, service_table);
+	}
 
 	DbgPrint("Server FD: %d\n", s_info.server_fd);
 
@@ -215,6 +219,12 @@ static int livebox_send_cb(pid_t pid, int handle, const struct packet *packet, v
 
 
 
+static int disconnected_cb(int handle, void *data)
+{
+	s_info.client_fd = -EINVAL;
+	return 0;
+}
+
 EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
 {
 	int ret;
@@ -226,6 +236,11 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 			.handler = NULL,
 		},
 	};
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
 
 	if (s_info.client_fd < 0) {
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
@@ -278,6 +293,11 @@ EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name,
 	};
 	struct result_cb_item *item;
 
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
 	if (s_info.client_fd < 0) {
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
 		if (s_info.client_fd < 0)
@@ -305,17 +325,39 @@ EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name,
 
 
 
+static inline int open_db(void)
+{
+	int ret;
+
+	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
+	if (ret != SQLITE_OK) {
+		DbgPrint("Failed to open a %s\n", s_info.dbfile);
+		return -EIO;
+	}
+
+	return 0;
+}
+
+
+
 /*!
  * \note READ ONLY DB
  */
-EAPI const int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *name, const char *param, void *data), void *data)
+EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *name, const char *param, void *data), void *data)
 {
 	sqlite3_stmt *stmt;
 	const char *query;
 	const unsigned char *name;
 	const unsigned char *service;
+	static int db_opened = 0;
 	int ret;
 	int cnt;
+
+	if (!db_opened)
+		db_opened = open_db() == 0;
+
+	if (!db_opened)
+		return -EIO;
 
 	if (pkgname) {
 		query = "SELECT pkgname, name, service FROM shortcut_service WHERE pkgname = ?";

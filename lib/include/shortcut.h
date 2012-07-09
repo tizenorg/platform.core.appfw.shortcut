@@ -213,7 +213,7 @@ extern int shortcut_add_to_home(const char *pkgname, const char *name, int type,
 
 extern int shortcut_add_to_home_with_period(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
 
-extern const int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *name, const char *param, void *data), void *data);
+extern int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *name, const char *param, void *data), void *data);
 #ifdef __cplusplus
 }
 #endif

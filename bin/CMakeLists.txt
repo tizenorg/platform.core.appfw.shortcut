@@ -1,4 +1,4 @@
-PROJECT(shortcut_service_register C)
+PROJECT(shortcuts C)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/bin/include)
 
@@ -17,13 +17,15 @@ ENDFOREACH(flag)
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 
 ADD_DEFINITIONS("-DPREFIX=\"${PREFIX}\"")
-ADD_DEFINITIONS("-DLOG_TAG=\"shortcut_service_register\"")
+ADD_DEFINITIONS("-DLOG_TAG=\"shortcuts\"")
 
-ADD_EXECUTABLE(${PROJECT_NAME}
+ADD_LIBRARY(${PROJECT_NAME} SHARED
 	src/service_register.c
 	src/dlist.c
 )
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${bin_pkgs_LDFLAGS})
 
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME} DESTINATION bin)
+INSTALL(TARGETS ${PROJECT_NAME} DESTINATION "etc/package-manager/parserlib")
+
+# End of a file

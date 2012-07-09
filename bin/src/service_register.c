@@ -175,13 +175,24 @@ static inline int db_fini(void)
 	return 0;
 }
 
-int uninstall_shortcut(const char *pkgname, xmlNodePtr root)
+int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *pkgname)
+{
+	xmlNodePtr root;
+
+	root = xmlDocGetRootElement(docPtr);
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *pkgname)
 {
 	int tap = 0;
 	xmlNodePtr node = NULL;
 	struct dlist *l;
 	const char *name;
 	const char *service;
+	xmlNodePtr root;
+
+	root = xmlDocGetRootElement(docPtr);
 
 	if (strcmp(root->name, "shortcut")) {
 		fprintf(stderr, "Invalid XML root\n");
@@ -229,13 +240,16 @@ int uninstall_shortcut(const char *pkgname, xmlNodePtr root)
 	return 0;
 }
 
-int install_shortcut(const char *pkgname, xmlNodePtr root)
+int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *pkgname)
 {
 	int tap = 0;
 	xmlNodePtr node = NULL;
 	struct dlist *l;
 	const char *name;
 	const char *service;
+	xmlNodePtr root;
+
+	root = xmlDocGetRootElement(docPtr);
 
 	if (strcmp(root->name, "shortcut")) {
 		fprintf(stderr, "Invalid XML root\n");
@@ -283,6 +297,7 @@ int install_shortcut(const char *pkgname, xmlNodePtr root)
 	return 0;
 }
 
+/*
 int main(int argc, char *argv[])
 {
 	xmlDoc *doc;
@@ -309,5 +324,6 @@ int main(int argc, char *argv[])
 	xmlCleanupParser();
 	return 0;
 }
+*/
 
 /* End of a file */
