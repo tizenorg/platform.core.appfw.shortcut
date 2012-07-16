@@ -279,8 +279,6 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
 }
 
-
-
 EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
 {
 	int ret;
@@ -323,7 +321,101 @@ EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name,
 	return com_core_packet_async_send(s_info.client_fd, packet, livebox_send_cb, item);
 }
 
+EAPI int add_to_home_shortcut(const char *pkgname, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
+{
+	int ret;
+	struct packet *packet;
+	struct result_cb_item *item;
+	static struct method service_table[] = {
+		{
+			.cmd = NULL,
+			.handler = NULL,
+		},
+	};
 
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0)
+			return s_info.client_fd;
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return -ENOMEM;
+	}
+
+	item->result_cb = result_cb;
+	item->data = data;
+
+	if (!pkgname)
+		pkgname = "";
+
+	if (!name)
+		name = "";
+
+	if (!content)
+		content = "";
+
+	if (!icon)
+		icon = "";
+
+	packet = packet_create("add_shortcut", "ssiss", pkgname, name, type, content, icon);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return -EFAULT;
+	}
+
+	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
+}
+
+EAPI int add_to_home_livebox(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+{
+	int ret;
+	struct packet *packet;
+	static struct method service_table[] = {
+		{
+			.cmd = NULL,
+			.handler = NULL,
+		},
+	};
+	struct result_cb_item *item;
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0)
+			return s_info.client_fd;
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return -ENOMEM;
+	}
+
+	item->result_cb = result_cb;
+	item->data = data;
+
+	packet = packet_create("add_livebox", "ssissd", pkgname, name, type, content, icon, period);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return -EFAULT;
+	}
+
+	return com_core_packet_async_send(s_info.client_fd, packet, livebox_send_cb, item);
+}
 
 static inline int open_db(void)
 {
