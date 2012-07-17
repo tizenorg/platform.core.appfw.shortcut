@@ -80,6 +80,9 @@ enum {
 	SHORTCUT_PACKAGE = 0x0, /**< Launch the package using given pakcage name. */
 	SHORTCUT_DATA = 0x01, /**< Launch the related package with given data(content_info). */
 	SHORTCUT_FILE = 0x02, /**< Launch the related package with given filename(content_info). */
+
+	LAUNCH_BY_PACKAGE = 0x0, /*!< */
+	LAUNCH_BY_URI = 0x01, /*!< */
 };
 
 /**
