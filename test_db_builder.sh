@@ -12,6 +12,16 @@ PKGNAME=(
 "com.samsung.contacts"
 )
 
+ICON=(
+"/opt/share/icons/com.samsung.music-icon.png"
+"/opt/share/icons/com.samsung.music-icon.png"
+"/opt/share/icons/com.samsung.music-icon.png"
+"/opt/share/icons/com.samsung.gallery-icon.png"
+"/opt/share/icons/com.samsung.gallery-icon.png"
+"/opt/share/icons/com.samsung.contacts-icon.png"
+"/opt/share/icons/com.samsung.contacts-icon.png"
+)
+
 NAME=(
 "My favorite songs"
 "Albums"
@@ -35,11 +45,11 @@ SERVICE=(
 CNT=0
 ERR=0
 
-sqlite3 $DBFILE "CREATE TABLE shortcut_service (pkgname TEXT, name TEXT, service TEXT)"
+sqlite3 $DBFILE "CREATE TABLE shortcut_service (pkgname TEXT, icon TEXT, name TEXT, service TEXT)"
 while [ $CNT -lt 7 ]
 do
-	echo "Insert a new record ('${PKGNAME[$CNT]}', '${NAME[$CNT]}', '${SERVICE[$CNT]}')"
-	sqlite3 $DBFILE "INSERT INTO shortcut_service (pkgname, name, service) VALUES ('${PKGNAME[$CNT]}', '${NAME[$CNT]}', '${SERVICE[$CNT]}')" 2>/dev/null
+	echo "Insert a new record ('${PKGNAME[$CNT]}', '${ICON[$CNT]}', '${NAME[$CNT]}', '${SERVICE[$CNT]}')"
+	sqlite3 $DBFILE "INSERT INTO shortcut_service (pkgname, icon, name, service) VALUES ('${PKGNAME[$CNT]}', '${ICON[$CNT]}', '${NAME[$CNT]}', '${SERVICE[$CNT]}')" 2>/dev/null
 	if [ $? -ne 0 ]; then
 		let ERR=$ERR+1
 	fi

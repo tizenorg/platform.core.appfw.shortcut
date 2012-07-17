@@ -435,12 +435,13 @@ static inline int open_db(void)
 /*!
  * \note READ ONLY DB
  */
-EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *name, const char *param, void *data), void *data)
+EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *icon, const char *name, const char *param, void *data), void *data)
 {
 	sqlite3_stmt *stmt;
 	const char *query;
 	const unsigned char *name;
 	const unsigned char *service;
+	const unsigned char *icon;
 	static int db_opened = 0;
 	int ret;
 	int cnt;
@@ -452,7 +453,7 @@ EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, c
 		return -EIO;
 
 	if (pkgname) {
-		query = "SELECT pkgname, name, service FROM shortcut_service WHERE pkgname = ?";
+		query = "SELECT pkgname, name, service, icon FROM shortcut_service WHERE pkgname = ?";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			return -EIO;
@@ -464,7 +465,7 @@ EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, c
 			return -EIO;
 		}
 	} else {
-		query = "SELECT pkgname, name, service FROM shortcut_service";
+		query = "SELECT pkgname, name, service, icon FROM shortcut_service";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			return -EIO;
@@ -491,8 +492,14 @@ EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, c
 			continue;
 		}
 
+		icon = sqlite3_column_text(stmt, 3);
+		if (!icon) {
+			LOGE("Failed to get icon\n");
+			continue;
+		}
+
 		cnt++;
-		if (cb(pkgname, name, service, data) < 0)
+		if (cb(pkgname, icon, name, service, data) < 0)
 			break;
 	}
 

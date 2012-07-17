@@ -29,10 +29,10 @@ static Eina_Bool shortcut_add_cb(void *data)
 {
 	int ret;
 
-	ret = shortcut_add_to_home("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", result_cb, NULL);
+	ret = add_to_home_shortcut("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", result_cb, NULL);
 	printf("Client: shortcut_add_to_home returns: %d\n", ret);
 
-	ret = shortcut_add_to_home_with_period("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", 1.0f, result_cb, NULL);
+	ret = add_to_home_livebox("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", 1.0f, result_cb, NULL);
 	printf("Client: shortcut_add_to_home_with_period returns: %d\n", ret);
 
 	return ECORE_CALLBACK_RENEW;
