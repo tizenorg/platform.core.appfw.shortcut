@@ -56,7 +56,7 @@ static struct info {
 	int client_fd;
 	const char *socket_file;
 	struct {
-		int (*request_cb)(const char *pkgname, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, void *data);
+		int (*request_cb)(const char *appid, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, void *data);
 		void *data;
 	} server_cb;
 	int initialized;
@@ -73,7 +73,7 @@ static struct info {
 
 static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct packet *packet)
 {
-	const char *pkgname;
+	const char *appid;
 	const char *name;
 	int type;
 	const char *content;
@@ -83,15 +83,15 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssiss", &pkgname, &name, &type, &content, &icon) != 5) {
+	if (packet_get(packet, "ssiss", &appid, &name, &type, &content, &icon) != 5) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
 
-	DbgPrint("pkgname[%s], name[%s], type[0x%x], content[%s], icon[%s]\n", pkgname, name, type, content, icon);
+	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s]\n", appid, name, type, content, icon);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(pkgname, name, type, content, icon, pid, -1.0f, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, -1.0f, s_info.server_cb.data);
 	else
 		ret = 0;
 
@@ -102,7 +102,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 
 static struct packet *add_livebox_handler(pid_t pid, int handle, const struct packet *packet)
 {
-	const char *pkgname;
+	const char *appid;
 	const char *name;
 	int type;
 	const char *content;
@@ -113,15 +113,15 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssissd", &pkgname, &name, &type, &content, &icon, &period) != 6) {
+	if (packet_get(packet, "ssissd", &appid, &name, &type, &content, &icon, &period) != 6) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
 
-	DbgPrint("pkgname[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf]\n", pkgname, name, type, content, icon, period);
+	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf]\n", appid, name, type, content, icon, period);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(pkgname, name, type, content, icon, pid, period, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, period, s_info.server_cb.data);
 	else
 		ret = 0;
 
@@ -175,19 +175,28 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 	int ret;
 
 	if (!packet) {
-		ret = item->result_cb(-EFAULT, pid, item->data);
+		if (item->result_cb)
+			ret = item->result_cb(-EFAULT, pid, item->data);
+		else
+			ret = 0;
 		free(item);
 		return ret;
 	}
 
 	if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		ret = item->result_cb(-EINVAL, pid, item->data);
+		if (item->result_cb)
+			ret = item->result_cb(-EINVAL, pid, item->data);
+		else
+			ret = 0;
 		free(item);
 		return ret;
 	}
 
-	ret = item->result_cb(ret, pid, item->data);
+	if (item->result_cb)
+		ret = item->result_cb(ret, pid, item->data);
+	else
+		ret = 0;
 	free(item);
 	return ret;
 }
@@ -200,19 +209,28 @@ static int livebox_send_cb(pid_t pid, int handle, const struct packet *packet, v
 	int ret;
 
 	if (!packet) {
-		ret = item->result_cb(-EFAULT, pid, item->data);
+		if (item->result_cb)
+			ret = item->result_cb(-EFAULT, pid, item->data);
+		else
+			ret = 0;
 		free(item);
 		return -EINVAL;
 	}
 
 	if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		ret = item->result_cb(-EINVAL, pid, item->data);
+		if (item->result_cb)
+			ret = item->result_cb(-EINVAL, pid, item->data);
+		else
+			ret = 0;
 		free(item);
 		return -EINVAL;
 	}
 
-	ret = item->result_cb(ret, pid, item->data);
+	if (item->result_cb)
+		ret = item->result_cb(ret, pid, item->data);
+	else
+		ret = 0;
 	free(item);
 	return ret;
 }
@@ -225,7 +243,7 @@ static int disconnected_cb(int handle, void *data)
 	return 0;
 }
 
-EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
+EAPI int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
@@ -257,8 +275,8 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	item->result_cb = result_cb;
 	item->data = data;
 
-	if (!pkgname)
-		pkgname = "";
+	if (!appid)
+		appid = "";
 
 	if (!name)
 		name = "";
@@ -269,7 +287,7 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	if (!icon)
 		icon = "";
 
-	packet = packet_create("add_shortcut", "ssiss", pkgname, name, type, content, icon);
+	packet = packet_create("add_shortcut", "ssiss", appid, name, type, content, icon);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -279,7 +297,7 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
 }
 
-EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+EAPI int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
@@ -311,7 +329,7 @@ EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name,
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("add_livebox", "ssissd", pkgname, name, type, content, icon, period);
+	packet = packet_create("add_livebox", "ssissd", appid, name, type, content, icon, period);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -321,7 +339,7 @@ EAPI int shortcut_add_to_home_with_period(const char *pkgname, const char *name,
 	return com_core_packet_async_send(s_info.client_fd, packet, livebox_send_cb, item);
 }
 
-EAPI int add_to_home_shortcut(const char *pkgname, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
+EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
@@ -353,8 +371,8 @@ EAPI int add_to_home_shortcut(const char *pkgname, const char *name, int type, c
 	item->result_cb = result_cb;
 	item->data = data;
 
-	if (!pkgname)
-		pkgname = "";
+	if (!appid)
+		appid = "";
 
 	if (!name)
 		name = "";
@@ -365,7 +383,7 @@ EAPI int add_to_home_shortcut(const char *pkgname, const char *name, int type, c
 	if (!icon)
 		icon = "";
 
-	packet = packet_create("add_shortcut", "ssiss", pkgname, name, type, content, icon);
+	packet = packet_create("add_shortcut", "ssiss", appid, name, type, content, icon);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -375,7 +393,7 @@ EAPI int add_to_home_shortcut(const char *pkgname, const char *name, int type, c
 	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
 }
 
-EAPI int add_to_home_livebox(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
@@ -407,7 +425,7 @@ EAPI int add_to_home_livebox(const char *pkgname, const char *name, int type, co
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("add_livebox", "ssissd", pkgname, name, type, content, icon, period);
+	packet = packet_create("add_livebox", "ssissd", appid, name, type, content, icon, period);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -432,16 +450,53 @@ static inline int open_db(void)
 
 
 
+static inline char *get_i18n_name(const char *lang, int id)
+{
+	sqlite3_stmt *stmt;
+	const char *query;
+	const char *name;
+	char *ret;
+	int status;
+
+	query = "SELECT name FROM shortcut_name WHERE id = ? AND lang = ?";
+	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+	if (status != SQLITE_OK) {
+		ErrPrint("Failed to prepare stmt\n");
+		return NULL;
+	}
+
+	if (SQLITE_ROW != sqlite3_step(stmt)) {
+		ErrPrint("Failed to do step\n");
+		sqlite3_reset(stmt);
+		sqlite3_clear_bindings(stmt);
+		sqlite3_finalize(stmt);
+		return NULL;
+	}
+
+	name = sqlite3_column_text(stmt, 0);
+	ret = name ? strdup(name) : NULL;
+
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+
+
 /*!
  * \note READ ONLY DB
  */
-EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *icon, const char *name, const char *param, void *data), void *data)
+EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data)
 {
 	sqlite3_stmt *stmt;
 	const char *query;
 	const unsigned char *name;
-	const unsigned char *service;
+	char *i18n_name;
+	const unsigned char *extra_data;
+	const unsigned char *extra_key;
 	const unsigned char *icon;
+	int id;
 	static int db_opened = 0;
 	int ret;
 	int cnt;
@@ -452,20 +507,20 @@ EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, c
 	if (!db_opened)
 		return -EIO;
 
-	if (pkgname) {
-		query = "SELECT pkgname, name, service, icon FROM shortcut_service WHERE pkgname = ?";
+	if (appid) {
+		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service WHERE appid = ?";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			return -EIO;
 		}
 
-		ret = sqlite3_bind_text(stmt, 1, pkgname, -1, NULL);
+		ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
 		if (ret != SQLITE_OK) {
 			sqlite3_finalize(stmt);
 			return -EIO;
 		}
 	} else {
-		query = "SELECT pkgname, name, service, icon FROM shortcut_service";
+		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			return -EIO;
@@ -474,33 +529,51 @@ EAPI int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, c
 
 	cnt = 0;
 	while (SQLITE_ROW == sqlite3_step(stmt)) {
-		pkgname = sqlite3_column_text(stmt, 0);
-		if (!pkgname) {
+		id = sqlite3_column_int(stmt, 0);
+
+		appid = sqlite3_column_text(stmt, 1);
+		if (!appid) {
 			LOGE("Failed to get package name\n");
 			continue;
 		}
 
-		name = sqlite3_column_text(stmt, 1);
+		name = sqlite3_column_text(stmt, 2);
 		if (!name) {
 			LOGE("Failed to get name\n");
 			continue;
 		}
 
-		service = sqlite3_column_text(stmt, 2);
-		if (!service) {
+		extra_key = sqlite3_column_text(stmt, 3);
+		if (!extra_key) {
 			LOGE("Failed to get service\n");
 			continue;
 		}
 
-		icon = sqlite3_column_text(stmt, 3);
+		extra_data = sqlite3_column_text(stmt, 4);
+		if (!extra_data) {
+			LOGE("Failed to get service\n");
+			continue;
+		}
+
+		icon = sqlite3_column_text(stmt, 5);
 		if (!icon) {
 			LOGE("Failed to get icon\n");
 			continue;
 		}
 
+		/*!
+		 * \todo
+		 * GET LOCALE
+		 */
+		i18n_name = get_i18n_name("en-us", id);
+
 		cnt++;
-		if (cb(pkgname, icon, name, service, data) < 0)
+		if (cb(appid, icon, (i18n_name != NULL ? i18n_name : (char *)name), extra_key, extra_data, data) < 0) {
+			free(i18n_name);
 			break;
+		}
+
+		free(i18n_name);
 	}
 
 	sqlite3_reset(stmt);

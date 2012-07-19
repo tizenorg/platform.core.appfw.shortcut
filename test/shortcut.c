@@ -18,9 +18,9 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
-static int shortcut_list_cb(const char *pkgname, const char *icon, const char *name, const char *param, void *data)
+static int shortcut_list_cb(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data)
 {
-	printf("pkgname[%s] icon[%s], name[%s] param[%s]\n", pkgname, icon, name, param);
+	printf("appid[%s] icon[%s], name[%s] extra_key[%s], extra_ata[%s]\n", appid, icon, name, extra_key, extra_data);
 	return 0;
 }
 

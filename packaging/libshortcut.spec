@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary:    Shortcut add feature supporting library
-Version:    0.2.1
+Version:    0.2.2
 Release:    0
 Group:      main/devel
 License:    SAMSUNG

@@ -39,7 +39,7 @@ extern "C" {
  * @brief This function prototype is used to define a callback function for the add_to_home reqeust.
  *        The homescreen should define a callback as this type and implementing the service code
  *        for adding a new application shortcut.
- * @param[in] pkgname Shortcut is added for this package.
+ * @param[in] appid Shortcut is added for this package.
  * @param[in] name Name for created shortcut icon.
  * @param[in] type 3 kinds of types are defined.
  * @param[in] content_info Specific information for creating a new shortcut.
@@ -53,7 +53,7 @@ extern "C" {
  * @post None
  * @remarks None
  */
-typedef int (*request_cb_t)(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, int pid, double period, void *data);
+typedef int (*request_cb_t)(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, double period, void *data);
 
 /**
  * @brief This function prototype is used to define for receiving the result of add_to_home.
@@ -119,9 +119,9 @@ enum {
  * @code
  * #include <shortcut.h>
  *
- * static int request_cb(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, int pid, void *data)
+ * static int request_cb(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, void *data)
  * {
- * 	printf("Package name: %s\n", pkgname);
+ * 	printf("Package name: %s\n", appid);
  * 	printf("Name: %s\n", name);
  * 	printf("Type: %d\n", type);
  * 	printf("Content: %s\n", content_info);
@@ -147,7 +147,7 @@ enum {
 extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
 
 /**
- * @fn int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
+ * @fn int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
  *
  * @brief The application, which supporting the add_to_home feature, should invoke this.
  *
@@ -159,7 +159,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * - Application should check the return status from the callback function
  * - Application should set the callback function to get the result of this request.
  *
- * @param[in] pkgname Package name of owner of this shortcut.
+ * @param[in] appid Package name of owner of this shortcut.
  * @param[in] name Name for created shortcut icon.
  * @param[in] type 3 kinds of types are defined.
  * @param[in] content_info Specific information for delivering to the creating shortcut.
@@ -212,15 +212,15 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * @endcode
  */
-extern int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
+extern int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
 
-extern int shortcut_add_to_home_with_period(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
+extern int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
 
-extern int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *icon, const char *name, const char *param, void *data), void *data);
+extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data);
 
-extern int add_to_home_shortcut(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
+extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
 
-extern int add_to_home_livebox(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
+extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
 #ifdef __cplusplus
 }
 #endif
