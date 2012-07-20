@@ -42,11 +42,9 @@
 int errno;
 
 static struct {
-	struct dlist *node_list;
 	const char *dbfile;
 	sqlite3 *handle;
 } s_info = {
-	.node_list = NULL,
 	.dbfile = "/opt/dbspace/.shortcut_service.db",
 	.handle = NULL,
 };
@@ -472,7 +470,6 @@ int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *appid)
 {
 	xmlNodePtr node = NULL;
-	struct dlist *l;
 	char *key;
 	char *data;
 	xmlNodePtr root;
@@ -495,18 +492,13 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *appid)
 	}
 
 	DbgPrint("AppID: %s\n", appid);
-	s_info.node_list = dlist_append(s_info.node_list, root->children);
-
-	while (s_info.node_list) {
-		l = dlist_nth(s_info.node_list, 0);
-		root = dlist_data(l);
-		s_info.node_list = dlist_remove(s_info.node_list, l);
-
+	root = root->children;
+	while (root) {
 		for (node = root; node; node = node->next) {
 			if (node->type == XML_ELEMENT_NODE)
 				DbgPrint("Element %s\n", node->name);
 
-			if (!strcmp(node->name, "text"))
+			if (strcmp(node->name, "shortcut"))
 				continue;
 
 			if (!xmlHasProp(node, "extra_data")
@@ -563,6 +555,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *appid)
 			 * DbgPrint("Skip this node's children\n");
 			 */
 		}
+		root = root->next;
 	}
 
 	return 0;
@@ -571,7 +564,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *appid)
 int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 {
 	xmlNodePtr node = NULL;
-	xmlNodePtr children = NULL;
+	xmlNodePtr child = NULL;
 	char *key;
 	char *data;
 	char *name;
@@ -603,18 +596,14 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 	}
 
 	DbgPrint("AppID: %s\n", appid);
-	s_info.node_list = dlist_append(s_info.node_list, root->children);
 
-	while (s_info.node_list) {
-		l = dlist_nth(s_info.node_list, 0);
-		root = dlist_data(l);
-		s_info.node_list = dlist_remove(s_info.node_list, l);
-
+	root = root->children;
+	while (root) {
 		for (node = root; node; node = node->next) {
 			if (node->type == XML_ELEMENT_NODE)
 				DbgPrint("Element %s\n", node->name);
 
-			if (!strcmp(node->name, "text"))
+			if (strcmp(node->name, "shortcut"))
 				continue;
 
 			if (!xmlHasProp(node, "extra_key") || !xmlHasProp(node, "extra_data")) {
@@ -627,19 +616,19 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 
 			icon = NULL;
 			name = NULL;
-			for (children = node->children; children; children = children->next) {
-				if (!strcmp(children->name, "icon")) {
+			for (child = node->children; child; child = child->next) {
+				if (!strcmp(child->name, "icon")) {
 					if (icon) {
 						DbgPrint("Icon is duplicated\n");
 						continue;
 					}
 
-					icon = xmlNodeGetContent(children);
+					icon = xmlNodeGetContent(child);
 					continue;
 				}
 
-				if (!strcmp(children->name, "label")) {
-					if (!xmlHasProp(children, "xml:lang") && name) {
+				if (!strcmp(child->name, "label")) {
+					if (!xmlHasProp(child, "xml:lang") && name) {
 						DbgPrint("Default name is duplicated\n");
 						continue;
 					}
@@ -650,8 +639,8 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 						break;
 					}
 
-					i18n->lang = xmlGetProp(children, "xml:lang");
-					i18n->name = xmlNodeGetContent(children);
+					i18n->lang = xmlGetProp(child, "xml:lang");
+					i18n->name = xmlNodeGetContent(child);
 					i18n_list = dlist_append(i18n_list, i18n);
 					continue;
 				}
@@ -680,38 +669,37 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 					xmlFree(i18n->name);
 					free(i18n);
 				}
-				break;
-			}
+			} else {
+				id = db_get_id(appid, key, data);
+				if (id < 0) {
+					ErrPrint("Failed to insert a new record\n");
+					rollback_transaction();
+					xmlFree((char *)appid);
+					xmlFree(key);
+					xmlFree(data);
+					xmlFree(icon);
+					xmlFree(name);
 
-			id = db_get_id(appid, key, data);
-			if (id < 0) {
-				ErrPrint("Failed to insert a new record\n");
-				rollback_transaction();
-				xmlFree((char *)appid);
-				xmlFree(key);
-				xmlFree(data);
-				xmlFree(icon);
-				xmlFree(name);
-
-				dlist_foreach_safe(i18n_list, l, n, i18n) {
-					i18n_list = dlist_remove(i18n_list, l);
-					xmlFree(i18n->lang);
-					xmlFree(i18n->name);
-					free(i18n);
+					dlist_foreach_safe(i18n_list, l, n, i18n) {
+						i18n_list = dlist_remove(i18n_list, l);
+						xmlFree(i18n->lang);
+						xmlFree(i18n->name);
+						free(i18n);
+					}
+				} else {
+					dlist_foreach_safe(i18n_list, l, n, i18n) {
+						i18n_list = dlist_remove(i18n_list, l);
+						if (db_insert_name(id, i18n->lang, i18n->name) < 0)
+							ErrPrint("Failed to add i18n name: %s(%s)\n", i18n->name, i18n->lang);
+						xmlFree(i18n->lang);
+						xmlFree(i18n->name);
+						free(i18n);
+					}
+					commit_transaction();
 				}
-				break;
 			}
-
-			dlist_foreach_safe(i18n_list, l, n, i18n) {
-				i18n_list = dlist_remove(i18n_list, l);
-				if (db_insert_name(id, i18n->lang, i18n->name) < 0)
-					ErrPrint("Failed to add i18n name: %s(%s)\n", i18n->name, i18n->lang);
-				xmlFree(i18n->lang);
-				xmlFree(i18n->name);
-				free(i18n);
-			}
-			commit_transaction();
 		}
+		root = root->next;
 	}
 
 	return 0;
