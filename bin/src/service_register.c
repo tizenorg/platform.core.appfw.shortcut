@@ -456,10 +456,12 @@ int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 		return -EINVAL;
 	}
 
-	if (!s_info.handle)
-		db_init();
+	if (!s_info.handle) {
+		if (db_init() < 0)
+			return -EIO;
+	}
 
-	if (strcmp(root->name, "shortcuts")) {
+	if (strcmp(root->name, "shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
 	}
@@ -482,15 +484,17 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *appid)
 		return -EINVAL;
 	}
 
-	if (!s_info.handle)
-		db_init();
+	if (!s_info.handle) {
+		if (db_init() < 0)
+			return -EIO;
+	}
 
-	if (strcmp(root->name, "shortcuts")) {
+	if (strcmp(root->name, "shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
 	}
 
-	DbgPrint("Package: %s\n", appid);
+	DbgPrint("AppID: %s\n", appid);
 	s_info.node_list = dlist_append(s_info.node_list, root->children);
 
 	while (s_info.node_list) {
@@ -588,15 +592,17 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 		return -EINVAL;
 	}
 
-	if (!s_info.handle)
-		db_init();
+	if (!s_info.handle) {
+		if (db_init() < 0)
+			return -EIO;
+	}
 
-	if (strcmp(root->name, "shortcuts")) {
+	if (strcmp(root->name, "shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
 	}
 
-	DbgPrint("Package: %s\n", appid);
+	DbgPrint("AppID: %s\n", appid);
 	s_info.node_list = dlist_append(s_info.node_list, root->children);
 
 	while (s_info.node_list) {

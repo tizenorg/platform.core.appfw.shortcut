@@ -61,7 +61,7 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
  * @param[in] pid Process ID of who handles this add_to_home request.
  * @param[in] data Callback data.
  * @return int Returns 0, if there is no error or returns errno.
- * @see shortcut_add_to_home()
+ * @see add_to_home_shortcut()
  * @pre None
  * @post None
  * @remarks None
@@ -72,17 +72,18 @@ typedef int (*result_cb_t)(int ret, int pid, void *data);
  * @brief Basically, three types of shortcut is defined.
  *        Every homescreen developer should support these types of shortcut.
  *        Or returns proper errno to figure out why the application failed to add a shortcut.
- *        SHORTCUT_PACKAGE is used for adding a package itself as a shortcut
- *        SHORTCUT_DATA is used for adding a shortcut for "content" data.
- *        SHORTCUT_FILE is used for adding a shortcut for "file".
+ *        LAUNCH_BY_PACKAGE is used for adding a package itself as a shortcut
+ *        LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
  */
 enum {
+	/*!< Deprecated type */
 	SHORTCUT_PACKAGE = 0x0, /**< Launch the package using given pakcage name. */
 	SHORTCUT_DATA = 0x01, /**< Launch the related package with given data(content_info). */
 	SHORTCUT_FILE = 0x02, /**< Launch the related package with given filename(content_info). */
 
-	LAUNCH_BY_PACKAGE = 0x0, /*!< */
-	LAUNCH_BY_URI = 0x01, /*!< */
+	/*!< Use these */
+	LAUNCH_BY_PACKAGE = 0x0, /*!< Launch the package using given pakcage name. */
+	LAUNCH_BY_URI = 0x01, /*!< Launch the related package with given data(URI). */
 };
 
 /**
@@ -147,7 +148,7 @@ enum {
 extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
 
 /**
- * @fn int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
+ * @fn int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
  *
  * @brief The application, which supporting the add_to_home feature, should invoke this.
  *
@@ -199,7 +200,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * static int app_create(void *data)
  * {
- * 	shortcut_add_to_home("com.samsung.gallery", "With friends",
+ * 	add_to_home_shortcut("com.samsung.gallery", "With friends",
  * 					SHORTCUT_DATA, "gallery:0000-0000",
  * 					"/opt/media/Pictures/Friends.jpg", result_cb, NULL);
  * 	return 0;
@@ -212,15 +213,24 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * @endcode
  */
-extern int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
-
-extern int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
-
 extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data);
 
 extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
 
 extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
+
+
+/*!
+ * \note
+ * These two functions are deprecated now.
+ *
+ * Please replace the "shortcut_add_to_home" with "add_to_home_shortcut"
+ * Please replace the "shortcut_add_to_home_with_period" with "add_to_home_livebox"
+ */
+extern int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data) __attribute__ ((deprecated));
+
+extern int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data) __attribute__ ((deprecated));
+
 #ifdef __cplusplus
 }
 #endif

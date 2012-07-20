@@ -44,8 +44,6 @@ extern FILE *__file_log_fp;
 #endif
 
 #define EAPI __attribute__((visibility("default")))
-#define LIVEBOX_FLAG	0x0100
-#define TYPE_MASK	0x000F
 
 int errno;
 
@@ -60,6 +58,7 @@ static struct info {
 		void *data;
 	} server_cb;
 	int initialized;
+	int db_opened;
 } s_info = {
 	.server_fd = -1,
 	.client_fd = -1,
@@ -67,6 +66,7 @@ static struct info {
 	.dbfile = "/opt/dbspace/.shortcut_service.db",
 	.handle = NULL,
 	.initialized = 0,
+	.db_opened = 0,
 };
 
 
@@ -132,25 +132,25 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 
 EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 {
-	static struct method service_table[] = {
-		{
-			.cmd = "add_shortcut",
-			.handler = add_shortcut_handler,
-		},
-		{
-			.cmd = "add_livebox",
-			.handler = add_livebox_handler,
-		},
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
-
 	s_info.server_cb.request_cb = request_cb;
 	s_info.server_cb.data = data;
 
 	if (s_info.server_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = "add_shortcut",
+				.handler = add_shortcut_handler,
+			},
+			{
+				.cmd = "add_livebox",
+				.handler = add_livebox_handler,
+			},
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
 		unlink(s_info.socket_file);	/* Delete previous socket file for creating a new server socket */
 		s_info.server_fd = com_core_packet_server_init(s_info.socket_file, service_table);
 	}
@@ -175,22 +175,11 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 	int ret;
 
 	if (!packet) {
-		if (item->result_cb)
-			ret = item->result_cb(-EFAULT, pid, item->data);
-		else
-			ret = 0;
-		free(item);
-		return ret;
-	}
-
-	if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		if (item->result_cb)
-			ret = item->result_cb(-EINVAL, pid, item->data);
-		else
-			ret = 0;
-		free(item);
-		return ret;
+		ret = -EFAULT;
+	} else if (packet_get(packet, "i", &ret) != 1) {
+		ErrPrint("Packet is not valid\n");
+		ret = -EINVAL;
 	}
 
 	if (item->result_cb)
@@ -209,22 +198,11 @@ static int livebox_send_cb(pid_t pid, int handle, const struct packet *packet, v
 	int ret;
 
 	if (!packet) {
-		if (item->result_cb)
-			ret = item->result_cb(-EFAULT, pid, item->data);
-		else
-			ret = 0;
-		free(item);
-		return -EINVAL;
-	}
-
-	if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		if (item->result_cb)
-			ret = item->result_cb(-EINVAL, pid, item->data);
-		else
-			ret = 0;
-		free(item);
-		return -EINVAL;
+		ret = -EFAULT;
+	} else if (packet_get(packet, "i", &ret) != 1) {
+		ErrPrint("Packet is not valid\n");
+		ret = -EINVAL;
 	}
 
 	if (item->result_cb)
@@ -243,113 +221,13 @@ static int disconnected_cb(int handle, void *data)
 	return 0;
 }
 
-EAPI int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
-{
-	int ret;
-	struct packet *packet;
-	struct result_cb_item *item;
-	static struct method service_table[] = {
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
 
-	if (!s_info.initialized) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	if (s_info.client_fd < 0) {
-		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0)
-			return s_info.client_fd;
-	}
-
-	item = malloc(sizeof(*item));
-	if (!item) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		return -ENOMEM;
-	}
-
-	item->result_cb = result_cb;
-	item->data = data;
-
-	if (!appid)
-		appid = "";
-
-	if (!name)
-		name = "";
-
-	if (!content)
-		content = "";
-
-	if (!icon)
-		icon = "";
-
-	packet = packet_create("add_shortcut", "ssiss", appid, name, type, content, icon);
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		free(item);
-		return -EFAULT;
-	}
-
-	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
-}
-
-EAPI int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
-{
-	int ret;
-	struct packet *packet;
-	static struct method service_table[] = {
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
-	struct result_cb_item *item;
-
-	if (!s_info.initialized) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	if (s_info.client_fd < 0) {
-		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0)
-			return s_info.client_fd;
-	}
-
-	item = malloc(sizeof(*item));
-	if (!item) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		return -ENOMEM;
-	}
-
-	item->result_cb = result_cb;
-	item->data = data;
-
-	packet = packet_create("add_livebox", "ssissd", appid, name, type, content, icon, period);
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		free(item);
-		return -EFAULT;
-	}
-
-	return com_core_packet_async_send(s_info.client_fd, packet, livebox_send_cb, item);
-}
 
 EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
 	struct result_cb_item *item;
-	static struct method service_table[] = {
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
 
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
@@ -357,9 +235,18 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	}
 
 	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0)
+		if (s_info.client_fd < 0) {
+			ErrPrint("Failed to make connection\n");
 			return s_info.client_fd;
+		}
 	}
 
 	item = malloc(sizeof(*item));
@@ -393,16 +280,12 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
 }
 
+
+
 EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
-	static struct method service_table[] = {
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
 	struct result_cb_item *item;
 
 	if (!s_info.initialized) {
@@ -411,6 +294,13 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	}
 
 	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
 		if (s_info.client_fd < 0)
 			return s_info.client_fd;
@@ -433,6 +323,17 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	}
 
 	return com_core_packet_async_send(s_info.client_fd, packet, livebox_send_cb, item);
+}
+
+
+EAPI int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+{
+	return add_to_home_livebox(appid, name, type, content, icon, period, result_cb, data);
+}
+
+EAPI int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
+{
+	return add_to_home_shortcut(appid, name, type, content, icon, result_cb, data);
 }
 
 static inline int open_db(void)
@@ -450,6 +351,9 @@ static inline int open_db(void)
 
 
 
+/*!
+ * \note this function will returns allocated(heap) string
+ */
 static inline char *get_i18n_name(const char *lang, int id)
 {
 	sqlite3_stmt *stmt;
@@ -497,25 +401,28 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	const unsigned char *extra_key;
 	const unsigned char *icon;
 	int id;
-	static int db_opened = 0;
 	int ret;
 	int cnt;
 
-	if (!db_opened)
-		db_opened = open_db() == 0;
+	if (!s_info.db_opened)
+		s_info.db_opened = (open_db() == 0);
 
-	if (!db_opened)
+	if (!s_info.db_opened) {
+		ErrPrint("Failed to open a DB\n");
 		return -EIO;
+	}
 
 	if (appid) {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service WHERE appid = ?";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
+			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
 			return -EIO;
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
 		if (ret != SQLITE_OK) {
+			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
 			sqlite3_finalize(stmt);
 			return -EIO;
 		}
@@ -523,6 +430,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
+			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
 			return -EIO;
 		}
 	}
@@ -563,7 +471,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 
 		/*!
 		 * \todo
-		 * GET LOCALE
+		 * Implement the "GET LOCALE" code
 		 */
 		i18n_name = get_i18n_name("en-us", id);
 
