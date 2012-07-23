@@ -225,7 +225,6 @@ static int disconnected_cb(int handle, void *data)
 
 EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
 {
-	int ret;
 	struct packet *packet;
 	struct result_cb_item *item;
 
@@ -277,14 +276,13 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		return -EFAULT;
 	}
 
-	return com_core_packet_async_send(s_info.client_fd, packet, shortcut_send_cb, item);
+	return com_core_packet_async_send(s_info.client_fd, packet, 0u, shortcut_send_cb, item);
 }
 
 
 
 EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
 {
-	int ret;
 	struct packet *packet;
 	struct result_cb_item *item;
 
@@ -322,7 +320,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		return -EFAULT;
 	}
 
-	return com_core_packet_async_send(s_info.client_fd, packet, livebox_send_cb, item);
+	return com_core_packet_async_send(s_info.client_fd, packet, 0u, livebox_send_cb, item);
 }
 
 
@@ -358,7 +356,7 @@ static inline char *get_i18n_name(const char *lang, int id)
 {
 	sqlite3_stmt *stmt;
 	const char *query;
-	const char *name;
+	const unsigned char *name;
 	char *ret;
 	int status;
 
@@ -378,7 +376,7 @@ static inline char *get_i18n_name(const char *lang, int id)
 	}
 
 	name = sqlite3_column_text(stmt, 0);
-	ret = name ? strdup(name) : NULL;
+	ret = name ? strdup((const char *)name) : NULL;
 
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -439,7 +437,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	while (SQLITE_ROW == sqlite3_step(stmt)) {
 		id = sqlite3_column_int(stmt, 0);
 
-		appid = sqlite3_column_text(stmt, 1);
+		appid = (const char *)sqlite3_column_text(stmt, 1);
 		if (!appid) {
 			LOGE("Failed to get package name\n");
 			continue;
@@ -476,7 +474,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		i18n_name = get_i18n_name("en-us", id);
 
 		cnt++;
-		if (cb(appid, icon, (i18n_name != NULL ? i18n_name : (char *)name), extra_key, extra_data, data) < 0) {
+		if (cb(appid, (char *)icon, (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
 			free(i18n_name);
 			break;
 		}
