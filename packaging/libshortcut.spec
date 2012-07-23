@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary:    Shortcut add feature supporting library
-Version:    0.3.0
+Version:    0.3.1
 Release:    0
 Group:      main/devel
 License:    SAMSUNG
@@ -47,7 +47,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 /usr/lib/*.so*
-/usr/etc/package-manager/parserlib
+/usr/etc/package-manager/parserlib/*
 
 %files devel
 %defattr(-,root,root,-)

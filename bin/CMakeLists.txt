@@ -1,4 +1,4 @@
-PROJECT(shortcuts C)
+PROJECT(shortcut-list C)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/bin/include)
 
