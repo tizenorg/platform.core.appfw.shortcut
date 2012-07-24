@@ -3,7 +3,7 @@ Summary:    Shortcut add feature supporting library
 Version:    0.0.5
 Release:    0
 Group:      main/devel
-License:    Samsung Proprietary License
+License:    Flora Software License 
 Source0:    %{name}-%{version}.tar.gz
 Source1001: packaging/shortcut.manifest 
 
