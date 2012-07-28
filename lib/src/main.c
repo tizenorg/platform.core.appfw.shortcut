@@ -217,6 +217,11 @@ static int livebox_send_cb(pid_t pid, int handle, const struct packet *packet, v
 
 static int disconnected_cb(int handle, void *data)
 {
+	if (s_info.client_fd != handle) {
+		/*!< This is not my favor */
+		return 0;
+	}
+
 	s_info.client_fd = -EINVAL;
 	return 0;
 }
@@ -227,6 +232,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 {
 	struct packet *packet;
 	struct result_cb_item *item;
+	int ret;
 
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
@@ -276,7 +282,15 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		return -EFAULT;
 	}
 
-	return com_core_packet_async_send(s_info.client_fd, packet, 0u, shortcut_send_cb, item);
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = -1;
+	}
+
+	return ret;
 }
 
 
@@ -285,6 +299,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 {
 	struct packet *packet;
 	struct result_cb_item *item;
+	int ret;
 
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
@@ -320,7 +335,15 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		return -EFAULT;
 	}
 
-	return com_core_packet_async_send(s_info.client_fd, packet, 0u, livebox_send_cb, item);
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, livebox_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = -1;
+	}
+
+	return ret;
 }
 
 
