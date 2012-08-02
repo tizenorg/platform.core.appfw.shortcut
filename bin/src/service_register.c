@@ -460,6 +460,12 @@ int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 			return -EIO;
 	}
 
+	root = root->children;
+	if (!root) {
+		ErrPrint("Root has no child node\n");
+		return -EINVAL;
+	}
+
 	if (strcmp((char *)root->name, "shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
@@ -486,6 +492,12 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 	if (!s_info.handle) {
 		if (db_init() < 0)
 			return -EIO;
+	}
+
+	root = root->children;
+	if (!root) {
+		ErrPrint("Root has no children\n");
+		return -EINVAL;
 	}
 
 	if (strcmp((char *)root->name, "shortcut-list")) {
@@ -590,6 +602,12 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 	if (!s_info.handle) {
 		if (db_init() < 0)
 			return -EIO;
+	}
+
+	root = root->children;
+	if (!root) {
+		ErrPrint("Root has no children\n");
+		return -EINVAL;
 	}
 
 	if (strcmp((char *)root->name, "shortcut-list")) {
