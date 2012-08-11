@@ -1,4 +1,6 @@
-<shortcuts>
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns="http://tizen.org/ns/packages" package="com.samsung.myapp" version="0.3.5" install-location="auto">
+<shortcut-list test="a">
 	<shortcut appid="com.samsung.myapp" extra_key="key" extra_data="SERVICE INFORMATION 1">
 		<icon>myapp_shortcut01.png</icon>
 		<label>Default Name</label>
@@ -56,4 +58,5 @@
 		<label xml:lang="fr-fr">Name fr</label>
 		<label xml:lang="kor-kr">Name kr</label>
 	</shortcut>
-</shortcuts>
+</shortcut-list>
+</manifest>

@@ -55,9 +55,7 @@ static inline int begin_transaction(void)
 	sqlite3_stmt *stmt;
 	int ret;
 
-	ret = sqlite3_prepare_v2(
-		s_info.handle, "BEGIN TRANSACTION", -1, &stmt, NULL);
-
+	ret = sqlite3_prepare_v2(s_info.handle, "BEGIN TRANSACTION", -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		DbgPrint("Error: %s\n", sqlite3_errmsg(s_info.handle));
 		return EXIT_FAILURE;
@@ -79,8 +77,7 @@ static inline int rollback_transaction(void)
 	int ret;
 	sqlite3_stmt *stmt;
 
-	ret = sqlite3_prepare_v2(
-			s_info.handle, "ROLLBACK TRANSACTION", -1, &stmt, NULL);
+	ret = sqlite3_prepare_v2(s_info.handle, "ROLLBACK TRANSACTION", -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		DbgPrint("Error: %s\n", sqlite3_errmsg(s_info.handle));
 		return EXIT_FAILURE;
@@ -102,8 +99,7 @@ static inline int commit_transaction(void)
 	sqlite3_stmt *stmt;
 	int ret;
 
-	ret = sqlite3_prepare_v2(
-			s_info.handle, "COMMIT TRANSACTION", -1, &stmt, NULL);
+	ret = sqlite3_prepare_v2(s_info.handle, "COMMIT TRANSACTION", -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		DbgPrint("Error: %s\n", sqlite3_errmsg(s_info.handle));
 		return EXIT_FAILURE;
@@ -162,7 +158,7 @@ static inline int db_remove_record(const char *appid, const char *key, const cha
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		ErrPrint("Failed to prepare the initial DML\n");
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
 		return -EIO;
 	}
 
@@ -211,7 +207,7 @@ static inline int db_remove_name(int id)
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		ErrPrint("Failed to prepare the initial DML\n");
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
 		return -EIO;
 	}
 
@@ -240,7 +236,7 @@ out:
 
 static inline int db_insert_record(const char *appid, const char *icon, const char *name, const char *key, const char *data)
 {
-	static const char *dml = "INSERT INTO shortcut_service (appid, icon, name, key, data) VALUES (?, ?, ?, ?, ?)";
+	static const char *dml = "INSERT INTO shortcut_service (appid, icon, name, extra_key, extra_data) VALUES (?, ?, ?, ?, ?)";
 	sqlite3_stmt *stmt;
 	int ret;
 
@@ -268,7 +264,7 @@ static inline int db_insert_record(const char *appid, const char *icon, const ch
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		ErrPrint("Failed to prepare the initial DML\n");
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
 		return -EIO;
 	}
 
@@ -324,7 +320,7 @@ static inline int db_insert_name(int id, const char *lang, const char *name)
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		ErrPrint("Failed to prepare the initial DML\n");
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
 		return -EIO;
 	}
 
@@ -361,7 +357,7 @@ out:
 
 static inline int db_get_id(const char *appid, const char *key, const char *data)
 {
-	static const char *dml = "SELECT id FROM shortcut_service WHERE appid = ? AND key = ? AND data = ?";
+	static const char *dml = "SELECT id FROM shortcut_service WHERE appid = ? AND extra_key = ? AND extra_data = ?";
 	sqlite3_stmt *stmt;
 	int ret;
 
@@ -372,7 +368,7 @@ static inline int db_get_id(const char *appid, const char *key, const char *data
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		ErrPrint("Failed to prepare the initial DML\n");
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
 		return -EIO;
 	}
 
@@ -466,7 +462,7 @@ int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 		return -EINVAL;
 	}
 
-	if (strcmp((char *)root->name, "shortcut-list")) {
+	if (xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
 	}
@@ -500,7 +496,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 		return -EINVAL;
 	}
 
-	if (strcmp((char *)root->name, "shortcut-list")) {
+	if (xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
 	}
@@ -512,7 +508,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 			if (node->type == XML_ELEMENT_NODE)
 				DbgPrint("Element %s\n", node->name);
 
-			if (strcmp((char *)node->name, "shortcut"))
+			if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut"))
 				continue;
 
 			if (!xmlHasProp(node, (xmlChar *)"extra_data")
@@ -610,7 +606,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 		return -EINVAL;
 	}
 
-	if (strcmp((char *)root->name, "shortcut-list")) {
+	if (xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
 		ErrPrint("Invalid XML root\n");
 		return -EINVAL;
 	}
@@ -623,7 +619,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 			if (node->type == XML_ELEMENT_NODE)
 				DbgPrint("Element %s\n", node->name);
 
-			if (strcmp((char *)node->name, "shortcut"))
+			if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut"))
 				continue;
 
 			if (!xmlHasProp(node, (xmlChar *)"extra_key") || !xmlHasProp(node, (xmlChar *)"extra_data")) {
@@ -637,7 +633,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 			icon = NULL;
 			name = NULL;
 			for (child = node->children; child; child = child->next) {
-				if (!strcmp((char *)child->name, "icon")) {
+				if (!xmlStrcasecmp(child->name, (const xmlChar *)"icon")) {
 					if (icon) {
 						DbgPrint("Icon is duplicated\n");
 						continue;
@@ -647,9 +643,17 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 					continue;
 				}
 
-				if (!strcmp((char *)child->name, "label")) {
-					if (!xmlHasProp(child, (xmlChar *)"xml:lang") && name) {
-						DbgPrint("Default name is duplicated\n");
+				if (!xmlStrcasecmp(child->name, (const xmlChar *)"label")) {
+					xmlChar *lang;
+					lang = xmlNodeGetLang(child);
+					if (!lang) {
+						if (name) {
+							DbgPrint("Default name is duplicated\n");
+						} else {
+							name = xmlNodeGetContent(child);
+							DbgPrint("Default name is %s\n", name);
+						}
+
 						continue;
 					}
 
@@ -659,12 +663,11 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 						break;
 					}
 
-					i18n->lang = xmlGetProp(child, (xmlChar *)"xml:lang");
+					i18n->lang = lang;
 					i18n->name = xmlNodeGetContent(child);
 					i18n_list = dlist_append(i18n_list, i18n);
 					continue;
 				}
-
 			}
 
 			DbgPrint("appid: %s\n", appid);
@@ -677,7 +680,6 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 			if (db_insert_record(appid, (char *)icon, (char *)name, (char *)key, (char *)data) < 0) {
 				ErrPrint("Failed to insert a new record\n");
 				rollback_transaction();
-				xmlFree((xmlChar *)appid);
 				xmlFree(key);
 				xmlFree(data);
 				xmlFree(icon);
@@ -694,7 +696,6 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 				if (id < 0) {
 					ErrPrint("Failed to insert a new record\n");
 					rollback_transaction();
-					xmlFree((xmlChar *)appid);
 					xmlFree(key);
 					xmlFree(data);
 					xmlFree(icon);
