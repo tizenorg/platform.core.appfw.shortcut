@@ -3,7 +3,7 @@ Summary:    Shortcut add feature supporting library
 Version:    0.3.3
 Release:    0
 Group:      main/devel
-License:    SAMSUNG
+License:    Flora License
 Source0:    %{name}-%{version}.tar.gz
 
 Requires(post): /sbin/ldconfig
