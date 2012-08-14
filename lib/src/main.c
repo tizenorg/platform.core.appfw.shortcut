@@ -47,6 +47,8 @@ extern FILE *__file_log_fp;
 
 int errno;
 
+
+
 static struct info {
 	const char *dbfile;
 	sqlite3 *handle;
@@ -378,29 +380,242 @@ static inline int open_db(void)
 static inline char *get_i18n_name(const char *lang, int id)
 {
 	sqlite3_stmt *stmt;
-	const char *query;
+	static const char *query = "SELECT name FROM shortcut_name WHERE id = ? AND lang = ?";
 	const unsigned char *name;
 	char *ret;
 	int status;
 
-	query = "SELECT name FROM shortcut_name WHERE id = ? AND lang = ?";
 	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 	if (status != SQLITE_OK) {
-		ErrPrint("Failed to prepare stmt\n");
+		ErrPrint("Failed to prepare stmt: %s\n", sqlite3_errmsg(s_info.handle));
 		return NULL;
 	}
 
+	status = sqlite3_bind_int(stmt, 1, id);
+	if (status != SQLITE_OK) {
+		ErrPrint("Failed to bind id: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = NULL;
+		goto out;
+	}
+
+	status = sqlite3_bind_text(stmt, 2, lang, -1, NULL);
+	if (status != SQLITE_OK) {
+		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = NULL;
+		goto out;
+	}
+
 	if (SQLITE_ROW != sqlite3_step(stmt)) {
-		ErrPrint("Failed to do step\n");
-		sqlite3_reset(stmt);
-		sqlite3_clear_bindings(stmt);
-		sqlite3_finalize(stmt);
-		return NULL;
+		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = NULL;
+		goto out;
 	}
 
 	name = sqlite3_column_text(stmt, 0);
 	ret = name ? strdup((const char *)name) : NULL;
 
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+
+
+static inline int homescreen_get_i18n(const char *appid, const char *lang, char **name, char **desc)
+{
+	sqlite3_stmt *stmt;
+	static const char *query = "SELECT name, desc FROM desc WHERE appid = ? AND lang = ?";
+	const unsigned char *_name;
+	const unsigned char *_desc;
+	int status;
+
+	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+	if (status != SQLITE_OK) {
+		ErrPrint("Failed to prepare stmt: %s\n", sqlite3_errmsg(s_info.handle));
+		return -EIO;
+	}
+
+	status = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	if (status != SQLITE_OK) {
+		ErrPrint("Failed to bind appid: %s\n", sqlite3_errmsg(s_info.handle));
+		status = -EIO;
+		goto out;
+	}
+
+	status = sqlite3_bind_text(stmt, 2, lang, -1, NULL);
+	if (status != SQLITE_OK) {
+		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
+		status = -EIO;
+		goto out;
+	}
+
+	if (SQLITE_ROW != sqlite3_step(stmt)) {
+		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(s_info.handle));
+		status = -EIO;
+		goto out;
+	}
+
+	if (name) {
+		_name = sqlite3_column_text(stmt, 0);
+		*name = _name ? strdup((const char *)_name) : NULL;
+	}
+
+	if (desc) {
+		_desc = sqlite3_column_text(stmt, 1);
+		*desc = _desc ? strdup((const char *)_desc) : NULL;
+	}
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return status;
+}
+
+
+
+/*!
+ * cb: SYNC callback
+ */
+EAPI int homescreen_get_description(const char *appid, void (*cb)(const char *appid, const char *icon, const char *name, const char *desc, void *data), void *data)
+{
+	sqlite3_stmt *stmt;
+	static const char *query = "SELECT icon, name, desc FROM homescreen WHERE appid = ?";
+	char *i18n_name;
+	char *i18n_desc;
+	const unsigned char *desc;
+	const unsigned char *name;
+	const unsigned char *icon;
+	int ret;
+
+	ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	if (SQLITE_ROW != sqlite3_step(stmt)) {
+		ErrPrint("Step failed: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	icon = sqlite3_column_text(stmt, 0);
+	name = sqlite3_column_text(stmt, 1);
+	desc = sqlite3_column_text(stmt, 2);
+
+	/*!
+	 * \todo
+	 * Get the i18n name and desc
+	 */
+	if (homescreen_get_i18n(appid, "en-us", &i18n_name, &i18n_desc) < 0) {
+		i18n_name = NULL;
+		i18n_desc = NULL;
+	}
+
+	cb(appid, (const char *)icon, i18n_name ? i18n_name : (const char *)name, i18n_desc ? i18n_desc : (const char *)desc, data);
+
+	free(i18n_name);
+	free(i18n_desc);
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+
+
+EAPI char *homescreen_get_image(const char *appid, int idx)
+{
+	static const char *query = "SELECT path FROM image WHERE appid = ? AND id = ?";
+	sqlite3_stmt *stmt;
+	int ret;
+	const unsigned char *path;
+	char *ret_path = NULL;
+
+	ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	ret = sqlite3_bind_int(stmt, 2, idx);
+	if (ret != SQLITE_OK) {
+		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	if (SQLITE_ROW != sqlite3_step(stmt)) {
+		ErrPrint("Step failed: %s\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	path = sqlite3_column_text(stmt, 0);
+	if (!path) {
+		ErrPrint("Get result: %s\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	ret_path = strdup((const char *)path);
+	if (!ret_path)
+		ErrPrint("Heap: %s\n", strerror(errno));
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret_path;
+}
+
+
+
+EAPI int homescreen_get_image_count(const char *appid)
+{
+	static const char *query = "SELECT COUNT(id) FROM image WHERE appid = ?";
+	sqlite3_stmt *stmt;
+	int ret;
+
+	ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	if (SQLITE_ROW != sqlite3_step(stmt)) {
+		ErrPrint("step failed: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	ret = sqlite3_column_int(stmt, 0);
+
+out:
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
 	sqlite3_finalize(stmt);

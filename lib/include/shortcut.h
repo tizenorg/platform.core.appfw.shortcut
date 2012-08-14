@@ -221,6 +221,20 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
 
 
 /*!
+ * \brief Number of preview images for homescreen
+ */
+extern int homescreen_get_image_count(const char *appid);
+/*!
+ * \return string allocated in the heap - Path of image
+ */
+extern char *homescreen_get_image(const char *appid, int idx);
+
+/*!
+ * \brief Description of the homescreen (based on i18n)
+ */
+extern int homescreen_get_description(const char *appid, void (*cb)(const char *appid, const char *icon, const char *name, const char *desc, void *data), void *data);
+
+/*!
  * \note
  * These two functions are deprecated now.
  *

@@ -1,6 +1,6 @@
-PROJECT(shortcut-list C)
+PROJECT(homescreen C)
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/bin/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/pkgmgr_homescreen/include)
 
 INCLUDE(FindPkgConfig)
 pkg_check_modules(bin_pkgs REQUIRED
@@ -17,7 +17,6 @@ ENDFOREACH(flag)
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -g -Wall -Werror")
 
 ADD_DEFINITIONS("-DPREFIX=\"${PREFIX}\"")
-ADD_DEFINITIONS("-DLOG_TAG=\"shortcuts\"")
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED
 	src/service_register.c
