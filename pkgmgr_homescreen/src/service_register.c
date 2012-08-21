@@ -925,11 +925,29 @@ static inline int update_desc(struct homescreen *homescreen, xmlNodePtr node)
 
 int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 {
+	xmlNodePtr node;
+
 	if (!s_info.handle) {
 		if (db_init() < 0) {
 			ErrPrint("Failed to init DB\n");
 			return -EIO;
 		}
+	}
+
+	node = xmlDocGetRootElement(docPtr);
+	if (!node) {
+		ErrPrint("Invalid document\n");
+		return -EINVAL;
+	}
+
+	for (node = node->children; node; node = node->next) {
+		if (!xmlStrcasecmp(node->name, (const xmlChar *)"homescreen"))
+			break;
+	}
+
+	if (!node) {
+		ErrPrint("Root has no homescreen\n");
+		return -EINVAL;
 	}
 
 	return 0;
@@ -953,14 +971,13 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *pkgname)
 		return -EINVAL;
 	}
 
-	node = node->children;
-	if (!node) {
-		ErrPrint("Root has no children\n");
-		return -EINVAL;
+	for (node = node->children; node; node = node->next) {
+		if (!xmlStrcasecmp(node->name, (const xmlChar *)"homescreen"))
+			break;
 	}
 
-	if (xmlStrcasecmp(node->name, (const xmlChar *)"homescreen")) {
-		ErrPrint("Invalid tag: %s\n", (char *)node->name);
+	if (!node) {
+		ErrPrint("Root has no children\n");
 		return -EINVAL;
 	}
 
@@ -1014,14 +1031,13 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *pkgname)
 		return -EINVAL;
 	}
 
-	node = node->children;
-	if (!node) {
-		ErrPrint("Root has no children\n");
-		return -EINVAL;
+	for (node = node->children; node; node = node->next) {
+		if (!xmlStrcasecmp(node->name, (const xmlChar *)"homescreen"))
+			break;
 	}
 
-	if (xmlStrcasecmp(node->name, (const xmlChar *)"homescreen")) {
-		ErrPrint("Invalid tag: %s\n", (char *)node->name);
+	if (!node) {
+		ErrPrint("Root has no children\n");
 		return -EINVAL;
 	}
 

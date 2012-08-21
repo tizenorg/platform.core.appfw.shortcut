@@ -472,14 +472,13 @@ int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 			return -EIO;
 	}
 
-	root = root->children;
-	if (!root) {
-		ErrPrint("Root has no child node\n");
-		return -EINVAL;
+	for (root = root->children; root; root = root->next) {
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
+			break;
 	}
 
-	if (xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
-		ErrPrint("Invalid XML root\n");
+	if (!root) {
+		ErrPrint("Root has no shortcut-list\n");
 		return -EINVAL;
 	}
 
@@ -506,14 +505,13 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 			return -EIO;
 	}
 
-	root = root->children;
-	if (!root) {
-		ErrPrint("Root has no children\n");
-		return -EINVAL;
+	for (root = root->children; root; root = root->next) {
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
+			break;
 	}
 
-	if (xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
-		ErrPrint("Invalid XML root\n");
+	if (!root) {
+		ErrPrint("Root has no shortcut-list\n");
 		return -EINVAL;
 	}
 
@@ -616,14 +614,13 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 			return -EIO;
 	}
 
-	root = root->children;
-	if (!root) {
-		ErrPrint("Root has no children\n");
-		return -EINVAL;
+	for (root = root->children; root; root = root->next) {
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
+			break;
 	}
 
-	if (xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
-		ErrPrint("Invalid XML root\n");
+	if (!root) {
+		ErrPrint("Root has no children\n");
 		return -EINVAL;
 	}
 
