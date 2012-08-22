@@ -701,7 +701,7 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 
 
 
-EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
+EAPI int add_to_home_shortcut(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	int pkgname_len;
@@ -761,6 +761,11 @@ EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, c
 	}
 
 	return 0;
+}
+
+EAPI int shortcut_add_to_home(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
+{
+	return add_to_home_shortcut(pkgname, name, type, content_info, icon, result_cb, data);
 }
 
 

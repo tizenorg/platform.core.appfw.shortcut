@@ -1,4 +1,4 @@
-Name:	    shortcut
+Name:	    libshortcut
 Summary:    Shortcut add feature supporting library
 Version:    0.0.5
 Release:    0
