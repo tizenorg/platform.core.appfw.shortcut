@@ -1,3 +1,10 @@
+shortcut (0.3.6) unstable; urgency=low
+
+  * Git: slp/pkgs/s/shortcut
+  * Tag: shortcut_0.3.6
+
+ -- Sung-jae Park <nicesj.park@samsung.com>  Thu, 30 Aug 2012 10:56:01 +0900
+
 shortcut (0.3.5) unstable; urgency=low
 
   * Git: slp/pkgs/s/shortcut

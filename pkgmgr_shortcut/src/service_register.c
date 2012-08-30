@@ -590,6 +590,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 	xmlChar *data;
 	xmlChar *name;
 	xmlChar *icon;
+	xmlChar *shortcut_appid;
 	xmlNodePtr root;
 	struct i18n_name {
 		xmlChar *name;
@@ -638,6 +639,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 
 		key = xmlGetProp(node, (xmlChar *)"extra_key");
 		data = xmlGetProp(node, (xmlChar *)"extra_data");
+		shortcut_appid = xmlGetProp(node, (xmlChar *)"appid");
 
 		icon = NULL;
 		name = NULL;
@@ -680,19 +682,21 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 		}
 
 		DbgPrint("appid: %s\n", appid);
+		DbgPrint("shortcut appid: %s\n", shortcut_appid);
 		DbgPrint("key: %s\n", key);
 		DbgPrint("data: %s\n", data);
 		DbgPrint("icon: %s\n", icon);
 		DbgPrint("Default name: %s\n", name);
 
+		if (!shortcut_appid) {
+			shortcut_appid = xmlStrdup((xmlChar *)appid);
+			DbgPrint("Use the default appid\n");
+		}
+
 		begin_transaction();
-		if (db_insert_record(appid, (char *)icon, (char *)name, (char *)key, (char *)data) < 0) {
+		if (db_insert_record((char *)shortcut_appid, (char *)icon, (char *)name, (char *)key, (char *)data) < 0) {
 			ErrPrint("Failed to insert a new record\n");
 			rollback_transaction();
-			xmlFree(key);
-			xmlFree(data);
-			xmlFree(icon);
-			xmlFree(name);
 
 			dlist_foreach_safe(i18n_list, l, n, i18n) {
 				i18n_list = dlist_remove(i18n_list, l);
@@ -701,14 +705,10 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 				free(i18n);
 			}
 		} else {
-			id = db_get_id(appid, (char *)key, (char *)data);
+			id = db_get_id((char *)shortcut_appid, (char *)key, (char *)data);
 			if (id < 0) {
 				ErrPrint("Failed to insert a new record\n");
 				rollback_transaction();
-				xmlFree(key);
-				xmlFree(data);
-				xmlFree(icon);
-				xmlFree(name);
 
 				dlist_foreach_safe(i18n_list, l, n, i18n) {
 					i18n_list = dlist_remove(i18n_list, l);
@@ -728,6 +728,12 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 				commit_transaction();
 			}
 		}
+
+		xmlFree(key);
+		xmlFree(data);
+		xmlFree(icon);
+		xmlFree(name);
+		xmlFree(shortcut_appid);
 	}
 
 	return 0;
