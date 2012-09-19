@@ -40,7 +40,8 @@ rm -rf %{buildroot}
 
 %postun
 
-%files
+%files -n libshortcut
+%manifest libshortcut.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
 
