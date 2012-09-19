@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary:    Shortcut add feature supporting library
-Version:    0.3.6
+Version:    0.3.7
 Release:    0
 Group:      main/devel
 License:    Flora License
@@ -44,7 +44,8 @@ rm -rf %{buildroot}
 
 %postun
 
-%files
+%files -n libshortcut
+%manifest libshortcut.manifest
 %defattr(-,root,root,-)
 /usr/lib/*.so*
 /usr/etc/package-manager/parserlib/*
