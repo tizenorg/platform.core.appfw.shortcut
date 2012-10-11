@@ -26,6 +26,8 @@
 #include <dlog.h>
 #include <glib.h>
 #include <db-util.h>
+#include <vconf.h>
+#include <vconf-keys.h>
 
 #include <packet.h>
 #include <com-core.h>
@@ -380,7 +382,7 @@ static inline int open_db(void)
 static inline char *get_i18n_name(const char *lang, int id)
 {
 	sqlite3_stmt *stmt;
-	static const char *query = "SELECT name FROM shortcut_name WHERE id = ? AND lang = ?";
+	static const char *query = "SELECT name FROM shortcut_name WHERE id = ? AND lang = ? COLLATE NOCASE";
 	const unsigned char *name;
 	char *ret;
 	int status;
@@ -405,6 +407,7 @@ static inline char *get_i18n_name(const char *lang, int id)
 		goto out;
 	}
 
+	DbgPrint("id: %d, lang: %s\n", id, lang);
 	if (SQLITE_ROW != sqlite3_step(stmt)) {
 		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(s_info.handle));
 		ret = NULL;
@@ -624,6 +627,36 @@ out:
 
 
 
+static inline char *cur_locale(void)
+{
+	char *language;
+	language = vconf_get_str(VCONFKEY_LANGSET);
+	if (language) {
+		char *ptr;
+
+		ptr = language;
+		while (*ptr) {
+			if (*ptr == '.') {
+				*ptr = '\0';
+				break;
+			}
+
+			if (*ptr == '_')
+				*ptr = '-';
+
+			ptr++;
+		}
+	} else {
+		language = strdup("en_us");
+		if (!language)
+			ErrPrint("Heap: %s\n", strerror(errno));
+	}
+
+	return language;
+}
+
+
+
 /*!
  * \note READ ONLY DB
  */
@@ -639,6 +672,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	int id;
 	int ret;
 	int cnt;
+	char *language;
 
 	if (!s_info.db_opened)
 		s_info.db_opened = (open_db() == 0);
@@ -648,11 +682,18 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		return -EIO;
 	}
 
+	language = cur_locale();
+	if (!language) {
+		ErrPrint("Locale is not valid\n");
+		return -EINVAL;
+	}
+
 	if (appid) {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service WHERE appid = ?";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
+			free(language);
 			return -EIO;
 		}
 
@@ -660,6 +701,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		if (ret != SQLITE_OK) {
 			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
 			sqlite3_finalize(stmt);
+			free(language);
 			return -EIO;
 		}
 	} else {
@@ -667,6 +709,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
+			free(language);
 			return -EIO;
 		}
 	}
@@ -709,7 +752,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		 * \todo
 		 * Implement the "GET LOCALE" code
 		 */
-		i18n_name = get_i18n_name("en-us", id);
+		i18n_name = get_i18n_name(language, id);
 
 		cnt++;
 		if (cb(appid, (char *)icon, (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
@@ -723,6 +766,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
 	sqlite3_finalize(stmt);
+	free(language);
 	return cnt;
 }
 

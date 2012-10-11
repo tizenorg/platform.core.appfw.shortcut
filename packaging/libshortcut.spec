@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary:    Shortcut add feature supporting library
-Version:    0.3.8
+Version:    0.3.9
 Release:    0
 Group:      main/devel
 License:    Flora License
@@ -16,6 +16,7 @@ BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(com-core)
 BuildRequires: pkgconfig(libxml-2.0)
+BuildRequires: pkgconfig(vconf)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.

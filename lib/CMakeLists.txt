@@ -17,6 +17,7 @@ pkg_check_modules(svc_pkgs REQUIRED
 	glib-2.0
 	db-util
 	com-core
+	vconf
 )
 
 FOREACH(flag ${svc_pkgs_CFLAGS})
