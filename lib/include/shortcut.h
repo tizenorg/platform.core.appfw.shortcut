@@ -75,16 +75,28 @@ typedef int (*result_cb_t)(int ret, int pid, void *data);
  *        LAUNCH_BY_PACKAGE is used for adding a package itself as a shortcut
  *        LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
  */
-enum {
+enum shortcut_type {
 	/*!< Deprecated type */
-	SHORTCUT_PACKAGE = 0x0, /**< Launch the package using given pakcage name. */
-	SHORTCUT_DATA = 0x01, /**< Launch the related package with given data(content_info). */
-	SHORTCUT_FILE = 0x02, /**< Launch the related package with given filename(content_info). */
+	SHORTCUT_PACKAGE	= 0x00000000, /**< Launch the package using given pakcage name. */
+	SHORTCUT_DATA		= 0x00000001, /**< Launch the related package with given data(content_info). */
+	SHORTCUT_FILE		= 0x00000002, /**< Launch the related package with given filename(content_info). */
 
 	/*!< Use these */
-	LAUNCH_BY_PACKAGE = 0x0, /*!< Launch the package using given pakcage name. */
-	LAUNCH_BY_URI = 0x01, /*!< Launch the related package with given data(URI). */
+	LAUNCH_BY_PACKAGE	= 0x00000000, /*!< Launch the package using given pakcage name. */
+	LAUNCH_BY_URI		= 0x00000001, /*!< Launch the related package with given data(URI). */
+
+	LIVEBOX_TYPE_DEFAULT	= 0x10000000,
+	LIVEBOX_TYPE_1x1	= 0x10010000,
+	LIVEBOX_TYPE_2x1	= 0x10020000,
+	LIVEBOX_TYPE_2x2	= 0x10040000,
+	LIVEBOX_TYPE_4x1	= 0x10080000,
+	LIVEBOX_TYPE_4x2	= 0x10100000,
+	LIVEBOX_TYPE_4x3	= 0x10200000,
+	LIVEBOX_TYPE_4x4	= 0x10400000,
+	LIVEBOX_TYPE_UNKNOWN	= 0x1FFF0000,
 };
+
+#define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
 
 /**
  * @fn int shortcut_set_request_cb(request_cb_t request_cb, void *data)

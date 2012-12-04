@@ -647,7 +647,7 @@ static inline char *cur_locale(void)
 			ptr++;
 		}
 	} else {
-		language = strdup("en_us");
+		language = strdup("en-us");
 		if (!language)
 			ErrPrint("Heap: %s\n", strerror(errno));
 	}

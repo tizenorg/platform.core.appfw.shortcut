@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary:    Shortcut add feature supporting library
-Version:    0.3.10
+Version:    0.3.11
 Release:    0
 Group:      main/devel
 License:    Flora License
