@@ -1,10 +1,10 @@
 Name: libshortcut
-Summary:    Shortcut add feature supporting library
-Version:    0.3.11
-Release:    0
-Group:      main/devel
-License:    Flora License
-Source0:    %{name}-%{version}.tar.gz
+Summary: Shortcut add feature supporting library
+Version: 0.3.12
+Release: 0
+Group: main/devel
+License: Flora License
+Source0: %{name}-%{version}.tar.gz
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -50,6 +50,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 /usr/lib/*.so*
 /usr/etc/package-manager/parserlib/*
+/usr/share/license/*
 
 %files devel
 %defattr(-,root,root,-)
