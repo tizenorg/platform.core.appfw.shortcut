@@ -17,16 +17,18 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
-int shortcut_request_cb(const char *pkgname, const char *name, int type, const char *exec, const char *icon, int pid, double period, void *data)
+static int shortcut_list_cb(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data)
 {
-	printf("SERVER: name: %s, type: %d, exec: %s, icon: %s, pid: %d, data: %p, period: %lf\n",
-		name, type, exec, icon, pid, data, period);
+	printf("appid[%s] icon[%s], name[%s] extra_key[%s], extra_ata[%s]\n", appid, icon, name, extra_key, extra_data);
 	return 0;
 }
 
 int elm_main(int argc, char *argv[])
 {
-	shortcut_set_request_cb(shortcut_request_cb, NULL);
+	int ret;
+	ret = shortcut_get_list(NULL, shortcut_list_cb, NULL);
+	if (ret < 0)
+		printf("Error: %d\n", ret);
 
 	elm_run();
 	elm_shutdown();
@@ -36,4 +38,3 @@ int elm_main(int argc, char *argv[])
 
 ELM_MAIN()
 /* End of a file */
-

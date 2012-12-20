@@ -1,3 +1,0 @@
-@PREFIX@/include/shortcut/shortcut.h
-@PREFIX@/include/shortcut/SLP_shortcut_PG.h
-@PREFIX@/lib/pkgconfig/*.pc

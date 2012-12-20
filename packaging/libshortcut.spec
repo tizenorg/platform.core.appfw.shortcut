@@ -1,10 +1,10 @@
-Name:	    libshortcut
-Summary:    Shortcut add feature supporting library
-Version:    0.0.5
-Release:    0
-Group:      main/devel
-License:    Flora License
-Source0:    %{name}-%{version}.tar.gz
+Name: libshortcut
+Summary: Shortcut add feature supporting library
+Version: 0.3.12
+Release: 0
+Group: main/devel
+License: Flora License
+Source0: %{name}-%{version}.tar.gz
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -12,6 +12,11 @@ Requires(postun): /sbin/ldconfig
 BuildRequires: cmake, gettext-tools
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(dlog)
+BuildRequires: pkgconfig(db-util)
+BuildRequires: pkgconfig(sqlite3)
+BuildRequires: pkgconfig(com-core)
+BuildRequires: pkgconfig(libxml-2.0)
+BuildRequires: pkgconfig(vconf)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.
@@ -43,10 +48,12 @@ rm -rf %{buildroot}
 %files -n libshortcut
 %manifest libshortcut.manifest
 %defattr(-,root,root,-)
-%{_libdir}/*.so*
+/usr/lib/*.so*
+/usr/etc/package-manager/parserlib/*
+/usr/share/license/*
 
 %files devel
 %defattr(-,root,root,-)
-%{_includedir}/shortcut/SLP_shortcut_PG.h
-%{_includedir}/shortcut/shortcut.h
-%{_libdir}/pkgconfig/shortcut.pc
+/usr/include/shortcut/shortcut_PG.h
+/usr/include/shortcut/shortcut.h
+/usr/lib/pkgconfig/shortcut.pc
