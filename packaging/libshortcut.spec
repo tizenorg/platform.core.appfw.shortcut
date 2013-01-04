@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.3.13
+Version: 0.3.14
 Release: 0
 Group: main/devel
 License: Flora License
@@ -9,7 +9,7 @@ Source0: %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
-BuildRequires: cmake, gettext-tools
+BuildRequires: cmake, gettext-tools, coreutils
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(db-util)
@@ -48,12 +48,14 @@ rm -rf %{buildroot}
 %files -n libshortcut
 %manifest libshortcut.manifest
 %defattr(-,root,root,-)
-/usr/lib/*.so*
-/usr/etc/package-manager/parserlib/*
-/usr/share/license/*
+%{_libdir}/*.so*
+%{_prefix}/etc/package-manager/parserlib/*
+%{_datarootdir}/license/*
 
 %files devel
 %defattr(-,root,root,-)
-/usr/include/shortcut/shortcut_PG.h
-/usr/include/shortcut/shortcut.h
-/usr/lib/pkgconfig/shortcut.pc
+%{_includedir}/shortcut/shortcut_PG.h
+%{_includedir}/shortcut/shortcut.h
+%{_libdir}/pkgconfig/shortcut.pc
+
+# End of a file
