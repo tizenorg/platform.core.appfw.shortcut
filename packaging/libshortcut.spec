@@ -1,9 +1,9 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.3.14
+Version: 0.3.16
 Release: 0
 Group: main/devel
-License: Flora License
+License: Apache License
 Source0: %{name}-%{version}.tar.gz
 
 Requires(post): /sbin/ldconfig
