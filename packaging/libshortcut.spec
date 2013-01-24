@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.3.16
+Version: 0.3.17
 Release: 0
 Group: main/devel
 License: Apache License
@@ -40,6 +40,9 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
+mkdir -p %{buildroot}/opt/dbspace
+touch %{buildroot}/opt/dbspace/.shortcut_service.db
+touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 
 %post
 
@@ -51,6 +54,8 @@ rm -rf %{buildroot}
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
 %{_datarootdir}/license/*
+%attr(640,root,app) /opt/dbspace/.shortcut_service.db
+%attr(640,root,app) /opt/dbspace/.shortcut_service.db-journal
 
 %files devel
 %defattr(-,root,root,-)
