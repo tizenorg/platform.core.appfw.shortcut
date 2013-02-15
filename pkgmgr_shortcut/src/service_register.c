@@ -462,34 +462,6 @@ static inline int db_fini(void)
 	return 0;
 }
 
-int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
-{
-	xmlNodePtr root;
-
-	root = xmlDocGetRootElement(docPtr);
-	if (!root) {
-		ErrPrint("Invalid node ptr\n");
-		return -EINVAL;
-	}
-
-	if (!s_info.handle) {
-		if (db_init() < 0)
-			return -EIO;
-	}
-
-	for (root = root->children; root; root = root->next) {
-		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
-			break;
-	}
-
-	if (!root) {
-		ErrPrint("Root has no shortcut-list\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 {
 	xmlNodePtr node = NULL;
@@ -741,6 +713,14 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 		xmlFree(shortcut_appid);
 	}
 
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
+{
+	/* So... ugly */
+	PKGMGR_PARSER_PLUGIN_UNINSTALL(docPtr, appid);
+	PKGMGR_PARSER_PLUGIN_INSTALL(docPtr, appid);
 	return 0;
 }
 
