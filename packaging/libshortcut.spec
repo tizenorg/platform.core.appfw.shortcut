@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.3.18
+Version: 0.3.19
 Release: 0
 Group: main/devel
 License: Apache License
