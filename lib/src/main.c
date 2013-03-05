@@ -401,7 +401,7 @@ static inline char *get_i18n_name(const char *lang, int id)
 		goto out;
 	}
 
-	status = sqlite3_bind_text(stmt, 2, lang, -1, NULL);
+	status = sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT);
 	if (status != SQLITE_OK) {
 		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
 		ret = NULL;
@@ -441,14 +441,14 @@ static inline int homescreen_get_i18n(const char *appid, const char *lang, char 
 		return -EIO;
 	}
 
-	status = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	status = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
 	if (status != SQLITE_OK) {
 		ErrPrint("Failed to bind appid: %s\n", sqlite3_errmsg(s_info.handle));
 		status = -EIO;
 		goto out;
 	}
 
-	status = sqlite3_bind_text(stmt, 2, lang, -1, NULL);
+	status = sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT);
 	if (status != SQLITE_OK) {
 		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
 		status = -EIO;
@@ -501,7 +501,7 @@ EAPI int homescreen_get_description(const char *appid, void (*cb)(const char *ap
 		goto out;
 	}
 
-	ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
 	if (ret != SQLITE_OK) {
 		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
@@ -555,7 +555,7 @@ EAPI char *homescreen_get_image(const char *appid, int idx)
 		goto out;
 	}
 
-	ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
 	if (ret != SQLITE_OK) {
 		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
 		goto out;
@@ -604,7 +604,7 @@ EAPI int homescreen_get_image_count(const char *appid)
 		goto out;
 	}
 
-	ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+	ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
 	if (ret != SQLITE_OK) {
 		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
@@ -698,7 +698,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 			return -EIO;
 		}
 
-		ret = sqlite3_bind_text(stmt, 1, appid, -1, NULL);
+		ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
 		if (ret != SQLITE_OK) {
 			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
 			sqlite3_finalize(stmt);

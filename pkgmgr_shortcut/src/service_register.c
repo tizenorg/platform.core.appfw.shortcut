@@ -180,17 +180,17 @@ static inline int db_remove_record(const char *appid, const char *key, const cha
 	}
 
 	ret = -EIO;
-	if (sqlite3_bind_text(stmt, 1, appid, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a appid(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, key, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 2, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a key(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, data, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 3, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a data(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
@@ -286,27 +286,27 @@ static inline int db_insert_record(const char *appid, const char *icon, const ch
 	}
 
 	ret = -EIO;
-	if (sqlite3_bind_text(stmt, 1, appid, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a appid(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, icon, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 2, icon, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a icon(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, name, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 3, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a name(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 4, key, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 4, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a service(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 5, data, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 5, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a service(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
@@ -347,13 +347,13 @@ static inline int db_insert_name(int id, const char *lang, const char *name)
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, lang, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, name, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 3, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
 		goto out;
@@ -390,17 +390,17 @@ static inline int db_get_id(const char *appid, const char *key, const char *data
 	}
 
 	ret = -EIO;
-	if (sqlite3_bind_text(stmt, 1, appid, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a appid(%s) - %s\n", appid, sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, key, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 2, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a key(%s) - %s\n", key, sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, data, -1, NULL) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 3, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a data(%s) - %s\n", data, sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
