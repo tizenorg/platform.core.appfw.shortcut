@@ -18,34 +18,18 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
-static int result_cb(int ret, int pid, void *data)
+static int shortcut_list_cb(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data)
 {
-	printf("Client: Return %d (%d)\n", ret, pid);
-	//elm_exit();
+	printf("appid[%s] icon[%s], name[%s] extra_key[%s], extra_ata[%s]\n", appid, icon, name, extra_key, extra_data);
 	return 0;
-}
-
-static Eina_Bool shortcut_add_cb(void *data)
-{
-	int ret;
-
-	ret = add_to_home_shortcut("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", result_cb, NULL);
-	printf("Client: shortcut_add_to_home returns: %d\n", ret);
-
-	ret = add_to_home_livebox("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", 1.0f, result_cb, NULL);
-	printf("Client: shortcut_add_to_home_with_period returns: %d\n", ret);
-
-	return ECORE_CALLBACK_RENEW;
 }
 
 int elm_main(int argc, char *argv[])
 {
-	Ecore_Timer *timer;
-
-	timer = ecore_timer_add(3.0f, shortcut_add_cb, NULL);
-	if (!timer) {
-		printf("Failed to add a timer\n");
-	}
+	int ret;
+	ret = shortcut_get_list(NULL, shortcut_list_cb, NULL);
+	if (ret < 0)
+		printf("Error: %d\n", ret);
 
 	elm_run();
 	elm_shutdown();
