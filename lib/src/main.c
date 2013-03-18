@@ -59,7 +59,7 @@ static struct info {
 	int client_fd;
 	const char *socket_file;
 	struct {
-		int (*request_cb)(const char *appid, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, void *data);
+		int (*request_cb)(const char *appid, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, int allow_duplicate, void *data);
 		void *data;
 	} server_cb;
 	int initialized;
@@ -83,20 +83,21 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	int type;
 	const char *content;
 	const char *icon;
+	int allow_duplicate;
 	int ret;
 
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssiss", &appid, &name, &type, &content, &icon) != 5) {
+	if (packet_get(packet, "ssissi", &appid, &name, &type, &content, &icon, &allow_duplicate) != 6) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
 
-	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s]\n", appid, name, type, content, icon);
+	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s] allow_duplicate[%d]\n", appid, name, type, content, icon, allow_duplicate);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, -1.0f, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, -1.0f, allow_duplicate, s_info.server_cb.data);
 	else
 		ret = 0;
 
@@ -113,20 +114,21 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	const char *content;
 	const char *icon;
 	double period;
+	int allow_duplicate;
 	int ret;
 
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssissd", &appid, &name, &type, &content, &icon, &period) != 6) {
+	if (packet_get(packet, "ssissdi", &appid, &name, &type, &content, &icon, &period, &allow_duplicate) != 7) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
 
-	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf]\n", appid, name, type, content, icon, period);
+	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf], allow_duplicate[%d]\n", appid, name, type, content, icon, period, allow_duplicate);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, period, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, period, allow_duplicate, s_info.server_cb.data);
 	else
 		ret = 0;
 
@@ -233,7 +235,7 @@ static int disconnected_cb(int handle, void *data)
 
 
 
-EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
+EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
@@ -280,7 +282,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	if (!icon)
 		icon = "";
 
-	packet = packet_create("add_shortcut", "ssiss", appid, name, type, content, icon);
+	packet = packet_create("add_shortcut", "ssissi", appid, name, type, content, icon, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -300,7 +302,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 
 
 
-EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
@@ -333,7 +335,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("add_livebox", "ssissd", appid, name, type, content, icon, period);
+	packet = packet_create("add_livebox", "ssissdi", appid, name, type, content, icon, period, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -351,16 +353,6 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	return ret;
 }
 
-
-EAPI int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
-{
-	return add_to_home_livebox(appid, name, type, content, icon, period, result_cb, data);
-}
-
-EAPI int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data)
-{
-	return add_to_home_shortcut(appid, name, type, content, icon, result_cb, data);
-}
 
 static inline int open_db(void)
 {
@@ -417,207 +409,6 @@ static inline char *get_i18n_name(const char *lang, int id)
 
 	name = sqlite3_column_text(stmt, 0);
 	ret = name ? strdup((const char *)name) : NULL;
-
-out:
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	sqlite3_finalize(stmt);
-	return ret;
-}
-
-
-
-static inline int homescreen_get_i18n(const char *appid, const char *lang, char **name, char **desc)
-{
-	sqlite3_stmt *stmt;
-	static const char *query = "SELECT name, desc FROM desc WHERE appid = ? AND lang = ?";
-	const unsigned char *_name;
-	const unsigned char *_desc;
-	int status;
-
-	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
-	if (status != SQLITE_OK) {
-		ErrPrint("Failed to prepare stmt: %s\n", sqlite3_errmsg(s_info.handle));
-		return -EIO;
-	}
-
-	status = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
-	if (status != SQLITE_OK) {
-		ErrPrint("Failed to bind appid: %s\n", sqlite3_errmsg(s_info.handle));
-		status = -EIO;
-		goto out;
-	}
-
-	status = sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT);
-	if (status != SQLITE_OK) {
-		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
-		status = -EIO;
-		goto out;
-	}
-
-	if (SQLITE_ROW != sqlite3_step(stmt)) {
-		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(s_info.handle));
-		status = -EIO;
-		goto out;
-	}
-
-	if (name) {
-		_name = sqlite3_column_text(stmt, 0);
-		*name = _name ? strdup((const char *)_name) : NULL;
-	}
-
-	if (desc) {
-		_desc = sqlite3_column_text(stmt, 1);
-		*desc = _desc ? strdup((const char *)_desc) : NULL;
-	}
-
-out:
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	sqlite3_finalize(stmt);
-	return status;
-}
-
-
-
-/*!
- * cb: SYNC callback
- */
-EAPI int homescreen_get_description(const char *appid, void (*cb)(const char *appid, const char *icon, const char *name, const char *desc, void *data), void *data)
-{
-	sqlite3_stmt *stmt;
-	static const char *query = "SELECT icon, name, desc FROM homescreen WHERE appid = ?";
-	char *i18n_name;
-	char *i18n_desc;
-	const unsigned char *desc;
-	const unsigned char *name;
-	const unsigned char *icon;
-	int ret;
-
-	ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = -EIO;
-		goto out;
-	}
-
-	ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = -EIO;
-		goto out;
-	}
-
-	if (SQLITE_ROW != sqlite3_step(stmt)) {
-		ErrPrint("Step failed: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = -EIO;
-		goto out;
-	}
-
-	icon = sqlite3_column_text(stmt, 0);
-	name = sqlite3_column_text(stmt, 1);
-	desc = sqlite3_column_text(stmt, 2);
-
-	/*!
-	 * \todo
-	 * Get the i18n name and desc
-	 */
-	if (homescreen_get_i18n(appid, "en-us", &i18n_name, &i18n_desc) < 0) {
-		i18n_name = NULL;
-		i18n_desc = NULL;
-	}
-
-	cb(appid, (const char *)icon, i18n_name ? i18n_name : (const char *)name, i18n_desc ? i18n_desc : (const char *)desc, data);
-
-	free(i18n_name);
-	free(i18n_desc);
-
-out:
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	sqlite3_finalize(stmt);
-	return ret;
-}
-
-
-
-EAPI char *homescreen_get_image(const char *appid, int idx)
-{
-	static const char *query = "SELECT path FROM image WHERE appid = ? AND id = ?";
-	sqlite3_stmt *stmt;
-	int ret;
-	const unsigned char *path;
-	char *ret_path = NULL;
-
-	ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ErrPrint("Prepare failed: %s\n", sqlite3_errmsg(s_info.handle));
-		goto out;
-	}
-
-	ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
-		goto out;
-	}
-
-	ret = sqlite3_bind_int(stmt, 2, idx);
-	if (ret != SQLITE_OK) {
-		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
-		goto out;
-	}
-
-	if (SQLITE_ROW != sqlite3_step(stmt)) {
-		ErrPrint("Step failed: %s\n", sqlite3_errmsg(s_info.handle));
-		goto out;
-	}
-
-	path = sqlite3_column_text(stmt, 0);
-	if (!path) {
-		ErrPrint("Get result: %s\n", sqlite3_errmsg(s_info.handle));
-		goto out;
-	}
-
-	ret_path = strdup((const char *)path);
-	if (!ret_path)
-		ErrPrint("Heap: %s\n", strerror(errno));
-
-out:
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	sqlite3_finalize(stmt);
-	return ret_path;
-}
-
-
-
-EAPI int homescreen_get_image_count(const char *appid)
-{
-	static const char *query = "SELECT COUNT(id) FROM image WHERE appid = ?";
-	sqlite3_stmt *stmt;
-	int ret;
-
-	ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = -EIO;
-		goto out;
-	}
-
-	ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		ErrPrint("bind failed: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = -EIO;
-		goto out;
-	}
-
-	if (SQLITE_ROW != sqlite3_step(stmt)) {
-		ErrPrint("step failed: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = -EIO;
-		goto out;
-	}
-
-	ret = sqlite3_column_int(stmt, 0);
 
 out:
 	sqlite3_reset(stmt);
