@@ -46,6 +46,7 @@ extern "C" {
  * @param[in] content_info Specific information for creating a new shortcut.
  * @param[in] icon Absolute path of an icon file for this shortcut.
  * @param[in] pid Process ID of who request add_to_home.
+ * @param[in] allow_duplicate 1 if shortcut can be duplicated or a shourtcut should be exists only one.
  * @param[in] data Callback data.
  * @return int Developer should returns the result of handling shortcut creation request.
  *             Returns 0, if succeed to handles the add_to_home request, or returns proper errno.
@@ -54,7 +55,7 @@ extern "C" {
  * @post None
  * @remarks None
  */
-typedef int (*request_cb_t)(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, double period, void *data);
+typedef int (*request_cb_t)(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, double period, int allow_duplicate, void *data);
 
 /**
  * @brief This function prototype is used to define for receiving the result of add_to_home.
@@ -182,6 +183,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @param[in] type 3 kinds of types are defined.
  * @param[in] content_info Specific information for delivering to the creating shortcut.
  * @param[in] icon Absolute path of an icon file
+ * @param[in] allow_duplicate set 1 If accept the duplicated shortcut or 0
  * @param[in] result_cb Callback function pointer which will be invoked after add_to_home request.
  * @param[in] data Callback data to deliver to the callback function.
  *
@@ -219,7 +221,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * {
  * 	add_to_home_shortcut("org.tizen.gallery", "With friends",
  * 					SHORTCUT_DATA, "gallery:0000-0000",
- * 					"/opt/media/Pictures/Friends.jpg", result_cb, NULL);
+ * 					"/opt/media/Pictures/Friends.jpg", 0, result_cb, NULL);
  * 	return 0;
  * }
  *
@@ -232,35 +234,9 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  */
 extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data);
 
-extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data);
+extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data);
 
-extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data);
-
-
-/*!
- * \brief Number of preview images for homescreen
- */
-extern int homescreen_get_image_count(const char *appid);
-/*!
- * \return string allocated in the heap - Path of image
- */
-extern char *homescreen_get_image(const char *appid, int idx);
-
-/*!
- * \brief Description of the homescreen (based on i18n)
- */
-extern int homescreen_get_description(const char *appid, void (*cb)(const char *appid, const char *icon, const char *name, const char *desc, void *data), void *data);
-
-/*!
- * \note
- * These two functions are deprecated now.
- *
- * Please replace the "shortcut_add_to_home" with "add_to_home_shortcut"
- * Please replace the "shortcut_add_to_home_with_period" with "add_to_home_livebox"
- */
-extern int shortcut_add_to_home(const char *appid, const char *name, int type, const char *content, const char *icon, result_cb_t result_cb, void *data) __attribute__ ((deprecated));
-
-extern int shortcut_add_to_home_with_period(const char *appid, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data) __attribute__ ((deprecated));
+extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
 
 #ifdef __cplusplus
 }
