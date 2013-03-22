@@ -164,7 +164,7 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 
 	DbgPrint("Server FD: %d\n", s_info.server_fd);
 
-	return s_info.server_fd > 0 ? 0 : s_info.server_fd;
+	return s_info.server_fd >= 0 ? SHORTCUT_SUCCESS : SHORTCUT_ERROR_COMM;
 }
 
 
@@ -257,14 +257,14 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
 		if (s_info.client_fd < 0) {
 			ErrPrint("Failed to make connection\n");
-			return s_info.client_fd;
+			return SHORTCUT_ERROR_COMM;
 		}
 	}
 
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return -ENOMEM;
+		return SHORTCUT_ERROR_MEMORY;
 	}
 
 	item->result_cb = result_cb;
@@ -286,7 +286,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
-		return -EFAULT;
+		return SHORTCUT_ERROR_FAULT;
 	}
 
 	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
@@ -295,9 +295,10 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
 		s_info.client_fd = -1;
+		return SHORTCUT_ERROR_COMM;
 	}
 
-	return ret;
+	return SHORTCUT_SUCCESS;
 }
 
 
@@ -323,13 +324,13 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
 		if (s_info.client_fd < 0)
-			return s_info.client_fd;
+			return SHORTCUT_ERROR_COMM;
 	}
 
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return -ENOMEM;
+		return SHORTCUT_ERROR_MEMORY;
 	}
 
 	item->result_cb = result_cb;
@@ -339,7 +340,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
-		return -EFAULT;
+		return SHORTCUT_ERROR_FAULT;
 	}
 
 	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, livebox_send_cb, item);
@@ -348,9 +349,10 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
 		s_info.client_fd = -1;
+		return SHORTCUT_ERROR_COMM;
 	}
 
-	return ret;
+	return SHORTCUT_SUCCESS;
 }
 
 
@@ -471,13 +473,13 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 
 	if (!s_info.db_opened) {
 		ErrPrint("Failed to open a DB\n");
-		return -EIO;
+		return SHORTCUT_ERROR_IO;
 	}
 
 	language = cur_locale();
 	if (!language) {
 		ErrPrint("Locale is not valid\n");
-		return -EINVAL;
+		return SHORTCUT_ERROR_FAULT;
 	}
 
 	if (appid) {
@@ -486,7 +488,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		if (ret != SQLITE_OK) {
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
 			free(language);
-			return -EIO;
+			return SHORTCUT_ERROR_IO;
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
@@ -494,7 +496,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
 			sqlite3_finalize(stmt);
 			free(language);
-			return -EIO;
+			return SHORTCUT_ERROR_IO;
 		}
 	} else {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service";
@@ -502,7 +504,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		if (ret != SQLITE_OK) {
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
 			free(language);
-			return -EIO;
+			return SHORTCUT_ERROR_IO;
 		}
 	}
 
