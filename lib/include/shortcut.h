@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
+ * Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,22 @@ enum shortcut_type {
 	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000,
 };
 
+enum shortcut_response {
+	SHORTCUT_SUCCESS = 0x00000000,
+	SHORTCUT_ERROR = 0x80000000,	/*!< MSB(1)  */
+	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,
+	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002,
+	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004,
+	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008,
+	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010,
+	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020,
+	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,
+	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080,
+	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100,
+};
+
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
+#define SHORTCUT_STATUS_IS_ERROR(type)	(!!((type) & SHORTCUT_ERROR))
 
 /**
  * @fn int shortcut_set_request_cb(request_cb_t request_cb, void *data)
