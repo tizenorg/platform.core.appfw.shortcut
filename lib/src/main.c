@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
+ * Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,16 +183,16 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 
 	if (!packet) {
 		ErrPrint("Packet is not valid\n");
-		ret = -EFAULT;
+		ret = SHORTCUT_ERROR_FAULT;
 	} else if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		ret = -EINVAL;
+		ret = SHORTCUT_ERROR_INVALID;
 	}
 
 	if (item->result_cb)
 		ret = item->result_cb(ret, pid, item->data);
 	else
-		ret = 0;
+		ret = SHORTCUT_SUCCESS;
 	free(item);
 	return ret;
 }
@@ -206,16 +206,16 @@ static int livebox_send_cb(pid_t pid, int handle, const struct packet *packet, v
 
 	if (!packet) {
 		ErrPrint("Packet is not valid\n");
-		ret = -EFAULT;
+		ret = SHORTCUT_ERROR_FAULT;
 	} else if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		ret = -EINVAL;
+		ret = SHORTCUT_ERROR_INVALID;
 	}
 
 	if (item->result_cb)
 		ret = item->result_cb(ret, pid, item->data);
 	else
-		ret = 0;
+		ret = SHORTCUT_SUCCESS;
 	free(item);
 	return ret;
 }
@@ -229,7 +229,7 @@ static int disconnected_cb(int handle, void *data)
 		return 0;
 	}
 
-	s_info.client_fd = -EINVAL;
+	s_info.client_fd = SHORTCUT_ERROR_INVALID;
 	return 0;
 }
 
@@ -363,10 +363,10 @@ static inline int open_db(void)
 	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
 	if (ret != SQLITE_OK) {
 		DbgPrint("Failed to open a %s\n", s_info.dbfile);
-		return -EIO;
+		return SHORTCUT_ERROR_IO;
 	}
 
-	return 0;
+	return SHORTCUT_SUCCESS;
 }
 
 

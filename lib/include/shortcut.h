@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
+ * Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,21 +103,26 @@ enum shortcut_type {
 };
 
 enum shortcut_response {
-	SHORTCUT_SUCCESS = 0x00000000,
-	SHORTCUT_ERROR = 0x80000000,	/*!< MSB(1)  */
-	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,
-	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002,
-	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004,
-	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008,
-	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010,
-	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020,
-	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,
-	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080,
-	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100,
+	SHORTCUT_SUCCESS = 0x00000000, /*!< Successfully handled */
+	SHORTCUT_ERROR = 0x80000000,	/*!< MSB(1). Check this using SHORTCUT_STATUS_IS_ERROR macro  */
+	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001, /*!< There is no space to add new shortcut */
+	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002, /*!< Shortcut is already added */
+	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004, /*!< Failed to add a shortcut. Unrecoverable error */
+	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008, /*!< Unsupported shortcut */
+	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010, /*!< Receiver is busy, try again later */
+	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020, /*!< Shortcut request is not valid, invalid parameter or invalid argument value */
+	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040, /*!< Connection is not estabilished. or there is a problem of communication */ 
+	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080, /*!< Memory is not enough to handle new request */
+	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100, /*!< Unable to access file or DB. Check your resource files */
+
+	SHORTCUT_STATUS_CARED = 0x08000000, /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
 };
 
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
+
 #define SHORTCUT_STATUS_IS_ERROR(type)	(!!((type) & SHORTCUT_ERROR))
+#define SHORTCUT_STATUS_IS_CARED(type)	(!!((type) & SHORTCUT_STATUS_CARED))
+#define SHORTCUT_ERROR_CODE(type)	(type & ~SHORTCUT_STATUS_CARED)
 
 /**
  * @fn int shortcut_set_request_cb(request_cb_t request_cb, void *data)
