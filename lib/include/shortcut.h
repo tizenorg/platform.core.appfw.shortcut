@@ -87,6 +87,9 @@ enum shortcut_type {
 	LAUNCH_BY_PACKAGE	= 0x00000000, /*!< Launch the package using given pakcage name. */
 	LAUNCH_BY_URI		= 0x00000001, /*!< Launch the related package with given data(URI). */
 
+	SHORTCUT_REMOVE		= 0x40000000, /*!< Remove a shortcut */
+	LIVEBOX_REMOVE		= 0x80000000, /*!< Remove a livebox */
+
 	LIVEBOX_TYPE_DEFAULT	  = 0x10000000,
 	LIVEBOX_TYPE_EASY_DEFAULT = 0x30000000,
 	LIVEBOX_TYPE_1x1	  = 0x10010000,
@@ -119,6 +122,7 @@ enum shortcut_response {
 };
 
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
+#define ADD_TO_HOME_IS_REMOVE_REQUEST(type)	(!!((type) & SHORTCUT_REMOVE))
 
 #define SHORTCUT_STATUS_IS_ERROR(type)	(!!((type) & SHORTCUT_ERROR))
 #define SHORTCUT_STATUS_IS_CARED(type)	(!!((type) & SHORTCUT_STATUS_CARED))
@@ -257,6 +261,10 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
 extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data);
 
 extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
+
+extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
+
+extern int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
 
 #ifdef __cplusplus
 }
