@@ -76,6 +76,63 @@ static struct info {
 
 
 
+static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struct packet *packet)
+{
+	const char *appid;
+	const char *name;
+	const char *content_info;
+	int ret;
+
+	if (!packet) {
+		ErrPrint("Packet is NIL, maybe disconnected?\n");
+		return NULL;
+	}
+
+	if (packet_get(packet, "sss", &appid, &name, &content_info) != 3) {
+		ErrPrint("Invalid apcket\n");
+		return NULL;
+	}
+
+	DbgPrint("appid[%s], name[%s], content_info[%s]\n", appid, name, content_info);
+
+	if (s_info.server_cb.request_cb)
+		ret = s_info.server_cb.request_cb(appid, name, SHORTCUT_REMOVE, content_info, NULL, pid, -1.0f, 0, s_info.server_cb.data);
+	else
+		ret = SHORTCUT_ERROR_UNSUPPORTED;
+
+	return packet_create_reply(packet, "i", ret);
+}
+
+
+
+static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct packet *packet)
+{
+	const char *appid;
+	const char *name;
+	int ret;
+
+	if (!packet) {
+		ErrPrint("PAcket is NIL, maybe disconnected?\n");
+		return NULL;
+	}
+
+	if (packet_get(packet, "ss", &appid, &name) != 2) {
+		ErrPrint("Invalid packet\n");
+		return NULL;
+	}
+
+	DbgPrint("appid[%s], name[%s]\n", appid, name);
+
+	if (s_info.server_cb.request_cb)
+		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, pid, -1.0f, 0, s_info.server_cb.data);
+	else
+		ret = SHORTCUT_ERROR_UNSUPPORTED;
+
+	return packet_create_reply(packet, "i", ret);
+}
+
+
+
 static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *appid;
@@ -99,7 +156,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	if (s_info.server_cb.request_cb)
 		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, -1.0f, allow_duplicate, s_info.server_cb.data);
 	else
-		ret = 0;
+		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -153,6 +210,14 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 				.handler = add_livebox_handler,
 			},
 			{
+				.cmd = "rm_shortcut",
+				.handler = remove_shortcut_handler,
+			},
+			{
+				.cmd = "rm_livebox",
+				.handler = remove_livebox_handler,
+			},
+			{
 				.cmd = NULL,
 				.handler = NULL,
 			},
@@ -199,29 +264,6 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 
 
 
-static int livebox_send_cb(pid_t pid, int handle, const struct packet *packet, void *data)
-{
-	struct result_cb_item *item = data;
-	int ret;
-
-	if (!packet) {
-		ErrPrint("Packet is not valid\n");
-		ret = SHORTCUT_ERROR_FAULT;
-	} else if (packet_get(packet, "i", &ret) != 1) {
-		ErrPrint("Packet is not valid\n");
-		ret = SHORTCUT_ERROR_INVALID;
-	}
-
-	if (item->result_cb)
-		ret = item->result_cb(ret, pid, item->data);
-	else
-		ret = SHORTCUT_SUCCESS;
-	free(item);
-	return ret;
-}
-
-
-
 static int disconnected_cb(int handle, void *data)
 {
 	if (s_info.client_fd != handle) {
@@ -231,6 +273,129 @@ static int disconnected_cb(int handle, void *data)
 
 	s_info.client_fd = SHORTCUT_ERROR_INVALID;
 	return 0;
+}
+
+
+
+EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data)
+{
+	struct packet *packet;
+	struct result_cb_item *item;
+	int ret;
+
+	if (!appid || !name) {
+		ErrPrint("Invalid argument\n");
+		return SHORTCUT_ERROR_INVALID;
+	}
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0) {
+			ErrPrint("Failed to make connection\n");
+			return SHORTCUT_ERROR_COMM;
+		}
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return SHORTCUT_ERROR_MEMORY;
+	}
+
+	item->result_cb = result_cb;
+	item->data = data;
+
+	packet = packet_create("rm_shortcut", "sss", appid, name, content_info);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = -1;
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	return SHORTCUT_SUCCESS;
+}
+
+
+
+EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data)
+{
+	struct packet *packet;
+	struct result_cb_item *item;
+	int ret;
+
+	if (!appid || !name) {
+		ErrPrint("Invalid argument\n");
+		return SHORTCUT_ERROR_INVALID;
+	}
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
+
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0) {
+			ErrPrint("Failed to make connection\n");
+			return SHORTCUT_ERROR_COMM;
+		}
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return SHORTCUT_ERROR_MEMORY;
+	}
+
+	item->result_cb = result_cb;
+	item->data = data;
+
+	packet = packet_create("rm_livebox", "ss", appid, name);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = -1;
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	return SHORTCUT_SUCCESS;
 }
 
 
@@ -343,7 +508,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		return SHORTCUT_ERROR_FAULT;
 	}
 
-	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, livebox_send_cb, item);
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
 	if (ret < 0) {
 		packet_destroy(packet);
 		free(item);
