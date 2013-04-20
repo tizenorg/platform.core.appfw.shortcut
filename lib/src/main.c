@@ -67,7 +67,7 @@ static struct info {
 } s_info = {
 	.server_fd = -1,
 	.client_fd = -1,
-	.socket_file = "/tmp/.shortcut",
+	.socket_file = "/tmp/.shortcut.service",
 	.dbfile = "/opt/dbspace/.shortcut_service.db",
 	.handle = NULL,
 	.initialized = 0,
@@ -82,13 +82,14 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 	const char *name;
 	const char *content_info;
 	int ret;
+	int sender_pid;
 
 	if (!packet) {
 		ErrPrint("Packet is NIL, maybe disconnected?\n");
 		return NULL;
 	}
 
-	if (packet_get(packet, "sss", &appid, &name, &content_info) != 3) {
+	if (packet_get(packet, "isss", &sender_pid, &appid, &name, &content_info) != 4) {
 		ErrPrint("Invalid apcket\n");
 		return NULL;
 	}
@@ -96,7 +97,7 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 	DbgPrint("appid[%s], name[%s], content_info[%s]\n", appid, name, content_info);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, SHORTCUT_REMOVE, content_info, NULL, pid, -1.0f, 0, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, SHORTCUT_REMOVE, content_info, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
 	else
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
@@ -110,13 +111,14 @@ static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct
 	const char *appid;
 	const char *name;
 	int ret;
+	int sender_pid;
 
 	if (!packet) {
 		ErrPrint("PAcket is NIL, maybe disconnected?\n");
 		return NULL;
 	}
 
-	if (packet_get(packet, "ss", &appid, &name) != 2) {
+	if (packet_get(packet, "iss", &sender_pid, &appid, &name) != 3) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
@@ -124,7 +126,7 @@ static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct
 	DbgPrint("appid[%s], name[%s]\n", appid, name);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, pid, -1.0f, 0, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
 	else
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
@@ -142,11 +144,12 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	const char *icon;
 	int allow_duplicate;
 	int ret;
+	int sender_pid;
 
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssissi", &appid, &name, &type, &content, &icon, &allow_duplicate) != 6) {
+	if (packet_get(packet, "ississi", &sender_pid, &appid, &name, &type, &content, &icon, &allow_duplicate) != 7) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
@@ -154,7 +157,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s] allow_duplicate[%d]\n", appid, name, type, content, icon, allow_duplicate);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, -1.0f, allow_duplicate, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, -1.0f, allow_duplicate, s_info.server_cb.data);
 	else
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
@@ -173,11 +176,12 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	double period;
 	int allow_duplicate;
 	int ret;
+	int sender_pid;
 
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssissdi", &appid, &name, &type, &content, &icon, &period, &allow_duplicate) != 7) {
+	if (packet_get(packet, "ississdi", &sender_pid, &appid, &name, &type, &content, &icon, &period, &allow_duplicate) != 8) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
@@ -185,7 +189,7 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf], allow_duplicate[%d]\n", appid, name, type, content, icon, period, allow_duplicate);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, period, allow_duplicate, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, period, allow_duplicate, s_info.server_cb.data);
 	else
 		ret = 0;
 
@@ -200,6 +204,8 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 	s_info.server_cb.data = data;
 
 	if (s_info.server_fd < 0) {
+		int ret;
+		struct packet *packet;
 		static struct method service_table[] = {
 			{
 				.cmd = "add_shortcut",
@@ -223,8 +229,17 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 			},
 		};
 
-		unlink(s_info.socket_file);	/* Delete previous socket file for creating a new server socket */
-		s_info.server_fd = com_core_packet_server_init(s_info.socket_file, service_table);
+		s_info.server_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+
+		packet = packet_create_noack("service_register", "");
+		if (!packet) {
+			ErrPrint("Failed to build a packet\n");
+			return SHORTCUT_ERROR_FAULT;
+		}
+
+		ret = com_core_packet_send_only(s_info.server_fd, packet);
+		DbgPrint("Service register sent: %d\n", ret);
+		packet_destroy(packet);
 	}
 
 	DbgPrint("Server FD: %d\n", s_info.server_fd);
@@ -317,7 +332,7 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("rm_shortcut", "sss", appid, name, content_info);
+	packet = packet_create("rm_shortcut", "isss", getpid(), appid, name, content_info);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -379,7 +394,7 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("rm_livebox", "ss", appid, name);
+	packet = packet_create("rm_livebox", "iss", getpid(), appid, name);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -447,7 +462,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	if (!icon)
 		icon = "";
 
-	packet = packet_create("add_shortcut", "ssissi", appid, name, type, content, icon, allow_duplicate);
+	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, content, icon, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -501,7 +516,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("add_livebox", "ssissdi", appid, name, type, content, icon, period, allow_duplicate);
+	packet = packet_create("add_livebox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
