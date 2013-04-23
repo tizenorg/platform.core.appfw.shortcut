@@ -1,5 +1,5 @@
 Name: libshortcut
-Summary: Shortcut add feature supporting library
+Summary: Shortcut add/remove request function supporting library
 Version: 0.5.0
 Release: 0
 Group: HomeTF/Framework
