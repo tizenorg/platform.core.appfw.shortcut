@@ -48,9 +48,11 @@ extern FILE *__file_log_fp;
 
 #define EAPI __attribute__((visibility("default")))
 
+#if !defined(VCONFKEY_MASTER_STARTED)
+#define VCONFKEY_MASTER_STARTED	"memory/data-provider-master/started"
+#endif
+
 int errno;
-
-
 
 static struct info {
 	const char *dbfile;
@@ -67,13 +69,15 @@ static struct info {
 } s_info = {
 	.server_fd = -1,
 	.client_fd = -1,
-	.socket_file = "/tmp/.shortcut",
+	.socket_file = "/tmp/.shortcut.service",
 	.dbfile = "/opt/dbspace/.shortcut_service.db",
 	.handle = NULL,
 	.initialized = 0,
 	.db_opened = 0,
 };
 
+
+static inline int make_connection(void);
 
 
 static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struct packet *packet)
@@ -82,13 +86,14 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 	const char *name;
 	const char *content_info;
 	int ret;
+	int sender_pid;
 
 	if (!packet) {
 		ErrPrint("Packet is NIL, maybe disconnected?\n");
 		return NULL;
 	}
 
-	if (packet_get(packet, "sss", &appid, &name, &content_info) != 3) {
+	if (packet_get(packet, "isss", &sender_pid, &appid, &name, &content_info) != 4) {
 		ErrPrint("Invalid apcket\n");
 		return NULL;
 	}
@@ -96,7 +101,7 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 	DbgPrint("appid[%s], name[%s], content_info[%s]\n", appid, name, content_info);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, SHORTCUT_REMOVE, content_info, NULL, pid, -1.0f, 0, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, SHORTCUT_REMOVE, content_info, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
 	else
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
@@ -110,13 +115,14 @@ static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct
 	const char *appid;
 	const char *name;
 	int ret;
+	int sender_pid;
 
 	if (!packet) {
 		ErrPrint("PAcket is NIL, maybe disconnected?\n");
 		return NULL;
 	}
 
-	if (packet_get(packet, "ss", &appid, &name) != 2) {
+	if (packet_get(packet, "iss", &sender_pid, &appid, &name) != 3) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
@@ -124,7 +130,7 @@ static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct
 	DbgPrint("appid[%s], name[%s]\n", appid, name);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, pid, -1.0f, 0, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
 	else
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
@@ -142,11 +148,12 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	const char *icon;
 	int allow_duplicate;
 	int ret;
+	int sender_pid;
 
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssissi", &appid, &name, &type, &content, &icon, &allow_duplicate) != 6) {
+	if (packet_get(packet, "ississi", &sender_pid, &appid, &name, &type, &content, &icon, &allow_duplicate) != 7) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
@@ -154,7 +161,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s] allow_duplicate[%d]\n", appid, name, type, content, icon, allow_duplicate);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, -1.0f, allow_duplicate, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, -1.0f, allow_duplicate, s_info.server_cb.data);
 	else
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 
@@ -173,11 +180,12 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	double period;
 	int allow_duplicate;
 	int ret;
+	int sender_pid;
 
 	if (!packet)
 		return NULL;
 
-	if (packet_get(packet, "ssissdi", &appid, &name, &type, &content, &icon, &period, &allow_duplicate) != 7) {
+	if (packet_get(packet, "ississdi", &sender_pid, &appid, &name, &type, &content, &icon, &period, &allow_duplicate) != 8) {
 		ErrPrint("Invalid packet\n");
 		return NULL;
 	}
@@ -185,11 +193,113 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf], allow_duplicate[%d]\n", appid, name, type, content, icon, period, allow_duplicate);
 
 	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, pid, period, allow_duplicate, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, period, allow_duplicate, s_info.server_cb.data);
 	else
 		ret = 0;
 
 	return packet_create_reply(packet, "i", ret);
+}
+
+
+
+static void master_started_cb(keynode_t *node, void *user_data)
+{
+	int state = 0;
+
+	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0)
+		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
+
+	if (state == 1 && make_connection() == SHORTCUT_SUCCESS) {
+		int ret;
+		ret = vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
+		DbgPrint("Ignore VCONF [%d]\n", ret);
+	}
+}
+
+
+
+static int disconnected_cb(int handle, void *data)
+{
+	if (s_info.client_fd == handle) {
+		s_info.client_fd = SHORTCUT_ERROR_INVALID;
+		return 0;
+	}
+
+	if (s_info.server_fd == handle) {
+		int ret;
+		s_info.server_fd = SHORTCUT_ERROR_INVALID;
+		ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
+		if (ret < 0)
+			ErrPrint("Failed to add vconf for service state [%d]\n", ret);
+		else
+			DbgPrint("vconf is registered\n");
+
+		master_started_cb(NULL, NULL);
+		return 0;
+	}
+
+	return 0;
+}
+
+
+
+static inline int make_connection(void)
+{
+	int ret;
+	struct packet *packet;
+	static struct method service_table[] = {
+		{
+			.cmd = "add_shortcut",
+			.handler = add_shortcut_handler,
+		},
+		{
+			.cmd = "add_livebox",
+			.handler = add_livebox_handler,
+		},
+		{
+			.cmd = "rm_shortcut",
+			.handler = remove_shortcut_handler,
+		},
+		{
+			.cmd = "rm_livebox",
+			.handler = remove_livebox_handler,
+		},
+		{
+			.cmd = NULL,
+			.handler = NULL,
+		},
+	};
+
+	if (s_info.initialized == 0) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	s_info.server_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+	if (s_info.server_fd < 0) {
+		ErrPrint("Failed to make a connection to the master\n");
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	packet = packet_create_noack("service_register", "");
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_send_only(s_info.server_fd, packet);
+	DbgPrint("Service register sent: %d\n", ret);
+	packet_destroy(packet);
+	if (ret != 0) {
+		com_core_packet_client_fini(s_info.server_fd);
+		s_info.server_fd = -1;
+		ret = SHORTCUT_ERROR_COMM;
+	} else {
+		ret = SHORTCUT_SUCCESS;
+	}
+
+	DbgPrint("Server FD: %d\n", s_info.server_fd);
+	return ret;
 }
 
 
@@ -200,36 +310,19 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 	s_info.server_cb.data = data;
 
 	if (s_info.server_fd < 0) {
-		static struct method service_table[] = {
-			{
-				.cmd = "add_shortcut",
-				.handler = add_shortcut_handler,
-			},
-			{
-				.cmd = "add_livebox",
-				.handler = add_livebox_handler,
-			},
-			{
-				.cmd = "rm_shortcut",
-				.handler = remove_shortcut_handler,
-			},
-			{
-				.cmd = "rm_livebox",
-				.handler = remove_livebox_handler,
-			},
-			{
-				.cmd = NULL,
-				.handler = NULL,
-			},
-		};
+		int ret;
 
-		unlink(s_info.socket_file);	/* Delete previous socket file for creating a new server socket */
-		s_info.server_fd = com_core_packet_server_init(s_info.socket_file, service_table);
+		ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
+		if (ret < 0) {
+			ErrPrint("Failed to add vconf for service state [%d]\n", ret);
+		} else {
+			DbgPrint("vconf is registered\n");
+		}
+
+		master_started_cb(NULL, NULL);
 	}
 
-	DbgPrint("Server FD: %d\n", s_info.server_fd);
-
-	return s_info.server_fd >= 0 ? SHORTCUT_SUCCESS : SHORTCUT_ERROR_COMM;
+	return SHORTCUT_SUCCESS;
 }
 
 
@@ -260,19 +353,6 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 		ret = SHORTCUT_SUCCESS;
 	free(item);
 	return ret;
-}
-
-
-
-static int disconnected_cb(int handle, void *data)
-{
-	if (s_info.client_fd != handle) {
-		/*!< This is not my favor */
-		return 0;
-	}
-
-	s_info.client_fd = SHORTCUT_ERROR_INVALID;
-	return 0;
 }
 
 
@@ -317,7 +397,7 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("rm_shortcut", "sss", appid, name, content_info);
+	packet = packet_create("rm_shortcut", "isss", getpid(), appid, name, content_info);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -329,7 +409,7 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = -1;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID;
 		return SHORTCUT_ERROR_COMM;
 	}
 
@@ -379,7 +459,7 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("rm_livebox", "ss", appid, name);
+	packet = packet_create("rm_livebox", "iss", getpid(), appid, name);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -391,7 +471,7 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = -1;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID;
 		return SHORTCUT_ERROR_COMM;
 	}
 
@@ -447,7 +527,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	if (!icon)
 		icon = "";
 
-	packet = packet_create("add_shortcut", "ssissi", appid, name, type, content, icon, allow_duplicate);
+	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, content, icon, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -459,7 +539,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = -1;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID;
 		return SHORTCUT_ERROR_COMM;
 	}
 
@@ -501,7 +581,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("add_livebox", "ssissdi", appid, name, type, content, icon, period, allow_duplicate);
+	packet = packet_create("add_livebox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -513,7 +593,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = -1;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID;
 		return SHORTCUT_ERROR_COMM;
 	}
 
