@@ -268,6 +268,57 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
 
 extern int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
 
+
+
+/*!
+ * \note
+ * Example)
+ *
+ * // Initialize the service request
+ * int ret;
+ *
+ * ret = shortcut_icon_init(init_cb, NULL);
+ * if (ret < 0) {
+ *    ...
+ * }
+ *
+ * // After the init_cb is called, you can use below functions.
+ * struct shortcut_icon *handle;
+ *
+ * // Create request for creating shortcut icon.
+ * handle = shortcut_icon_create(LIVEBOX_TYPE_1x1, "/opt/usr/apps/org.tizen.cluster-home/data/shortcut/app1.png", NULL, NULL);
+ * if (!handle) {
+ *    ...
+ * }
+ * 
+ * // Send the request to the shortcut service
+ * ret = shortcut_icon_request_and_destroy(handle, result_cb, NULL);
+ * if (ret < 0) {
+ *    ...
+ * }
+ *
+ * // Don't finalize the icon service if you don't get result callbacks of all requests
+ * ret = shortcut_icon_fini();
+ * if (ret < 0) {
+ *    ...
+ * }
+ *
+ */
+
+struct shortcut_icon;
+#define DEFAULT_ICON_PART		"icon"
+#define DEFAULT_NAME_PART		"name"
+#define SHORTCUT_ICON_TYPE_IMAGE	"image"
+#define SHORTCUT_ICON_TYPE_TEXT		"text"
+#define SHORTCUT_ICON_TYPE_SCRIPT	"script"
+extern int shortcut_icon_service_init(int (*initialized_cb)(int status, void *data), void *data);
+extern int shortcut_icon_service_fini(void);
+
+extern struct shortcut_icon *shortcut_icon_request_create(int size_type, const char *output, const char *layout, const char *group);
+extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *subid);
+extern int shortcut_icon_request_send_and_destroy(struct shortcut_icon *handle, result_cb_t result_cb, void *data);
+
+
 #ifdef __cplusplus
 }
 #endif
