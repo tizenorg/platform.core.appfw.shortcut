@@ -39,6 +39,10 @@
 
 
 
+#define CREATED	0x00BEEF00
+#define DESTROYED 0x00DEAD00
+
+
 static struct info {
 	int fd;
 	int (*init_cb)(int status, void *data);
@@ -61,7 +65,8 @@ static struct info {
 
 
 struct request_item {
-	result_cb_t result_cb;
+	struct shortcut_icon *handle;
+	icon_request_cb_t result_cb;
 	void *data;
 };
 
@@ -82,32 +87,84 @@ struct block {
 	char *data;
 	char *option;
 	char *id;
-	char *file;
 	char *target_id;
 };
 
 
 
 struct shortcut_icon {
+	unsigned int state;
 	struct shortcut_desc *desc;
-	char *layout;
-	char *output;
-	char *descfile;
-	char *group;
-	int size_type;
+	int refcnt;
+	void *data;
 };
 
 
 
 struct shortcut_desc {
-	FILE *fp;
 	int for_pd;
-	char *filename;
 
 	unsigned int last_idx;
 
 	struct dlist *block_list;
 };
+
+
+
+static inline void delete_block(struct block *block)
+{
+	DbgPrint("Release block: %p\n", block);
+	free(block->type);
+	free(block->part);
+	free(block->data);
+	free(block->option);
+	free(block->id);
+	free(block->target_id);
+	free(block);
+}
+
+
+
+static inline int shortcut_icon_desc_close(struct shortcut_desc *handle)
+{
+	struct dlist *l;
+	struct dlist *n;
+	struct block *block;
+
+	dlist_foreach_safe(handle->block_list, l, n, block) {
+		handle->block_list = dlist_remove(handle->block_list, l);
+		delete_block(block);
+	}
+
+	free(handle);
+	return 0;
+}
+
+
+
+static inline struct shortcut_icon *shortcut_icon_request_unref(struct shortcut_icon *handle)
+{
+	handle->refcnt--;
+	DbgPrint("Handle: refcnt[%d]\n", handle->refcnt);
+
+	if (handle->refcnt == 0) {
+		handle->state = DESTROYED;
+		shortcut_icon_desc_close(handle->desc);
+		free(handle);
+		handle = NULL;
+	}
+
+	return handle;
+}
+
+
+
+static inline struct shortcut_icon *shortcut_icon_request_ref(struct shortcut_icon *handle)
+{
+	handle->refcnt++;
+	DbgPrint("Handle: refcnt[%d]\n", handle->refcnt);
+	return handle;
+}
 
 
 
@@ -126,7 +183,7 @@ static int disconnected_cb(int handle, void *data)
 
 
 
-static inline struct shortcut_desc *shortcut_icon_desc_open(const char *filename)
+static inline struct shortcut_desc *shortcut_icon_desc_open(void)
 {
 	struct shortcut_desc *handle;
 
@@ -136,128 +193,124 @@ static inline struct shortcut_desc *shortcut_icon_desc_open(const char *filename
 		return NULL;
 	}
 
-	handle->filename = strdup(filename);
-	if (!handle->filename) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(handle);
-		return NULL;
-	}
-
-	handle->fp = fopen(handle->filename, "w+");
-	if (!handle->fp) {
-		ErrPrint("Failed to open a file: %s\n", strerror(errno));
-		free(handle->filename);
-		free(handle);
-		return NULL;
-	}
-
 	return handle;
 }
 
 
 
-static inline int shortcut_icon_desc_close(struct shortcut_desc *handle)
+static inline int shortcut_icon_desc_save(struct shortcut_desc *handle, const char *filename)
 {
 	struct dlist *l;
 	struct dlist *n;
 	struct block *block;
+	FILE *fp;
 
 	if (!handle)
 		return -EINVAL;
 
+	fp = fopen(filename, "w+t");
+	if (!fp) {
+		ErrPrint("Error: %s\n", strerror(errno));
+		return -EIO;
+	}
+
 	DbgPrint("Close and flush\n");
 	dlist_foreach_safe(handle->block_list, l, n, block) {
-		handle->block_list = dlist_remove(handle->block_list, l);
-
 		DbgPrint("{\n");
-		fprintf(handle->fp, "{\n");
+		fprintf(fp, "{\n");
 		if (block->type) {
-			fprintf(handle->fp, "type=%s\n", block->type);
+			fprintf(fp, "type=%s\n", block->type);
 			DbgPrint("type=%s\n", block->type);
 		}
 
 		if (block->part) {
-			fprintf(handle->fp, "part=%s\n", block->part);
+			fprintf(fp, "part=%s\n", block->part);
 			DbgPrint("part=%s\n", block->part);
 		}
 
 		if (block->data) {
-			fprintf(handle->fp, "data=%s\n", block->data);
+			fprintf(fp, "data=%s\n", block->data);
 			DbgPrint("data=%s\n", block->data);
 		}
 
 		if (block->option) {
-			fprintf(handle->fp, "option=%s\n", block->option);
+			fprintf(fp, "option=%s\n", block->option);
 			DbgPrint("option=%s\n", block->option);
 		}
 
 		if (block->id) {
-			fprintf(handle->fp, "id=%s\n", block->id);
+			fprintf(fp, "id=%s\n", block->id);
 			DbgPrint("id=%s\n", block->id);
 		}
 
 		if (block->target_id) {
-			fprintf(handle->fp, "target=%s\n", block->target_id);
+			fprintf(fp, "target=%s\n", block->target_id);
 			DbgPrint("target=%s\n", block->target_id);
 		}
 
-		fprintf(handle->fp, "}\n");
+		fprintf(fp, "}\n");
 		DbgPrint("}\n");
-
-		free(block->type);
-		free(block->part);
-		free(block->data);
-		free(block->option);
-		free(block->id);
-		free(block->target_id);
-		free(block);
 	}
 
-	fclose(handle->fp);
-	free(handle->filename);
-	free(handle);
+	fclose(fp);
 	return 0;
 }
 
 
 
-static inline int shortcut_icon_desc_set_id(struct shortcut_desc *handle, int idx, const char *id)
+static inline struct block *find_block(struct shortcut_desc *handle, const char *id, const char *part)
 {
-	struct dlist *l;
 	struct block *block;
+	struct dlist *l;
 
 	dlist_foreach(handle->block_list, l, block) {
-		if (block->idx == idx) {
-			if (strcasecmp(block->type, SHORTCUT_ICON_TYPE_SCRIPT)) {
-				ErrPrint("Invalid block is used\n");
-				return SHORTCUT_ERROR_INVALID;
-			}
+		if (!strcmp(block->part, part) && !strcmp(block->id, id))
+			return block;
+	}
 
-			free(block->target_id);
-			block->target_id = NULL;
+	return NULL;
+}
 
-			if (!id || !strlen(id))
-				return SHORTCUT_SUCCESS;
 
-			block->target_id = strdup(id);
-			if (!block->target_id) {
-				ErrPrint("Heap: %s\n", strerror(errno));
-				return SHORTCUT_ERROR_MEMORY;
-			}
 
-			return SHORTCUT_SUCCESS;
+static inline int update_block(struct block *block, const char *data, const char *option)
+{
+	char *_data = NULL;
+	char *_option = NULL;
+
+	if (data) {
+		_data = strdup(data);
+		if (!_data) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			return -ENOMEM;
 		}
 	}
 
-	return SHORTCUT_ERROR_INVALID;
+	if (option) {
+		_option = strdup(option);
+		if (!_option) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			return -ENOMEM;
+		}
+	}
+
+	free(block->data);
+	free(block->option);
+
+	block->data = _data;
+	block->option = _option;
+	return 0;
 }
+
+
+
 /*!
  * \return idx
  */
 
 
 
-static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, const char *id, const char *type, const char *part, const char *data, const char *option)
+static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *target_id)
 {
 	struct block *block;
 
@@ -270,63 +323,96 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 	if (!data)
 		data = "";
 
-	block = calloc(1, sizeof(*block));
+	if (target_id) {
+		if (strcmp(type, SHORTCUT_ICON_TYPE_SCRIPT)) {
+			ErrPrint("target id only can be used for script type\n");
+			return -EINVAL;
+		}
+	}
+
+	block = find_block(handle, id, part);
 	if (!block) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_MEMORY;
-	}
-
-	block->type = strdup(type);
-	if (!block->type) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(block);
-		return SHORTCUT_ERROR_MEMORY;
-	}
-
-	block->part = strdup(part);
-	if (!block->part) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(block->type);
-		free(block);
-		return SHORTCUT_ERROR_MEMORY;
-	}
-
-	block->data = strdup(data);
-	if (!block->data) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(block->type);
-		free(block->part);
-		free(block);
-		return SHORTCUT_ERROR_MEMORY;
-	}
-
-	if (option) {
-		block->option = strdup(option);
-		if (!block->option) {
+		block = calloc(1, sizeof(*block));
+		if (!block) {
 			ErrPrint("Heap: %s\n", strerror(errno));
-			free(block->data);
+			return SHORTCUT_ERROR_MEMORY;
+		}
+
+		block->type = strdup(type);
+		if (!block->type) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			free(block);
+			return SHORTCUT_ERROR_MEMORY;
+		}
+
+		block->part = strdup(part);
+		if (!block->part) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			free(block->type);
+			free(block);
+			return SHORTCUT_ERROR_MEMORY;
+		}
+
+		block->data = strdup(data);
+		if (!block->data) {
+			ErrPrint("Heap: %s\n", strerror(errno));
 			free(block->type);
 			free(block->part);
 			free(block);
 			return SHORTCUT_ERROR_MEMORY;
 		}
-	}
 
-	if (id) {
-		block->id = strdup(id);
-		if (!block->id) {
-			ErrPrint("Heap: %s\n", strerror(errno));
-			free(block->option);
-			free(block->data);
-			free(block->type);
-			free(block->part);
-			free(block);
-			return SHORTCUT_ERROR_MEMORY;
+		if (option) {
+			block->option = strdup(option);
+			if (!block->option) {
+				ErrPrint("Heap: %s\n", strerror(errno));
+				free(block->data);
+				free(block->type);
+				free(block->part);
+				free(block);
+				return SHORTCUT_ERROR_MEMORY;
+			}
 		}
+
+		if (id) {
+			block->id = strdup(id);
+			if (!block->id) {
+				ErrPrint("Heap: %s\n", strerror(errno));
+				free(block->option);
+				free(block->data);
+				free(block->type);
+				free(block->part);
+				free(block);
+				return SHORTCUT_ERROR_MEMORY;
+			}
+		}
+
+		if (target_id) {
+			block->target_id = strdup(target_id);
+			if (!block->target_id) {
+				ErrPrint("Heap: %s\n", strerror(errno));
+				free(block->id);
+				free(block->option);
+				free(block->data);
+				free(block->type);
+				free(block->part);
+				free(block);
+				return SHORTCUT_ERROR_MEMORY;
+			}
+		}
+
+		block->idx = handle->last_idx++;
+		handle->block_list = dlist_append(handle->block_list, block);
+	} else {
+		if (strcmp(block->type, type) || strcmp(block->target_id, target_id)) {
+			ErrPrint("type or target id is not valid (%s, %s) or (%s, %s)\n",
+						block->type, type, block->target_id, target_id);
+			return -EINVAL;
+		}
+
+		update_block(block, data, option);
 	}
 
-	block->idx = handle->last_idx++;
-	handle->block_list = dlist_append(handle->block_list, block);
 	return block->idx;
 }
 
@@ -348,8 +434,9 @@ static int icon_request_cb(pid_t pid, int handle, const struct packet *packet, v
 	}
 
 	if (item->result_cb)
-		item->result_cb(ret, pid, item->data);
+		item->result_cb(item->handle, ret, item->data);
 
+	(void)shortcut_icon_request_unref(item->handle);
 	free(item);
 	return 0;
 }
@@ -388,7 +475,7 @@ static inline int make_connection(void)
 			if (ret < 0) {
 				ErrPrint("ret: %d\n", ret);
 				if (pend->item->result_cb)
-					pend->item->result_cb(ret, getpid(), pend->item->data);
+					pend->item->result_cb(pend->item->handle, ret, pend->item->data);
 				free(pend->item);
 			}
 
@@ -448,6 +535,10 @@ EAPI int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void
 
 EAPI int shortcut_icon_service_fini(void)
 {
+	struct dlist *l;
+	struct dlist *n;
+	struct pending_item *pend;
+
 	if (s_info.initialized) {
 		com_core_del_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
 		s_info.initialized = 0;
@@ -460,25 +551,23 @@ EAPI int shortcut_icon_service_fini(void)
 	s_info.init_cb = NULL;
 	s_info.cbdata = NULL;
 	s_info.fd = -1;
+
+	dlist_foreach_safe(s_info.pending_list, l, n, pend) {
+		s_info.pending_list = dlist_remove(s_info.pending_list, l);
+		packet_unref(pend->packet);
+		if (pend->item->result_cb)
+			pend->item->result_cb(pend->item->handle, SHORTCUT_ERROR_COMM, pend->item->data);
+		free(pend->item);
+		free(pend);
+	}
 	return 0;
 }
 
 
 
-EAPI struct shortcut_icon *shortcut_icon_request_create(int size_type, const char *output, const char *layout, const char *group)
+EAPI struct shortcut_icon *shortcut_icon_request_create(void)
 {
 	struct shortcut_icon *handle;
-	int len;
-
-	if (!layout) {
-		DbgPrint("Using default icon layout\n");
-		layout = DEFAULT_ICON_LAYOUT;
-	}
-
-	if (!group) {
-		DbgPrint("Using default icon group\n");
-		group = DEFAULT_ICON_GROUP;
-	}
 
 	handle = malloc(sizeof(*handle));
 	if (!handle) {
@@ -486,134 +575,162 @@ EAPI struct shortcut_icon *shortcut_icon_request_create(int size_type, const cha
 		return NULL;
 	}
 
-	len = strlen(output) + strlen(".desc") + 1;
-	handle->descfile = malloc(len);
-	if (!handle->descfile) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(handle);
-		return NULL;
-	}
-
-	handle->layout = strdup(layout);
-	if (!handle->layout) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(handle->descfile);
-		free(handle);
-		return NULL;
-	}
-
-	handle->group = strdup(group);
-	if (!handle->group) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(handle->descfile);
-		free(handle->layout);
-		free(handle);
-		return NULL;
-	}
-
-	handle->output = strdup(output);
-	if (!handle->output) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		free(handle->group);
-		free(handle->layout);
-		free(handle->descfile);
-		free(handle);
-		return NULL;
-	}
-
-	snprintf(handle->descfile, len, "%s.desc", output);
-
-	handle->desc = shortcut_icon_desc_open(handle->descfile);
+	handle->desc = shortcut_icon_desc_open();
 	if (!handle->desc) {
 		ErrPrint("Uanble to open desc\n");
-		free(handle->output);
-		free(handle->group);
-		free(handle->layout);
-		free(handle->descfile);
 		free(handle);
 		return NULL;
 	}
 
-	handle->size_type = size_type;
+	handle->state = CREATED;
+	handle->refcnt = 1;
 	return handle;
+}
+
+
+EAPI int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *data)
+{
+	if (!handle || handle->state != CREATED) {
+		ErrPrint("Handle is not valid\n");
+		return -EINVAL;
+	}
+
+	handle->data = data;
+	return 0;
+}
+
+
+
+EAPI void *shortcut_icon_request_data(struct shortcut_icon *handle)
+{
+	if (!handle || handle->state != CREATED) {
+		ErrPrint("Handle is not valid\n");
+		return NULL;
+	}
+
+	return handle->data;
 }
 
 
 
 EAPI int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *subid)
 {
-	int idx;
+	if (!handle || handle->state != CREATED) {
+		ErrPrint("Handle is not valid\n");
+		return -EINVAL;
+	}
 
-	idx = shortcut_icon_desc_add_block(handle->desc, id, type, part, data, option);
-	if (subid && idx >= 0)
-		shortcut_icon_desc_set_id(handle->desc, idx, subid);
-
-	return idx;
+	return shortcut_icon_desc_add_block(handle->desc, id, type, part, data, option, subid);
 }
 
 
 
-EAPI int shortcut_icon_request_send_and_destroy(struct shortcut_icon *handle, result_cb_t result_cb, void *data)
+EAPI int shortcut_icon_request_destroy(struct shortcut_icon *handle)
+{
+	if (!handle || handle->state != CREATED) {
+		ErrPrint("Handle is not valid\n");
+		return -EINVAL;
+	}
+
+	(void)shortcut_icon_request_unref(handle);
+	return 0;
+}
+
+
+
+EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type, const char *layout, const char *group, const char *outfile, icon_request_cb_t result_cb, void *data)
 {
 	int ret;
 	struct packet *packet;
 	struct request_item *item;
+	char *filename;
+	int len;
 
-	DbgPrint("Request and Destroy\n");
-	shortcut_icon_desc_close(handle->desc);
+	if (!handle || handle->state != CREATED) {
+		ErrPrint("Handle is not valid\n");
+		return -EINVAL;
+	}
+
+	if (!layout)
+		layout = DEFAULT_ICON_LAYOUT;
+
+	if (!group)
+		group = DEFAULT_ICON_GROUP;
+
+	len = strlen(outfile) + strlen(".desc") + 1;
+	filename = malloc(len);
+	if (!filename) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return -ENOMEM;
+	}
+
+	snprintf(filename, len, "%s.desc", outfile);
+
+	ret = shortcut_icon_desc_save(handle->desc, filename);
+	if (ret < 0)
+		goto out;
 
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
+		if (unlink(filename) < 0)
+			ErrPrint("Unlink: %s\n", strerror(errno));
 		ret = -ENOMEM;
-	} else {
-		item->result_cb = result_cb;
-		item->data = data;
+		goto out;
+	}
 
-		packet = packet_create("icon_create", "sssis", handle->layout, handle->group, handle->descfile, handle->size_type, handle->output);
-		if (!packet) {
-			ErrPrint("Failed to create a packet\n");
+	item->result_cb = result_cb;
+	item->data = data;
+	item->handle = shortcut_icon_request_ref(handle);
+
+	packet = packet_create("icon_create", "sssis", layout, group, filename, size_type, outfile);
+	if (!packet) {
+		ErrPrint("Failed to create a packet\n");
+		if (unlink(filename) < 0)
+			ErrPrint("Unlink: %s\n", strerror(errno));
+		free(item);
+		(void)shortcut_icon_request_unref(handle);
+		ret = -EFAULT;
+		goto out;
+	}
+
+	if (s_info.fd >= 0 && !s_info.pending_list) {
+		ret = com_core_packet_async_send(s_info.fd, packet, 0.0f, icon_request_cb, item);
+		packet_destroy(packet);
+		if (ret < 0) {
+			ErrPrint("ret: %d\n", ret);
+			if (unlink(filename) < 0)
+				ErrPrint("Unlink: %s\n", strerror(errno));
 			free(item);
-			ret = -EFAULT;
+			(void)shortcut_icon_request_unref(handle);
+		}
+		DbgPrint("Request is sent\n");
+	} else {
+		struct pending_item *pend;
+
+		pend = malloc(sizeof(*pend));
+		if (!pend) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			packet_destroy(packet);
+			free(item);
+			if (unlink(filename) < 0)
+				ErrPrint("Unlink: %s\n", strerror(errno));
+			(void)shortcut_icon_request_unref(handle);
+			ret = -ENOMEM;
 			goto out;
 		}
 
-		if (s_info.fd >= 0 && !s_info.pending_list) {
-			ret = com_core_packet_async_send(s_info.fd, packet, 0.0f, icon_request_cb, item);
-			packet_destroy(packet);
-			if (ret < 0) {
-				ErrPrint("ret: %d\n", ret);
-				free(item);
-			}
-			DbgPrint("Request is sent\n");
-		} else {
-			struct pending_item *pend;
+		pend->packet = packet;
+		pend->item = item;
 
-			pend = malloc(sizeof(*pend));
-			if (!pend) {
-				ErrPrint("Heap: %s\n", strerror(errno));
-				ret = -ENOMEM;
-				packet_destroy(packet);
-				free(item);
-				goto out;
-			}
+		s_info.pending_list = dlist_append(s_info.pending_list, pend);
+		DbgPrint("Request is pended\n");
 
-			pend->packet = packet;
-			pend->item = item;
-
-			s_info.pending_list = dlist_append(s_info.pending_list, pend);
-			DbgPrint("Request is pended\n");
-
-			ret = 0;
-		}
+		ret = 0;
 	}
 
 out:
-	free(handle->output);
-	free(handle->layout);
-	free(handle->group);
-	free(handle->descfile);
-	free(handle);
+	free(filename);
 	return ret;
 }
 
