@@ -36,6 +36,7 @@ extern "C" {
  *        The others for the application developers who should implement the Add to home feature.
  */
 
+struct shortcut_icon;
 /**
  * @brief This function prototype is used to define a callback function for the add_to_home reqeust.
  *        The homescreen should define a callback as this type and implementing the service code
@@ -69,6 +70,8 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
  * @remarks None
  */
 typedef int (*result_cb_t)(int ret, int pid, void *data);
+
+typedef int (*icon_request_cb_t)(struct shortcut_icon *handle, int ret, void *data);
 
 /**
  * @brief Basically, three types of shortcut is defined.
@@ -267,6 +270,88 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
 extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
 
 extern int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
+
+
+
+/*!
+ * \note
+ * Example)
+ *
+ * static int init_cb(int status, void *data)
+ * {
+ *    printf("Initializer returns: %d\n", status);
+ *    if (status == 0) {
+ *        printf("Succeed to initialize\n");
+ *    } else {
+ *        printf("Failed to initialize: %d\n", status);
+ *    }
+ * }
+ *
+ * int main(int argc, char *argv[])
+ * {
+ *     // Initialize the service request
+ *     int ret;
+ *
+ *     // After the init_cb is called, you can use below functions.
+ *     struct shortcut_icon *handle;
+ *
+ *     ret = shortcut_icon_init(init_cb, NULL);
+ *     if (ret < 0) {
+ *        ...
+ *
+ *     // Create request for creating shortcut icon.
+ *     handle = shortcut_icon_create();
+ *     if (!handle) {
+ *         ...
+ *     }
+ * 
+ *     // Send the request to the shortcut service
+ *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, "/usr/share/.../icon.png", NULL, NULL);
+ *     if (ret < 0) {
+ *        ...
+ *     }
+ *
+ *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, "app icon", NULL, NULL);
+ *     if (ret < 0) {
+ *        ...
+ *     }
+ *
+ *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/com.samsung.cluster-home/data/out.png", result_cb, NULL);
+ *     if (ret < 0) {
+ *        ...
+ *     }
+ *
+ *     ret = shortcut_icon_request_destroy(handle);
+ *     if (ret < 0) {
+ *        ...
+ *     }
+ *
+ *     // Don't finalize the icon service if you don't get result callbacks of all requests
+ *     ret = shortcut_icon_fini();
+ *     if (ret < 0) {
+ *        ...
+ *     }
+ *
+ *     return 0;
+ * }
+ */
+
+#define DEFAULT_ICON_PART		"icon"
+#define DEFAULT_NAME_PART		"name"
+#define SHORTCUT_ICON_TYPE_IMAGE	"image"
+#define SHORTCUT_ICON_TYPE_TEXT		"text"
+#define SHORTCUT_ICON_TYPE_SCRIPT	"script"
+
+extern int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void *data);
+extern int shortcut_icon_service_fini(void);
+
+extern struct shortcut_icon *shortcut_icon_request_create(void);
+extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *subid);
+extern int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type, const char *layout, const char *group, const char *outfile, icon_request_cb_t result_cb, void *data);
+extern int shortcut_icon_request_destroy(struct shortcut_icon *handle);
+
+extern int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *data);
+extern void *shortcut_icon_request_data(struct shortcut_icon *handle);
 
 #ifdef __cplusplus
 }
