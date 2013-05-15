@@ -31,6 +31,8 @@ ADD_DEFINITIONS("-DLOG_TAG=\"SHORTCUT\"")
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED 
 	src/main.c
+	src/icon.c
+	src/dlist.c
 )
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${svc_pkgs_LDFLAGS})
