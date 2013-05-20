@@ -264,7 +264,7 @@ static inline struct block *find_block(struct shortcut_desc *handle, const char 
 	struct dlist *l;
 
 	dlist_foreach(handle->block_list, l, block) {
-		if (!strcmp(block->part, part) && !strcmp(block->id, id))
+		if (!strcmp(block->part, part) && (!id || !strcmp(block->id, id)))
 			return block;
 	}
 
