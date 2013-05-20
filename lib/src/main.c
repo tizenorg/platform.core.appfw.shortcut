@@ -51,6 +51,7 @@ static struct info {
 	} server_cb;
 	int initialized;
 	int db_opened;
+	guint timer_id;
 } s_info = {
 	.server_fd = -1,
 	.client_fd = -1,
@@ -59,6 +60,7 @@ static struct info {
 	.handle = NULL,
 	.initialized = 0,
 	.db_opened = 0,
+	.timer_id = 0,
 };
 
 
@@ -203,6 +205,24 @@ static void master_started_cb(keynode_t *node, void *user_data)
 
 
 
+static gboolean timeout_cb(void *data)
+{
+	int ret;
+
+	ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
+	if (ret < 0)
+		ErrPrint("Failed to add vconf for service state [%d]\n", ret);
+	else
+		DbgPrint("vconf is registered\n");
+
+	master_started_cb(NULL, NULL);
+
+	s_info.timer_id = 0;
+	return FALSE;
+}
+
+
+
 static int disconnected_cb(int handle, void *data)
 {
 	if (s_info.client_fd == handle) {
@@ -211,15 +231,12 @@ static int disconnected_cb(int handle, void *data)
 	}
 
 	if (s_info.server_fd == handle) {
-		int ret;
-		s_info.server_fd = SHORTCUT_ERROR_INVALID;
-		ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
-		if (ret < 0)
-			ErrPrint("Failed to add vconf for service state [%d]\n", ret);
-		else
-			DbgPrint("vconf is registered\n");
-
-		master_started_cb(NULL, NULL);
+		if (!s_info.timer_id) {
+			s_info.server_fd = SHORTCUT_ERROR_INVALID;
+			s_info.timer_id = g_timeout_add(1000, timeout_cb, NULL);
+			if (!s_info.timer_id)
+				ErrPrint("Unable to add timer\n");
+		}
 		return 0;
 	}
 
