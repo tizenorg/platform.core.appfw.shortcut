@@ -404,9 +404,18 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 		block->idx = handle->last_idx++;
 		handle->block_list = dlist_append(handle->block_list, block);
 	} else {
-		if (strcmp(block->type, type) || strcmp(block->target_id, target_id)) {
-			ErrPrint("type or target id is not valid (%s, %s) or (%s, %s)\n",
-						block->type, type, block->target_id, target_id);
+		if (strcmp(block->type, type)) {
+			ErrPrint("type is not valid (%s, %s)\n", block->type, type);
+			return -EINVAL;
+		}
+
+		if ((block->target_id && !target_id) || (!block->target_id && target_id)) {
+			ErrPrint("type is not valid (%s, %s)\n", block->type, type);
+			return -EINVAL;
+		}
+
+		if (block->target_id && target_id && strcmp(block->target_id, target_id)) {
+			ErrPrint("type is not valid (%s, %s)\n", block->type, type);
 			return -EINVAL;
 		}
 
