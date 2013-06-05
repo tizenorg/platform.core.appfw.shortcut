@@ -1,0 +1,8 @@
+Change-Id: I8fcc60e44f7e520e4c9fc06645db6399dd650ced
+Code-Review+2: Anas Nashif
+Verified+1: Xavier Roche <xavier.roche@eurogiciel.fr>
+Submitted-by: Anas Nashif
+Submitted-at: Wed, 05 Jun 2013 04:29:43 -0700
+Reviewed-on: https://review.tizen.org/gerrit/3813
+Project: platform/core/appfw/shortcut
+Branch: refs/heads/tizen
