@@ -5,6 +5,7 @@ Release: 0
 Group: HomeTF/Framework
 License: Apache License
 Source0: %{name}-%{version}.tar.gz
+Source1001: 	libshortcut.manifest
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -32,6 +33,7 @@ Requires:   %{name} = %{version}-%{release}
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 %build
 %cmake .
@@ -49,7 +51,7 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %postun
 
 %files -n libshortcut
-%manifest libshortcut.manifest
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
@@ -58,6 +60,7 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %attr(640,root,app) /opt/dbspace/.shortcut_service.db-journal
 
 %files devel
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/shortcut/shortcut_PG.h
 %{_includedir}/shortcut/shortcut.h
