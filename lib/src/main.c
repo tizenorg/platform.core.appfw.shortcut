@@ -488,6 +488,9 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	struct result_cb_item *item;
 	int ret;
 
+	if (ADD_TO_HOME_IS_LIVEBOX(type))
+		ErrPrint("Invalid type used for adding a shortcut\n");
+
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
 		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
@@ -555,6 +558,9 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	struct packet *packet;
 	struct result_cb_item *item;
 	int ret;
+
+	if (!ADD_TO_HOME_IS_LIVEBOX(type))
+		ErrPrint("Invalid type is used for adding a livebox\n");
 
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
