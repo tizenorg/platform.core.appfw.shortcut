@@ -122,6 +122,7 @@ enum shortcut_response {
 	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040, /*!< Connection is not estabilished. or there is a problem of communication */ 
 	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080, /*!< Memory is not enough to handle new request */
 	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100, /*!< Unable to access file or DB. Check your resource files */
+	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200, /*!< Has no permission to add a shortcut */
 
 	SHORTCUT_STATUS_CARED = 0x08000000, /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
 };
