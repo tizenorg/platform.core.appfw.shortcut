@@ -107,7 +107,7 @@ enum shortcut_type {
 	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,
 	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,
 	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,
-	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000,
+	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000
 };
 
 enum shortcut_response {
@@ -124,7 +124,7 @@ enum shortcut_response {
 	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100, /*!< Unable to access file or DB. Check your resource files */
 	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200, /*!< Has no permission to add a shortcut */
 
-	SHORTCUT_STATUS_CARED = 0x08000000, /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
+	SHORTCUT_STATUS_CARED = 0x08000000 /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
 };
 
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
