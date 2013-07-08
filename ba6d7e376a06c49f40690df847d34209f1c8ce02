@@ -1,0 +1,8 @@
+Change-Id: Iba6d7e376a06c49f40690df847d34209f1c8ce02
+Code-Review+2: Ryan Ware <ware@linux.intel.com>
+Verified+1: Ryan Ware <ware@linux.intel.com>
+Submitted-by: Ryan Ware <ware@linux.intel.com>
+Submitted-at: Mon, 08 Jul 2013 10:07:22 -0700
+Reviewed-on: https://review.tizen.org/gerrit/4479
+Project: platform/core/appfw/shortcut
+Branch: refs/heads/tizen
