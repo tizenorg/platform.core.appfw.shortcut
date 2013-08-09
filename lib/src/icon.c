@@ -170,8 +170,9 @@ static inline struct shortcut_icon *shortcut_icon_request_ref(struct shortcut_ic
 
 static int disconnected_cb(int handle, void *data)
 {
-	if (s_info.fd != handle)
+	if (s_info.fd != handle) {
 		return 0;
+	}
 
 	ErrPrint("Disconnected\n");
 	s_info.fd = -1;
@@ -205,8 +206,9 @@ static inline int shortcut_icon_desc_save(struct shortcut_desc *handle, const ch
 	struct block *block;
 	FILE *fp;
 
-	if (!handle)
+	if (!handle) {
 		return -EINVAL;
+	}
 
 	fp = fopen(filename, "w+t");
 	if (!fp) {
@@ -252,7 +254,9 @@ static inline int shortcut_icon_desc_save(struct shortcut_desc *handle, const ch
 		DbgPrint("}\n");
 	}
 
-	fclose(fp);
+	if (fclose(fp) != 0) {
+		ErrPrint("fclose: %s\n", strerror(errno));
+	}
 	return 0;
 }
 
@@ -264,8 +268,9 @@ static inline struct block *find_block(struct shortcut_desc *handle, const char 
 	struct dlist *l;
 
 	dlist_foreach(handle->block_list, l, block) {
-		if (!strcmp(block->part, part) && (!id || !strcmp(block->id, id)))
+		if (!strcmp(block->part, part) && (!id || !strcmp(block->id, id))) {
 			return block;
+		}
 	}
 
 	return NULL;
@@ -314,14 +319,17 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 {
 	struct block *block;
 
-	if (!handle || !type)
+	if (!handle || !type) {
 		return SHORTCUT_ERROR_INVALID;
+	}
 
-	if (!part)
+	if (!part) {
 		part = "";
+	}
 
-	if (!data)
+	if (!data) {
 		data = "";
+	}
 
 	if (target_id) {
 		if (strcmp(type, SHORTCUT_ICON_TYPE_SCRIPT)) {
@@ -442,8 +450,9 @@ static int icon_request_cb(pid_t pid, int handle, const struct packet *packet, v
 		}
 	}
 
-	if (item->result_cb)
+	if (item->result_cb) {
 		item->result_cb(item->handle, ret, item->data);
+	}
 
 	(void)shortcut_icon_request_unref(item->handle);
 	free(item);
@@ -466,15 +475,17 @@ static inline int make_connection(void)
 	if (s_info.fd < 0) {
 		ret = SHORTCUT_ERROR_COMM;
 
-		if (s_info.init_cb)
+		if (s_info.init_cb) {
 			s_info.init_cb(ret, s_info.cbdata);
+		}
 	} else {
 		struct dlist *l;
 		struct dlist *n;
 		struct pending_item *pend;
 
-		if (s_info.init_cb)
+		if (s_info.init_cb) {
 			s_info.init_cb(SHORTCUT_SUCCESS, s_info.cbdata);
+		}
 
 		dlist_foreach_safe(s_info.pending_list, l, n, pend) {
 			s_info.pending_list = dlist_remove(s_info.pending_list, l);
@@ -483,8 +494,9 @@ static inline int make_connection(void)
 			packet_destroy(pend->packet);
 			if (ret < 0) {
 				ErrPrint("ret: %d\n", ret);
-				if (pend->item->result_cb)
+				if (pend->item->result_cb) {
 					pend->item->result_cb(pend->item->handle, ret, pend->item->data);
+				}
 				free(pend->item);
 			}
 
@@ -503,8 +515,9 @@ static void master_started_cb(keynode_t *node, void *user_data)
 {
 	int state = 0;
 
-	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0)
+	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0) {
 		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
+	}
 
 	if (state == 1 && make_connection() == SHORTCUT_SUCCESS) {
 		int ret;
@@ -519,8 +532,9 @@ EAPI int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void
 {
 	int ret;
 
-	if (s_info.fd >= 0)
+	if (s_info.fd >= 0) {
 		return -EALREADY;
+	}
 
 	if (s_info.initialized) {
 		s_info.initialized = 1;
@@ -531,10 +545,11 @@ EAPI int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void
 	s_info.cbdata = data;
 
 	ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
-	if (ret < 0)
+	if (ret < 0) {
 		ErrPrint("Failed to add vconf for service state [%d]\n", ret);
-	else
+	} else {
 		DbgPrint("vconf is registered\n");
+	}
 
 	master_started_cb(NULL, NULL);
 	return 0;
@@ -553,8 +568,9 @@ EAPI int shortcut_icon_service_fini(void)
 		s_info.initialized = 0;
 	}
 
-	if (s_info.fd < 0)
+	if (s_info.fd < 0) {
 		return -EINVAL;
+	}
 
 	com_core_packet_client_fini(s_info.fd);
 	s_info.init_cb = NULL;
@@ -564,8 +580,9 @@ EAPI int shortcut_icon_service_fini(void)
 	dlist_foreach_safe(s_info.pending_list, l, n, pend) {
 		s_info.pending_list = dlist_remove(s_info.pending_list, l);
 		packet_unref(pend->packet);
-		if (pend->item->result_cb)
+		if (pend->item->result_cb) {
 			pend->item->result_cb(pend->item->handle, SHORTCUT_ERROR_COMM, pend->item->data);
+		}
 		free(pend->item);
 		free(pend);
 	}
@@ -660,11 +677,13 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		return -EINVAL;
 	}
 
-	if (!layout)
+	if (!layout) {
 		layout = DEFAULT_ICON_LAYOUT;
+	}
 
-	if (!group)
+	if (!group) {
 		group = DEFAULT_ICON_GROUP;
+	}
 
 	len = strlen(outfile) + strlen(".desc") + 1;
 	filename = malloc(len);
@@ -676,14 +695,16 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 	snprintf(filename, len, "%s.desc", outfile);
 
 	ret = shortcut_icon_desc_save(handle->desc, filename);
-	if (ret < 0)
+	if (ret < 0) {
 		goto out;
+	}
 
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		if (unlink(filename) < 0)
+		if (unlink(filename) < 0) {
 			ErrPrint("Unlink: %s\n", strerror(errno));
+		}
 		ret = -ENOMEM;
 		goto out;
 	}
@@ -695,8 +716,9 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 	packet = packet_create("icon_create", "sssis", layout, group, filename, size_type, outfile);
 	if (!packet) {
 		ErrPrint("Failed to create a packet\n");
-		if (unlink(filename) < 0)
+		if (unlink(filename) < 0) {
 			ErrPrint("Unlink: %s\n", strerror(errno));
+		}
 		free(item);
 		(void)shortcut_icon_request_unref(handle);
 		ret = -EFAULT;
@@ -708,8 +730,9 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		packet_destroy(packet);
 		if (ret < 0) {
 			ErrPrint("ret: %d\n", ret);
-			if (unlink(filename) < 0)
+			if (unlink(filename) < 0) {
 				ErrPrint("Unlink: %s\n", strerror(errno));
+			}
 			free(item);
 			(void)shortcut_icon_request_unref(handle);
 		}
@@ -722,8 +745,9 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 			ErrPrint("Heap: %s\n", strerror(errno));
 			packet_destroy(packet);
 			free(item);
-			if (unlink(filename) < 0)
+			if (unlink(filename) < 0) {
 				ErrPrint("Unlink: %s\n", strerror(errno));
+			}
 			(void)shortcut_icon_request_unref(handle);
 			ret = -ENOMEM;
 			goto out;

@@ -87,10 +87,11 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 
 	DbgPrint("appid[%s], name[%s], content_info[%s]\n", appid, name, content_info);
 
-	if (s_info.server_cb.request_cb)
+	if (s_info.server_cb.request_cb) {
 		ret = s_info.server_cb.request_cb(appid, name, SHORTCUT_REMOVE, content_info, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
-	else
+	} else {
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
+	}
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -116,10 +117,11 @@ static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct
 
 	DbgPrint("appid[%s], name[%s]\n", appid, name);
 
-	if (s_info.server_cb.request_cb)
+	if (s_info.server_cb.request_cb) {
 		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
-	else
+	} else {
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
+	}
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -137,8 +139,9 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	int ret;
 	int sender_pid;
 
-	if (!packet)
+	if (!packet) {
 		return NULL;
+	}
 
 	if (packet_get(packet, "ississi", &sender_pid, &appid, &name, &type, &content, &icon, &allow_duplicate) != 7) {
 		ErrPrint("Invalid packet\n");
@@ -147,10 +150,11 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s] allow_duplicate[%d]\n", appid, name, type, content, icon, allow_duplicate);
 
-	if (s_info.server_cb.request_cb)
+	if (s_info.server_cb.request_cb) {
 		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, -1.0f, allow_duplicate, s_info.server_cb.data);
-	else
+	} else {
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
+	}
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -169,8 +173,9 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 	int ret;
 	int sender_pid;
 
-	if (!packet)
+	if (!packet) {
 		return NULL;
+	}
 
 	if (packet_get(packet, "ississdi", &sender_pid, &appid, &name, &type, &content, &icon, &period, &allow_duplicate) != 8) {
 		ErrPrint("Invalid packet\n");
@@ -179,10 +184,11 @@ static struct packet *add_livebox_handler(pid_t pid, int handle, const struct pa
 
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf], allow_duplicate[%d]\n", appid, name, type, content, icon, period, allow_duplicate);
 
-	if (s_info.server_cb.request_cb)
+	if (s_info.server_cb.request_cb) {
 		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, period, allow_duplicate, s_info.server_cb.data);
-	else
+	} else {
 		ret = 0;
+	}
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -193,8 +199,9 @@ static void master_started_cb(keynode_t *node, void *user_data)
 {
 	int state = 0;
 
-	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0)
+	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0) {
 		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
+	}
 
 	if (state == 1 && make_connection() == SHORTCUT_SUCCESS) {
 		int ret;
@@ -210,10 +217,11 @@ static gboolean timeout_cb(void *data)
 	int ret;
 
 	ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
-	if (ret < 0)
+	if (ret < 0) {
 		ErrPrint("Failed to add vconf for service state [%d]\n", ret);
-	else
+	} else {
 		DbgPrint("vconf is registered\n");
+	}
 
 	master_started_cb(NULL, NULL);
 
@@ -234,8 +242,9 @@ static int disconnected_cb(int handle, void *data)
 		if (!s_info.timer_id) {
 			s_info.server_fd = SHORTCUT_ERROR_INVALID;
 			s_info.timer_id = g_timeout_add(1000, timeout_cb, NULL);
-			if (!s_info.timer_id)
+			if (!s_info.timer_id) {
 				ErrPrint("Unable to add timer\n");
+			}
 		}
 		return 0;
 	}
@@ -349,10 +358,11 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 		ret = SHORTCUT_ERROR_INVALID;
 	}
 
-	if (item->result_cb)
+	if (item->result_cb) {
 		ret = item->result_cb(ret, pid, item->data);
-	else
+	} else {
 		ret = SHORTCUT_SUCCESS;
+	}
 	free(item);
 	return ret;
 }
@@ -488,8 +498,9 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	struct result_cb_item *item;
 	int ret;
 
-	if (ADD_TO_HOME_IS_LIVEBOX(type))
+	if (ADD_TO_HOME_IS_LIVEBOX(type)) {
 		ErrPrint("Invalid type used for adding a shortcut\n");
+	}
 
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
@@ -520,17 +531,21 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	item->result_cb = result_cb;
 	item->data = data;
 
-	if (!appid)
+	if (!appid) {
 		appid = "";
+	}
 
-	if (!name)
+	if (!name) {
 		name = "";
+	}
 
-	if (!content)
+	if (!content) {
 		content = "";
+	}
 
-	if (!icon)
+	if (!icon) {
 		icon = "";
+	}
 
 	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, content, icon, allow_duplicate);
 	if (!packet) {
@@ -559,8 +574,9 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	struct result_cb_item *item;
 	int ret;
 
-	if (!ADD_TO_HOME_IS_LIVEBOX(type))
+	if (!ADD_TO_HOME_IS_LIVEBOX(type)) {
 		ErrPrint("Invalid type is used for adding a livebox\n");
+	}
 
 	if (!s_info.initialized) {
 		s_info.initialized = 1;
@@ -576,8 +592,9 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		};
 
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0)
+		if (s_info.client_fd < 0) {
 			return SHORTCUT_ERROR_COMM;
+		}
 	}
 
 	item = malloc(sizeof(*item));
@@ -688,15 +705,17 @@ static inline char *cur_locale(void)
 				break;
 			}
 
-			if (*ptr == '_')
+			if (*ptr == '_') {
 				*ptr = '-';
+			}
 
 			ptr++;
 		}
 	} else {
 		language = strdup("en-us");
-		if (!language)
+		if (!language) {
 			ErrPrint("Heap: %s\n", strerror(errno));
+		}
 	}
 
 	return language;
@@ -721,8 +740,9 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	int cnt;
 	char *language;
 
-	if (!s_info.db_opened)
+	if (!s_info.db_opened) {
 		s_info.db_opened = (open_db() == 0);
+	}
 
 	if (!s_info.db_opened) {
 		ErrPrint("Failed to open a DB\n");
