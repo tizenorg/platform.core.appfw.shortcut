@@ -29,7 +29,6 @@ extern "C" {
 
 /**
  * @defgroup SHORTCUT Add to home (shortcut)
- * @author Sung-jae Park <nicesj.park@samsung.com>
  * @version 0.1
  * @brief To enhance the Add to home feature. Two types of API set are supported.
  *        One for the homescreen developers.
@@ -307,17 +306,17 @@ extern int add_to_home_remove_livebox(const char *appid, const char *name, resul
  *     }
  * 
  *     // Send the request to the shortcut service
- *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, "/usr/share/.../icon.png", NULL, NULL);
+ *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, "icon, "/usr/share/.../icon.png", NULL, NULL);
  *     if (ret < 0) {
  *        ...
  *     }
  *
- *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, "app icon", NULL, NULL);
+ *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, "text, "app icon", NULL, NULL);
  *     if (ret < 0) {
  *        ...
  *     }
  *
- *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/com.samsung.cluster-home/data/out.png", result_cb, NULL);
+ *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/org.tizen.cluster-home/data/out.png", result_cb, NULL);
  *     if (ret < 0) {
  *        ...
  *     }

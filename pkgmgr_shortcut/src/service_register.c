@@ -161,8 +161,9 @@ static inline void db_create_table(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0)
+	if (sqlite3_changes(s_info.handle) == 0) {
 		ErrPrint("No changes to DB\n");
+	}
 
 	ddl = "CREATE TABLE shortcut_name (id INTEGER, lang TEXT, name TEXT)";
 	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
@@ -170,8 +171,9 @@ static inline void db_create_table(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0)
+	if (sqlite3_changes(s_info.handle) == 0) {
 		ErrPrint("No changes to DB\n");
+	}
 }
 
 static inline int db_remove_record(const char *appid, const char *key, const char *data)
@@ -213,8 +215,9 @@ static inline int db_remove_record(const char *appid, const char *key, const cha
 		ErrPrint("Failed to execute the DML for %s - %s(%s)\n", appid, key, data);
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0)
+	if (sqlite3_changes(s_info.handle) == 0) {
 		DbgPrint("No changes\n");
+	}
 
 out:
 	sqlite3_reset(stmt);
@@ -253,8 +256,9 @@ static inline int db_remove_name(int id)
 		goto out;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0)
+	if (sqlite3_changes(s_info.handle) == 0) {
 		DbgPrint("No changes\n");
+	}
 
 out:
 	sqlite3_reset(stmt);
@@ -457,16 +461,18 @@ static inline int db_init(void)
 		return -EINVAL;
 	}
 
-	if (!stat.st_size)
+	if (!stat.st_size) {
 		db_create_table();
+	}
 
 	return 0;
 }
 
 static inline int db_fini(void)
 {
-	if (!s_info.handle)
+	if (!s_info.handle) {
 		return 0;
+	}
 
 	db_util_close(s_info.handle);
 	s_info.handle = NULL;
@@ -490,13 +496,15 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 	}
 
 	if (!s_info.handle) {
-		if (db_init() < 0)
+		if (db_init() < 0) {
 			return -EIO;
+		}
 	}
 
 	for (root = root->children; root; root = root->next) {
-		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
 			break;
+		}
 	}
 
 	if (!root) {
@@ -507,11 +515,13 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 	DbgPrint("AppID: %s\n", _appid);
 	root = root->children;
 	for (node = root; node; node = node->next) {
-		if (node->type == XML_ELEMENT_NODE)
+		if (node->type == XML_ELEMENT_NODE) {
 			DbgPrint("Element %s\n", node->name);
+		}
 
-		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut"))
+		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut")) {
 			continue;
+		}
 
 		if (!xmlHasProp(node, (xmlChar *)"extra_data")
 			|| !xmlHasProp(node, (xmlChar *)"extra_key")
@@ -597,13 +607,15 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 	}
 
 	if (!s_info.handle) {
-		if (db_init() < 0)
+		if (db_init() < 0) {
 			return -EIO;
+		}
 	}
 
 	for (root = root->children; root; root = root->next) {
-		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
 			break;
+		}
 	}
 
 	if (!root) {
@@ -615,11 +627,13 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 
 	root = root->children; /* Jump to children node */
 	for (node = root; node; node = node->next) {
-		if (node->type == XML_ELEMENT_NODE)
+		if (node->type == XML_ELEMENT_NODE) {
 			DbgPrint("Element %s\n", node->name);
+		}
 
-		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut"))
+		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut")) {
 			continue;
+		}
 
 		if (!xmlHasProp(node, (xmlChar *)"extra_key") || !xmlHasProp(node, (xmlChar *)"extra_data")) {
 			DbgPrint("Invalid element %s\n", node->name);
@@ -708,8 +722,9 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 			} else {
 				dlist_foreach_safe(i18n_list, l, n, i18n) {
 					i18n_list = dlist_remove(i18n_list, l);
-					if (db_insert_name(id, (char *)i18n->lang, (char *)i18n->name) < 0)
+					if (db_insert_name(id, (char *)i18n->lang, (char *)i18n->name) < 0) {
 						ErrPrint("Failed to add i18n name: %s(%s)\n", i18n->name, i18n->lang);
+					}
 					xmlFree(i18n->lang);
 					xmlFree(i18n->name);
 					free(i18n);

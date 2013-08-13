@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.6.5
+Version: 0.6.6
 Release: 0
 Group: HomeTF/Framework
 License: Apache License
@@ -34,6 +34,11 @@ Requires:   %{name} = %{version}-%{release}
 %setup -q
 
 %build
+%if 0%{?tizen_build_binary_release_type_eng}
+export CFLAGS="${CFLAGS} -DTIZEN_ENGINEER_MODE"
+export CXXFLAGS="${CXXFLAGS} -DTIZEN_ENGINEER_MODE"
+export FFLAGS="${FFLAGS} -DTIZEN_ENGINEER_MODE"
+%endif
 %cmake .
 make %{?jobs:-j%jobs}
 
