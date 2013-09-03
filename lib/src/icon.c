@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <libgen.h>
+#include <sys/time.h>
 
 #include <dlog.h>
 #include <glib.h>
