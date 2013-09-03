@@ -14,6 +14,7 @@
  * limitations under the License.
  *
 */
+#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
@@ -670,6 +671,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 	struct packet *packet;
 	struct request_item *item;
 	char *filename;
+	struct timeval tv;
 	int len;
 
 	if (!handle || handle->state != CREATED) {
@@ -685,14 +687,24 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		group = DEFAULT_ICON_GROUP;
 	}
 
-	len = strlen(outfile) + strlen(".desc") + 1;
+	len = strlen(outfile) + strlen(".desc") + 1 + 30; /* 30 == strlen(tv.tv_sec) + strlen(tv.tv_usec) + 10 (reserved) */
 	filename = malloc(len);
 	if (!filename) {
 		ErrPrint("Heap: %s\n", strerror(errno));
 		return -ENOMEM;
 	}
 
-	snprintf(filename, len, "%s.desc", outfile);
+	if (gettimeofday(&tv, NULL) != 0) {
+		ErrPrint("gettimeofday: %s\n", strerror(errno));
+		tv.tv_sec = rand();
+		tv.tv_usec = rand();
+	}
+
+	ret = snprintf(filename, len, "%s.%lu.%lu.desc", outfile, tv.tv_sec, tv.tv_usec);
+	if (ret < 0) {
+		ErrPrint("snprintf: %s\n", strerror(errno));
+		goto out;
+	}
 
 	ret = shortcut_icon_desc_save(handle->desc, filename);
 	if (ret < 0) {
