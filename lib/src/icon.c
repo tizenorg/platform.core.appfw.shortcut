@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <libgen.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include <dlog.h>
 #include <glib.h>
@@ -44,7 +45,6 @@
 #define CREATED	0x00BEEF00
 #define DESTROYED 0x00DEAD00
 
-
 static struct info {
 	int fd;
 	int (*init_cb)(int status, void *data);
@@ -54,6 +54,9 @@ static struct info {
 	const char *utility_socket;
 
 	struct dlist *pending_list;
+#if defined(_USE_ECORE_TIME_GET)
+	clockid_t type;
+#endif
 } s_info = {
 	.fd = -1,
 	.init_cb = NULL,
@@ -62,6 +65,9 @@ static struct info {
 
 	.utility_socket = "/tmp/.utility.service",
 	.pending_list = NULL,
+#if defined(_USE_ECORE_TIME_GET)
+	.type = CLOCK_MONOTONIC,
+#endif
 };
 
 
@@ -672,7 +678,6 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 	struct packet *packet;
 	struct request_item *item;
 	char *filename;
-	struct timeval tv;
 	int len;
 
 	if (!handle || handle->state != CREATED) {
@@ -695,6 +700,33 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		return -ENOMEM;
 	}
 
+#if defined(_USE_ECORE_TIME_GET)
+	struct timespec ts;
+	double tv;
+	do {
+		if (clock_gettime(s_info.type, &ts) == 0) {
+			tv = ts.tv_sec + ts.tv_nsec / 1000000000.0f;
+			break;
+		}
+
+		ErrPrint("%d: %s\n", s_info.type, strerror(errno));
+		if (s_info.type == CLOCK_MONOTONIC) {
+			s_info.type = CLOCK_REALTIME;
+		} else if (s_info.type == CLOCK_REALTIME) {
+			struct timeval _tv;
+			if (gettimeofday(&_tv, NULL) < 0) {
+				ErrPrint("gettimeofday: %s\n", strerror(errno));
+				_tv.tv_sec = rand();
+				_tv.tv_usec = rand();
+			}
+
+			tv = (double)_tv.tv_sec + (double)_tv.tv_usec / 1000000.0f;
+			break;
+		}
+	} while (1);
+	ret = snprintf(filename, len, "%s.%lf.desc", outfile, tv);
+#else
+	struct timeval tv;
 	if (gettimeofday(&tv, NULL) != 0) {
 		ErrPrint("gettimeofday: %s\n", strerror(errno));
 		tv.tv_sec = rand();
@@ -702,6 +734,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 	}
 
 	ret = snprintf(filename, len, "%s.%lu.%lu.desc", outfile, tv.tv_sec, tv.tv_usec);
+#endif
 	if (ret < 0) {
 		ErrPrint("snprintf: %s\n", strerror(errno));
 		goto out;
