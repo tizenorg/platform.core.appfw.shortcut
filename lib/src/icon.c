@@ -713,7 +713,14 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		if (s_info.type == CLOCK_MONOTONIC) {
 			s_info.type = CLOCK_REALTIME;
 		} else if (s_info.type == CLOCK_REALTIME) {
-			tv = rand();
+			struct timeval _tv;
+			if (gettimeofday(&_tv, NULL) < 0) {
+				ErrPrint("gettimeofday: %s\n", strerror(errno));
+				_tv.tv_sec = rand();
+				_tv.tv_usec = rand();
+			}
+
+			tv = (double)_tv.tv_sec + (double)_tv.tv_usec / 1000000.0f;
 			break;
 		}
 	} while (1);
