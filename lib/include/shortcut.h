@@ -29,7 +29,6 @@ extern "C" {
 
 /**
  * @defgroup SHORTCUT Add to home (shortcut)
- * @author Sung-jae Park <nicesj.park@samsung.com>
  * @version 0.1
  * @brief To enhance the Add to home feature. Two types of API set are supported.
  *        One for the homescreen developers.
@@ -107,7 +106,7 @@ enum shortcut_type {
 	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,
 	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,
 	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,
-	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000,
+	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000
 };
 
 enum shortcut_response {
@@ -122,8 +121,9 @@ enum shortcut_response {
 	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040, /*!< Connection is not estabilished. or there is a problem of communication */ 
 	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080, /*!< Memory is not enough to handle new request */
 	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100, /*!< Unable to access file or DB. Check your resource files */
+	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200, /*!< Has no permission to add a shortcut */
 
-	SHORTCUT_STATUS_CARED = 0x08000000, /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
+	SHORTCUT_STATUS_CARED = 0x08000000 /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
 };
 
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
@@ -306,17 +306,17 @@ extern int add_to_home_remove_livebox(const char *appid, const char *name, resul
  *     }
  * 
  *     // Send the request to the shortcut service
- *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, "/usr/share/.../icon.png", NULL, NULL);
+ *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, "icon, "/usr/share/.../icon.png", NULL, NULL);
  *     if (ret < 0) {
  *        ...
  *     }
  *
- *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, "app icon", NULL, NULL);
+ *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, "text, "app icon", NULL, NULL);
  *     if (ret < 0) {
  *        ...
  *     }
  *
- *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/com.samsung.cluster-home/data/out.png", result_cb, NULL);
+ *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/org.tizen.cluster-home/data/out.png", result_cb, NULL);
  *     if (ret < 0) {
  *        ...
  *     }

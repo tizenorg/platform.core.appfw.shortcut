@@ -41,7 +41,7 @@ static Eina_Bool test_main(void *data)
 	}
 
 	printf("Test: %d\n", idx);
-	ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, DEFAULT_ICON_PART, "/usr/share/icons/default/small/com.samsung.music-player.png", NULL, NULL);
+	ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, DEFAULT_ICON_PART, "/usr/share/icons/default/small/org.tizen.music-player.png", NULL, NULL);
 	printf("NAME set_info: %d\n", ret);
 
 	snprintf(filename, sizeof(filename), "App Name %d", idx);
