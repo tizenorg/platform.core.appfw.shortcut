@@ -144,6 +144,111 @@ static inline int commit_transaction(void)
 	sqlite3_finalize(stmt);
 	return EXIT_SUCCESS;
 }
+
+static void db_create_version(void)
+{
+	static const char *ddl = "CREATE TABLE version (version INTEGER)";
+	char *err;
+
+	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
+		ErrPrint("Failed to execute the DDL (%s)\n", err);
+		return;
+	}
+
+	if (sqlite3_changes(s_info.handle) == 0) {
+		ErrPrint("No changes to DB\n");
+	}
+}
+
+static int set_version(int version)
+{
+	static const char *dml = "INSERT INTO version (version) VALUES (?)";
+	sqlite3_stmt *stmt;
+	int ret;
+
+	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
+		return -EIO;
+	}
+
+	if (sqlite3_bind_int(stmt, 1, version) != SQLITE_OK) {
+		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret != SQLITE_DONE) {
+		ErrPrint("Failed to execute the DML for version: %d\n", ret);
+		ret = -EIO;
+	} else {
+		ret = 0;
+	}
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+static int update_version(int version)
+{
+	static const char *dml = "UPDATE version SET version = ?";
+	sqlite3_stmt *stmt;
+	int ret;
+
+	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
+		return -EIO;
+	}
+
+	if (sqlite3_bind_int(stmt, 1, version) != SQLITE_OK) {
+		ErrPrint("Failed to bind a version: %s\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret != SQLITE_DONE) {
+		ErrPrint("Failed to execute DML: %d\n", ret);
+		ret = -EIO;
+	} else {
+		ret = 0;
+	}
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+static int get_version(void)
+{
+	static const char *dml = "SELECT version FROM version";
+	sqlite3_stmt *stmt;
+	int ret;
+
+	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		return -ENOSYS;
+	}
+
+	if (sqlite3_step(stmt) != SQLITE_ROW) {
+		ret = -ENOENT;
+	} else {
+		ret = sqlite3_column_int(stmt, 0);
+	}
+
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
 static void db_create_table(void)
 {
 	char *err;
@@ -175,6 +280,8 @@ static void db_create_table(void)
 	if (sqlite3_changes(s_info.handle) == 0) {
 		ErrPrint("No changes to DB\n");
 	}
+
+	db_create_version();
 }
 
 static void alter_shortcut_name(void)
@@ -247,74 +354,36 @@ out:
 	return ret;
 }
 
-static int do_upgrade_db_schema(void)
+static void do_upgrade_db_schema(void)
 {
-	static const char *dml = ".schema";
-	sqlite3_stmt *stmt;
-	const char *schema;
-	char *table;
-	char *ddl;
-	int ret;
-	int bufsz;
+	int version;
 
-	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
-		return -EIO;
+	version = get_version();
+
+	switch (version) {
+	case -ENOSYS:
+		db_create_version();
+		/* Need to create version table */
+	case -ENOENT:
+		if (set_version(1) < 0) {
+			ErrPrint("Failed to set version\n");
+		}
+		/* Need to set version */
+		alter_shortcut_name();
+		alter_shortcut_service();
+	case 1:
+		break;
+	default:
+		/* Need to update version */
+		DbgPrint("Old version: %d\n", version);
+		if (update_version(1) < 0) {
+			ErrPrint("Failed to update version\n");
+		}
+
+		alter_shortcut_name();
+		alter_shortcut_service();
+		break;
 	}
-
-	ret = 0;
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		schema = (const char *)sqlite3_column_text(stmt, 0);
-		if (!schema || !strlen(schema)) {
-			continue;
-		}
-
-		bufsz = strlen(schema) + 1;
-
-		table = malloc(bufsz);
-		if (!table) {
-			ErrPrint("Heap: %s\n", strerror(errno));
-			ret = -ENOMEM;
-			break;
-		}
-
-		ddl = malloc(bufsz);
-		if (!ddl) {
-			ErrPrint("Heap: %s\n", strerror(errno));
-			free(table);
-			ret = -ENOMEM;
-			break;
-		}
-
-		if (sscanf(schema, "CREATE TABLE %s (%[^)])", table, ddl) != 2) {
-			free(table);
-			free(ddl);
-			ErrPrint("Invalid syntax: (%s)\n", schema);
-			continue;
-		}
-
-		if (!strcmp(table, "shortcut_name")) {
-			if (!strstr(ddl, "pkgid")) {
-				alter_shortcut_name();
-			}
-		} else if (!strcmp(table, "shortcut_service")) {
-			if (!strstr(ddl, "pkgid")) {
-				alter_shortcut_service();
-			}
-		} else {
-			ErrPrint("Unknown table: %s\n", table);
-		}
-
-		free(table);
-		free(ddl);
-		ret++;
-	}
-
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	sqlite3_finalize(stmt);
-	return ret;
 }
 
 
@@ -1003,8 +1072,7 @@ int PKGMGR_PARSER_PLUGIN_PRE_INSTALL(const char *appid)
 	ret = do_uninstall(appid);
 	if (ret < 0) {
 		ErrPrint("Failed to remove record: %s\n", appid);
-		rollback_transaction();
-		return ret;
+		/* Keep going */
 	}
 	commit_transaction();
 	return  0;
@@ -1037,8 +1105,7 @@ int PKGMGR_PARSER_PLUGIN_PRE_UPGRADE(const char *appid)
 	ret = do_uninstall(appid);
 	if (ret < 0) {
 		ErrPrint("Failed to remove a record: %s\n", appid);
-		rollback_transaction();
-		return ret;
+		/* Keep going */
 	}
 	commit_transaction();
 	return 0;
