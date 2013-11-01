@@ -52,17 +52,17 @@
 /*!
  * DB Table schema
  *
- * +----+-------+------+---------+-----------+------------+
- * | id | appid | Icon |  Name   | extra_key | extra_data |
- * +----+-------+------+---------+-----------+------------+
- * | id |   -   |   -  |    -    |     -     |     -      |
- * +----+-------+------+---------+-----------+------------+
+ * +----+-------+-------+------+---------+-----------+------------+
+ * | id | pkgid | appid | Icon |  Name   | extra_key | extra_data |
+ * +----+-------+-------+------+---------+-----------+------------+
+ * | id |   -   |   -   |   -  |    -    |     -     |     -      |
+ * +----+-------+-------+------+---------+-----------+------------+
  *
- * +----+------+------+
- * | fk | lang | name |
- * +----+------+------+
- * | id |   -  |   -  |
- * +----+------+------+
+ * +----+-------+------+------+
+ * | fk | pkgid | lang | name |
+ * +----+-------+------+------+
+ * | id |   -   |   -  |      |
+ * +----+-------+------+------+
  */
 
 #if !defined(LIBXML_TREE_ENABLED)
@@ -144,12 +144,13 @@ static inline int commit_transaction(void)
 	sqlite3_finalize(stmt);
 	return EXIT_SUCCESS;
 }
-static inline void db_create_table(void)
+static void db_create_table(void)
 {
 	char *err;
 	static const char *ddl =
 		"CREATE TABLE shortcut_service ("
 		"id INTEGER PRIMARY KEY AUTOINCREMENT, "
+		"pkgid TEXT, "
 		"appid TEXT, "
 		"icon TEXT, "
 		"name TEXT, "
@@ -165,7 +166,7 @@ static inline void db_create_table(void)
 		ErrPrint("No changes to DB\n");
 	}
 
-	ddl = "CREATE TABLE shortcut_name (id INTEGER, lang TEXT, name TEXT)";
+	ddl = "CREATE TABLE shortcut_name (id INTEGER, pkgid TEXT, lang TEXT, name TEXT)";
 	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
 		ErrPrint("Failed to execute the DDL (%s)\n", err);
 		return;
@@ -176,9 +177,150 @@ static inline void db_create_table(void)
 	}
 }
 
-static inline int db_remove_record(const char *appid, const char *key, const char *data)
+static void alter_shortcut_name(void)
 {
-	static const char *dml = "DELETE FROM shortcut_service WHERE appid = ? AND extra_key = ? AND extra_data = ?";
+	char *err;
+	static const char *ddl = "ALTER TABLE shortcut_name ADD pkgid TEXT";
+
+	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
+		ErrPrint("Failed to execute the DDL (%s)\n", err);
+		return;
+	}
+
+	if (sqlite3_changes(s_info.handle) == 0) {
+		ErrPrint("No changes to DB\n");
+	}
+}
+
+static void alter_shortcut_service(void)
+{
+	char *err;
+	static const char *ddl = "ALTER TABLE shortcut_service ADD pkgid TEXT";
+
+	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
+		ErrPrint("Failed to execute the DDL (%s)\n", err);
+		return;
+	}
+
+	if (sqlite3_changes(s_info.handle) == 0) {
+		ErrPrint("No changes to DB\n");
+	}
+}
+
+static int db_remove_by_pkgid(const char *pkgid)
+{
+	static const char *dml = "DELETE FROM shortcut_service WHERE pkgid = ?";
+	sqlite3_stmt *stmt;
+	int ret;
+
+	if (!pkgid) {
+		ErrPrint("Invalid argument\n");
+		return -EINVAL;
+	}
+
+	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
+		return -EIO;
+	}
+
+	ret = -EIO;
+	if (sqlite3_bind_text(stmt, 1, pkgid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind a pkgid(%s)\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	ret = 0;
+	if (sqlite3_step(stmt) != SQLITE_DONE) {
+		ret = -EIO;
+		ErrPrint("Failed to execute the DML for %s\n", pkgid);
+	} else {
+		if (sqlite3_changes(s_info.handle) == 0) {
+			DbgPrint("No changed\n");
+		}
+	}
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+static int do_upgrade_db_schema(void)
+{
+	static const char *dml = ".schema";
+	sqlite3_stmt *stmt;
+	const char *schema;
+	char *table;
+	char *ddl;
+	int ret;
+	int bufsz;
+
+	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
+		return -EIO;
+	}
+
+	ret = 0;
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		schema = (const char *)sqlite3_column_text(stmt, 0);
+		if (!schema || !strlen(schema)) {
+			continue;
+		}
+
+		bufsz = strlen(schema) + 1;
+
+		table = malloc(bufsz);
+		if (!table) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			ret = -ENOMEM;
+			break;
+		}
+
+		ddl = malloc(bufsz);
+		if (!ddl) {
+			ErrPrint("Heap: %s\n", strerror(errno));
+			free(table);
+			ret = -ENOMEM;
+			break;
+		}
+
+		if (sscanf(schema, "CREATE TABLE %s (%[^)])", table, ddl) != 2) {
+			free(table);
+			free(ddl);
+			ErrPrint("Invalid syntax: (%s)\n", schema);
+			continue;
+		}
+
+		if (!strcmp(table, "shortcut_name")) {
+			if (!strstr(ddl, "pkgid")) {
+				alter_shortcut_name();
+			}
+		} else if (!strcmp(table, "shortcut_service")) {
+			if (!strstr(ddl, "pkgid")) {
+				alter_shortcut_service();
+			}
+		} else {
+			ErrPrint("Unknown table: %s\n", table);
+		}
+
+		free(table);
+		free(ddl);
+		ret++;
+	}
+
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+
+static int db_remove_record(const char *pkgid, const char *appid, const char *key, const char *data)
+{
+	static const char *dml = "DELETE FROM shortcut_service WHERE appid = ? AND extra_key = ? AND extra_data = ? AND pkgid = ?";
 	sqlite3_stmt *stmt;
 	int ret;
 
@@ -209,6 +351,11 @@ static inline int db_remove_record(const char *appid, const char *key, const cha
 		goto out;
 	}
 
+	if (sqlite3_bind_text(stmt, 4, pkgid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind a pkgid(%s)\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
 	ret = 0;
 	if (sqlite3_step(stmt) != SQLITE_DONE) {
 		ret = -EIO;
@@ -226,7 +373,47 @@ out:
 	return ret;
 }
 
-static inline int db_remove_name(int id)
+static int db_remove_name_by_pkgid(const char *pkgid)
+{
+	static const char *dml = "DELETE FROM shortcut_name WHERE pkgid = ?";
+	sqlite3_stmt *stmt;
+	int ret;
+
+	if (!pkgid) {
+		ErrPrint("Invalid id\n");
+		return -EINVAL;
+	}
+
+	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
+		return -EIO;
+	}
+
+	if (sqlite3_bind_text(stmt, 1, pkgid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind pkgid(%s)\n", pkgid);
+		return -EIO;
+	}
+
+	ret = 0;
+	if (sqlite3_step(stmt) != SQLITE_DONE) {
+		ret = -EIO;
+		ErrPrint("Failed to execute the DML for %s\n", pkgid);
+		goto out;
+	}
+
+	if (sqlite3_changes(s_info.handle) == 0) {
+		DbgPrint("No chnages\n");
+	}
+
+out:
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	sqlite3_finalize(stmt);
+	return ret;
+}
+
+static int db_remove_name(int id)
 {
 	static const char *dml = "DELETE FROM shortcut_name WHERE id = ?";
 	sqlite3_stmt *stmt;
@@ -267,11 +454,16 @@ out:
 	return ret;
 }
 
-static inline int db_insert_record(const char *appid, const char *icon, const char *name, const char *key, const char *data)
+static int db_insert_record(const char *pkgid, const char *appid, const char *icon, const char *name, const char *key, const char *data)
 {
-	static const char *dml = "INSERT INTO shortcut_service (appid, icon, name, extra_key, extra_data) VALUES (?, ?, ?, ?, ?)";
+	static const char *dml = "INSERT INTO shortcut_service (pkgid, appid, icon, name, extra_key, extra_data) VALUES (?, ?, ?, ?, ?, ?)";
 	sqlite3_stmt *stmt;
 	int ret;
+
+	if (!pkgid) {
+		ErrPrint("Failed to get pkgid\n");
+		return -EINVAL;
+	}
 
 	if (!appid) {
 		ErrPrint("Failed to get appid\n");
@@ -302,27 +494,32 @@ static inline int db_insert_record(const char *appid, const char *icon, const ch
 	}
 
 	ret = -EIO;
-	if (sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 1, pkgid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind a pkgid(%s)\n", sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	if (sqlite3_bind_text(stmt, 2, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a appid(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, icon, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 3, icon, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a icon(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 4, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a name(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 4, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 5, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a service(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 5, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 6, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a service(%s)\n", sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
@@ -340,9 +537,9 @@ out:
 	return ret;
 }
 
-static inline int db_insert_name(int id, const char *lang, const char *name)
+static int db_insert_name(int id, const char *pkgid, const char *lang, const char *name)
 {
-	static const char *dml = "INSERT INTO shortcut_name (id, lang, name) VALUES (?, ?, ?)";
+	static const char *dml = "INSERT INTO shortcut_name (id, pkgid, lang, name) VALUES (?, ?, ?, ?)";
 	sqlite3_stmt *stmt;
 	int ret;
 
@@ -363,13 +560,19 @@ static inline int db_insert_name(int id, const char *lang, const char *name)
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 2, pkgid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind a pkgid(%s)\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	if (sqlite3_bind_text(stmt, 3, lang, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 4, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
 		goto out;
@@ -388,9 +591,9 @@ out:
 	return ret;
 }
 
-static inline int db_get_id(const char *appid, const char *key, const char *data)
+static int db_get_id(const char *pkgid, const char *appid, const char *key, const char *data)
 {
-	static const char *dml = "SELECT id FROM shortcut_service WHERE appid = ? AND extra_key = ? AND extra_data = ?";
+	static const char *dml = "SELECT id FROM shortcut_service WHERE pkgid = ? AND appid = ? AND extra_key = ? AND extra_data = ?";
 	sqlite3_stmt *stmt;
 	int ret;
 
@@ -406,17 +609,22 @@ static inline int db_get_id(const char *appid, const char *key, const char *data
 	}
 
 	ret = -EIO;
-	if (sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 1, pkgid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind a pkgid(%s) - %s\n", pkgid, sqlite3_errmsg(s_info.handle));
+		goto out;
+	}
+
+	if (sqlite3_bind_text(stmt, 2, appid, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a appid(%s) - %s\n", appid, sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 2, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 3, key, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a key(%s) - %s\n", key, sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
 
-	if (sqlite3_bind_text(stmt, 3, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 4, data, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a data(%s) - %s\n", data, sqlite3_errmsg(s_info.handle));
 		goto out;
 	}
@@ -436,7 +644,7 @@ out:
 	return ret;
 }
 
-static inline int db_init(void)
+static int db_init(void)
 {
 	int ret;
 	struct stat stat;
@@ -468,7 +676,7 @@ static inline int db_init(void)
 	return 0;
 }
 
-static inline int db_fini(void)
+static int db_fini(void)
 {
 	if (!s_info.handle) {
 		return 0;
@@ -480,108 +688,26 @@ static inline int db_fini(void)
 	return 0;
 }
 
-int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
+static int do_uninstall(const char *appid)
 {
-	xmlNodePtr node = NULL;
-	xmlChar *key;
-	xmlChar *data;
-	xmlChar *appid;
-	xmlNodePtr root;
-	int id;
+	int ret;
 
-	root = xmlDocGetRootElement(docPtr);
-	if (!root) {
-		ErrPrint("Invalid node ptr\n");
-		return -EINVAL;
+	ret = db_remove_by_pkgid(appid); 
+	if (ret < 0) {
+		ErrPrint("Failed to remove a record: %s\n", appid);
+		return ret;
 	}
 
-	if (!s_info.handle) {
-		if (db_init() < 0) {
-			return -EIO;
-		}
-	}
-
-	for (root = root->children; root; root = root->next) {
-		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
-			break;
-		}
-	}
-
-	if (!root) {
-		ErrPrint("Root has no shortcut-list\n");
-		return -EINVAL;
-	}
-
-	DbgPrint("AppID: %s\n", _appid);
-	root = root->children;
-	for (node = root; node; node = node->next) {
-		if (node->type == XML_ELEMENT_NODE) {
-			DbgPrint("Element %s\n", node->name);
-		}
-
-		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut")) {
-			continue;
-		}
-
-		if (!xmlHasProp(node, (xmlChar *)"extra_data")
-			|| !xmlHasProp(node, (xmlChar *)"extra_key")
-			|| !xmlHasProp(node, (xmlChar *)"appid"))
-		{
-			DbgPrint("Invalid element %s\n", node->name);
-			continue;
-		}
-
-		appid = xmlGetProp(node, (xmlChar *)"appid");
-		key = xmlGetProp(node, (xmlChar *)"extra_key");
-		data = xmlGetProp(node, (xmlChar *)"extra_data");
-
-		DbgPrint("appid: %s\n", appid);
-		DbgPrint("key: %s\n", key);
-		DbgPrint("data: %s\n", data);
-
-		id = db_get_id((char *)appid, (char *)key, (char *)data);
-		if (id < 0) {
-			ErrPrint("No records found\n");
-			xmlFree(appid);
-			xmlFree(key);
-			xmlFree(data);
-			continue;
-		}
-
-		begin_transaction();
-		if (db_remove_record((char *)appid, (char *)key, (char *)data) < 0) {
-			ErrPrint("Failed to remove a record\n");
-			rollback_transaction();
-			xmlFree(appid);
-			xmlFree(key);
-			xmlFree(data);
-			continue;
-		}
-
-		if (db_remove_name(id) < 0) {
-			ErrPrint("Failed to remove name records\n");
-			rollback_transaction();
-			xmlFree(appid);
-			xmlFree(key);
-			xmlFree(data);
-			continue;
-		}
-		commit_transaction();
-		xmlFree(appid);
-		xmlFree(key);
-		xmlFree(data);
-
-		/*!
-		 * \note
-		 * if (node->children)
-		 * DbgPrint("Skip this node's children\n");
-		 */
+	ret = db_remove_name_by_pkgid(appid);
+	if (ret < 0) {
+		ErrPrint("Failed to remove name records: %s\n", appid);
+		return ret;
 	}
 
 	return 0;
 }
 
-int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
+static int do_install(xmlDocPtr docPtr, const char *appid)
 {
 	xmlNodePtr node = NULL;
 	xmlNodePtr child = NULL;
@@ -604,12 +730,6 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 	if (!root) {
 		ErrPrint("Invalid node ptr\n");
 		return -EINVAL;
-	}
-
-	if (!s_info.handle) {
-		if (db_init() < 0) {
-			return -EIO;
-		}
 	}
 
 	for (root = root->children; root; root = root->next) {
@@ -697,7 +817,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 		}
 
 		begin_transaction();
-		if (db_insert_record((char *)shortcut_appid, (char *)icon, (char *)name, (char *)key, (char *)data) < 0) {
+		if (db_insert_record(appid, (char *)shortcut_appid, (char *)icon, (char *)name, (char *)key, (char *)data) < 0) {
 			ErrPrint("Failed to insert a new record\n");
 			rollback_transaction();
 
@@ -708,7 +828,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 				free(i18n);
 			}
 		} else {
-			id = db_get_id((char *)shortcut_appid, (char *)key, (char *)data);
+			id = db_get_id((char *)appid, (char *)shortcut_appid, (char *)key, (char *)data);
 			if (id < 0) {
 				ErrPrint("Failed to insert a new record\n");
 				rollback_transaction();
@@ -722,7 +842,7 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 			} else {
 				dlist_foreach_safe(i18n_list, l, n, i18n) {
 					i18n_list = dlist_remove(i18n_list, l);
-					if (db_insert_name(id, (char *)i18n->lang, (char *)i18n->name) < 0) {
+					if (db_insert_name(id, appid, (char *)i18n->lang, (char *)i18n->name) < 0) {
 						ErrPrint("Failed to add i18n name: %s(%s)\n", i18n->name, i18n->lang);
 					}
 					xmlFree(i18n->lang);
@@ -743,12 +863,197 @@ int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
 	return 0;
 }
 
+int PKGMGR_PARSER_PLUGIN_PRE_UNINSTALL(const char *appid)
+{
+	if (!s_info.handle) {
+		if (db_init() < 0) {
+			return -EIO;
+		}
+	}
+
+	do_upgrade_db_schema();
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_POST_UNINSTALL(const char *appid)
+{
+	int ret;
+
+	begin_transaction();
+	ret = do_uninstall(appid);
+	if (ret < 0) {
+		rollback_transaction();
+		return ret;
+	}
+	commit_transaction();
+
+	db_fini();
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
+{
+	xmlNodePtr node = NULL;
+	xmlChar *key;
+	xmlChar *data;
+	xmlChar *appid;
+	xmlNodePtr root;
+	int id;
+
+	root = xmlDocGetRootElement(docPtr);
+	if (!root) {
+		ErrPrint("Invalid node ptr\n");
+		return -EINVAL;
+	}
+
+	for (root = root->children; root; root = root->next) {
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
+			break;
+		}
+	}
+
+	if (!root) {
+		ErrPrint("Root has no shortcut-list\n");
+		return -EINVAL;
+	}
+
+	DbgPrint("AppID: %s\n", _appid);
+	root = root->children;
+	for (node = root; node; node = node->next) {
+		if (node->type == XML_ELEMENT_NODE) {
+			DbgPrint("Element %s\n", node->name);
+		}
+
+		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut")) {
+			continue;
+		}
+
+		if (!xmlHasProp(node, (xmlChar *)"extra_data")
+				|| !xmlHasProp(node, (xmlChar *)"extra_key")
+				|| !xmlHasProp(node, (xmlChar *)"appid"))
+		{
+			DbgPrint("Invalid element %s\n", node->name);
+			continue;
+		}
+
+		appid = xmlGetProp(node, (xmlChar *)"appid");
+		key = xmlGetProp(node, (xmlChar *)"extra_key");
+		data = xmlGetProp(node, (xmlChar *)"extra_data");
+
+		DbgPrint("appid: %s\n", appid);
+		DbgPrint("key: %s\n", key);
+		DbgPrint("data: %s\n", data);
+
+		id = db_get_id("", (char *)appid, (char *)key, (char *)data);
+		if (id < 0) {
+			ErrPrint("No records found\n");
+			xmlFree(appid);
+			xmlFree(key);
+			xmlFree(data);
+			continue;
+		}
+
+		begin_transaction();
+		if (db_remove_record("", (char *)appid, (char *)key, (char *)data) < 0) {
+			ErrPrint("Failed to remove a record\n");
+			rollback_transaction();
+			xmlFree(appid);
+			xmlFree(key);
+			xmlFree(data);
+			continue;
+		}
+
+		if (db_remove_name(id) < 0) {
+			ErrPrint("Failed to remove name records\n");
+			rollback_transaction();
+			xmlFree(appid);
+			xmlFree(key);
+			xmlFree(data);
+			continue;
+		}
+		commit_transaction();
+
+		xmlFree(appid);
+		xmlFree(key);
+		xmlFree(data);
+
+		/*!
+		 * \note
+		 * if (node->children)
+		 * DbgPrint("Skip this node's children\n");
+		 */
+	}
+
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_PRE_INSTALL(const char *appid)
+{
+	int ret;
+
+	if (!s_info.handle) {
+		if (db_init() < 0) {
+			return -EIO;
+		}
+	}
+
+	do_upgrade_db_schema();
+
+	begin_transaction();
+	ret = do_uninstall(appid);
+	if (ret < 0) {
+		ErrPrint("Failed to remove record: %s\n", appid);
+		rollback_transaction();
+		return ret;
+	}
+	commit_transaction();
+	return  0;
+}
+
+int PKGMGR_PARSER_PLUGIN_POST_INSTALL(const char *appid)
+{
+	db_fini();
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_INSTALL(xmlDocPtr docPtr, const char *appid)
+{
+	return do_install(docPtr, appid);
+}
+
+int PKGMGR_PARSER_PLUGIN_PRE_UPGRADE(const char *appid)
+{
+	int ret;
+
+	if (!s_info.handle) {
+		if (db_init() < 0) {
+			return -EIO;
+		}
+	}
+
+	do_upgrade_db_schema();
+
+	begin_transaction();
+	ret = do_uninstall(appid);
+	if (ret < 0) {
+		ErrPrint("Failed to remove a record: %s\n", appid);
+		rollback_transaction();
+		return ret;
+	}
+	commit_transaction();
+	return 0;
+}
+
+int PKGMGR_PARSER_PLUGIN_POST_UPGRADE(const char *appid)
+{
+	db_fini();
+	return 0;
+}
+
 int PKGMGR_PARSER_PLUGIN_UPGRADE(xmlDocPtr docPtr, const char *appid)
 {
 	/* So... ugly */
-	PKGMGR_PARSER_PLUGIN_UNINSTALL(docPtr, appid);
-	PKGMGR_PARSER_PLUGIN_INSTALL(docPtr, appid);
-	return 0;
+	return do_install(docPtr, appid);
 }
 
 /*
