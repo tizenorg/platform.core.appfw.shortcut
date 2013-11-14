@@ -374,7 +374,6 @@ static void do_upgrade_db_schema(void)
 	}
 }
 
-
 static int db_remove_record(const char *pkgid, const char *appid, const char *key, const char *data)
 {
 	static const char *dml = "DELETE FROM shortcut_service WHERE appid = ? AND extra_key = ? AND extra_data = ? AND pkgid = ?";
@@ -956,6 +955,11 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 	xmlChar *appid;
 	xmlNodePtr root;
 	int id;
+
+	if (!docPtr) {
+		DbgPrint("Package manager doesn't support the docPtr (%s)\n", _appid);
+		return 0;
+	}
 
 	root = xmlDocGetRootElement(docPtr);
 	if (!root) {
