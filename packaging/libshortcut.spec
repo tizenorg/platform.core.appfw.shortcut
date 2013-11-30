@@ -3,8 +3,9 @@ Summary: Shortcut add feature supporting library
 Version: 0.6.9
 Release: 0
 Group: HomeTF/Framework
-License: Apache License
+License: Apache
 Source0: %{name}-%{version}.tar.gz
+Source1001: %{name}.manifest
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -32,8 +33,14 @@ Requires:   %{name} = %{version}-%{release}
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 %build
+%if 0%{?sec_build_binary_debug_enable}
+export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"
+export CXXFLAGS="$CXXFLAGS -DTIZEN_DEBUG_ENABLE"
+export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
+%endif
 %if 0%{?tizen_build_binary_release_type_eng}
 export CFLAGS="${CFLAGS} -DTIZEN_ENGINEER_MODE"
 export CXXFLAGS="${CXXFLAGS} -DTIZEN_ENGINEER_MODE"
@@ -54,7 +61,7 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %postun
 
 %files -n libshortcut
-%manifest libshortcut.manifest
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
@@ -63,6 +70,7 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %attr(640,root,app) /opt/dbspace/.shortcut_service.db-journal
 
 %files devel
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/shortcut/shortcut_PG.h
 %{_includedir}/shortcut/shortcut.h
