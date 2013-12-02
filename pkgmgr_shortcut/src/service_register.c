@@ -46,11 +46,11 @@
  * | id |   -   |   -   |   -  |    -    |     -     |     -      |
  * +----+-------+-------+------+---------+-----------+------------+
  *
- * +----+-------+------+------+
- * | fk | pkgid | lang | name |
- * +----+-------+------+------+
- * | id |   -   |   -  |      |
- * +----+-------+------+------+
+ * +----+-------+------+------+------+
+ * | fk | pkgid | lang | name | icon |
+ * +----+-------+------+------+------+
+ * | id |   -   |   -  |      |   -  |
+ * +----+-------+------+------+------+
  */
 
 #if !defined(LIBXML_TREE_ENABLED)
@@ -58,6 +58,12 @@
 #endif
 
 int errno;
+
+struct i18n_name {
+	xmlChar *icon;
+	xmlChar *name;
+	xmlChar *lang;
+};
 
 static struct {
 	const char *dbfile;
@@ -259,7 +265,7 @@ static void db_create_table(void)
 		ErrPrint("No changes to DB\n");
 	}
 
-	ddl = "CREATE TABLE shortcut_name (id INTEGER, pkgid TEXT, lang TEXT, name TEXT)";
+	ddl = "CREATE TABLE shortcut_name (id INTEGER, pkgid TEXT, lang TEXT, name TEXT, icon TEXT)";
 	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
 		ErrPrint("Failed to execute the DDL (%s)\n", err);
 		return;
@@ -270,6 +276,21 @@ static void db_create_table(void)
 	}
 
 	db_create_version();
+}
+
+static void alter_shortcut_icon(void)
+{
+	char *err;
+	static const char *ddl = "ALTER TABLE shortcut_name ADD icon TEXT";
+
+	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
+		ErrPrint("Failed to execute the DDL (%s)\n", err);
+		return;
+	}
+
+	if (sqlite3_changes(s_info.handle) == 0) {
+		ErrPrint("No changes to DB\n");
+	}
 }
 
 static void alter_shortcut_name(void)
@@ -360,16 +381,23 @@ static void do_upgrade_db_schema(void)
 		alter_shortcut_name();
 		alter_shortcut_service();
 	case 1:
+		alter_shortcut_icon();
+		if (update_version(2) < 0) {
+			ErrPrint("Failed to update version\n");
+		}
+	case 2:
 		break;
 	default:
 		/* Need to update version */
 		DbgPrint("Old version: %d\n", version);
-		if (update_version(1) < 0) {
+		if (update_version(2) < 0) {
 			ErrPrint("Failed to update version\n");
 		}
 
 		alter_shortcut_name();
 		alter_shortcut_service();
+		/* 2 */
+		alter_shortcut_icon();
 		break;
 	}
 }
@@ -593,15 +621,23 @@ out:
 	return ret;
 }
 
-static int db_insert_name(int id, const char *pkgid, const char *lang, const char *name)
+static int db_insert_name(int id, const char *pkgid, const char *lang, const char *name, const char *icon)
 {
-	static const char *dml = "INSERT INTO shortcut_name (id, pkgid, lang, name) VALUES (?, ?, ?, ?)";
+	static const char *dml = "INSERT INTO shortcut_name (id, pkgid, lang, name) VALUES (?, ?, ?, ?, ?)";
 	sqlite3_stmt *stmt;
 	int ret;
 
-	if (id < 0 || !lang || !name) {
+	if (id < 0 || !lang) {
 		ErrPrint("Invalid parameters\n");
 		return -EINVAL;
+	}
+
+	if (!name) {
+		name = "";
+	}
+
+	if (!icon) {
+		icon = "";
 	}
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
@@ -629,6 +665,12 @@ static int db_insert_name(int id, const char *pkgid, const char *lang, const cha
 	}
 
 	if (sqlite3_bind_text(stmt, 4, name, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
+		ret = -EIO;
+		goto out;
+	}
+
+	if (sqlite3_bind_text(stmt, 5, icon, -1, SQLITE_TRANSIENT) != SQLITE_OK) {
 		ErrPrint("Failed to bind a id(%s)\n", sqlite3_errmsg(s_info.handle));
 		ret = -EIO;
 		goto out;
@@ -763,6 +805,45 @@ static int do_uninstall(const char *appid)
 	return 0;
 }
 
+static inline struct i18n_name *find_i18n_name(struct dlist *i18n_list, xmlChar *lang)
+{
+	struct dlist *l;
+	struct i18n_name *i18n;
+
+	dlist_foreach(i18n_list, l, i18n) {
+		if (!xmlStrcasecmp(i18n->lang, lang)) {
+			return i18n;
+		}
+	}
+
+	return NULL;
+}
+
+static inline struct i18n_name *create_i18n_name(xmlChar *lang, xmlChar *name, xmlChar *icon)
+{
+	struct i18n_name *i18n;
+
+	i18n = malloc(sizeof(*i18n));
+	if (!i18n) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return NULL;
+	}
+
+	i18n->lang = lang;
+	i18n->name = name;
+	i18n->icon = icon;
+
+	return i18n;
+}
+
+static inline void destroy_i18n_name(struct i18n_name *i18n)
+{
+	xmlFree(i18n->lang);
+	xmlFree(i18n->name);
+	xmlFree(i18n->icon);
+	free(i18n);
+}
+
 static int do_install(xmlDocPtr docPtr, const char *appid)
 {
 	xmlNodePtr node = NULL;
@@ -771,12 +852,10 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 	xmlChar *data;
 	xmlChar *name;
 	xmlChar *icon;
+	xmlChar *lang;
 	xmlChar *shortcut_appid;
 	xmlNodePtr root;
-	struct i18n_name {
-		xmlChar *name;
-		xmlChar *lang;
-	} *i18n;
+	struct i18n_name *i18n;
 	struct dlist *i18n_list = NULL;
 	struct dlist *l;
 	struct dlist *n;
@@ -824,17 +903,41 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 		name = NULL;
 		for (child = node->children; child; child = child->next) {
 			if (!xmlStrcasecmp(child->name, (const xmlChar *)"icon")) {
-				if (icon) {
-					DbgPrint("Icon is duplicated\n");
+				lang = xmlNodeGetLang(child);
+				if (!lang) {
+					if (icon) {
+						DbgPrint("Default icon is duplicated\n");
+					} else {
+						icon = xmlNodeGetContent(child);
+						DbgPrint("Default icon is %s\n", icon);
+					}
+
 					continue;
 				}
 
-				icon = xmlNodeGetContent(child);
+				i18n = find_i18n_name(i18n_list, lang);
+				if (i18n) {
+					xmlFree(lang);
+
+					if (i18n->icon) {
+						DbgPrint("%s is duplicated\n", i18n->icon);
+						continue;
+					}
+
+					i18n->icon = xmlNodeGetContent(child);
+				} else {
+					i18n = create_i18n_name(lang, NULL, xmlNodeGetContent(child));
+					if (!i18n) {
+						ErrPrint("Failed to create a new i18n_name\n");
+						continue;
+					}
+					i18n_list = dlist_append(i18n_list, i18n);
+				}
+
 				continue;
 			}
 
 			if (!xmlStrcasecmp(child->name, (const xmlChar *)"label")) {
-				xmlChar *lang;
 				lang = xmlNodeGetLang(child);
 				if (!lang) {
 					if (name) {
@@ -847,15 +950,25 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 					continue;
 				}
 
-				i18n = malloc(sizeof(*i18n));
-				if (!i18n) {
-					ErrPrint("Heap: %s\n", strerror(errno));
-					break;
+				i18n = find_i18n_name(i18n_list, lang);
+				if (i18n) {
+					xmlFree(lang);
+
+					if (i18n->name) {
+						DbgPrint("%s is duplicated\n", i18n->name);
+						continue;
+					}
+
+					i18n->name = xmlNodeGetContent(child);
+				} else {
+					i18n = create_i18n_name(lang, xmlNodeGetContent(child), NULL);
+					if (!i18n) {
+						ErrPrint("Failed to create a new i18n_name\n");
+						continue;
+					}
+					i18n_list = dlist_append(i18n_list, i18n);
 				}
 
-				i18n->lang = lang;
-				i18n->name = xmlNodeGetContent(child);
-				i18n_list = dlist_append(i18n_list, i18n);
 				continue;
 			}
 		}
@@ -879,9 +992,7 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 
 			dlist_foreach_safe(i18n_list, l, n, i18n) {
 				i18n_list = dlist_remove(i18n_list, l);
-				xmlFree(i18n->lang);
-				xmlFree(i18n->name);
-				free(i18n);
+				destroy_i18n_name(i18n);
 			}
 		} else {
 			id = db_get_id((char *)appid, (char *)shortcut_appid, (char *)key, (char *)data);
@@ -891,19 +1002,15 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 
 				dlist_foreach_safe(i18n_list, l, n, i18n) {
 					i18n_list = dlist_remove(i18n_list, l);
-					xmlFree(i18n->lang);
-					xmlFree(i18n->name);
-					free(i18n);
+					destroy_i18n_name(i18n);
 				}
 			} else {
 				dlist_foreach_safe(i18n_list, l, n, i18n) {
 					i18n_list = dlist_remove(i18n_list, l);
-					if (db_insert_name(id, appid, (char *)i18n->lang, (char *)i18n->name) < 0) {
+					if (db_insert_name(id, appid, (char *)i18n->lang, (char *)i18n->name, (char *)i18n->icon) < 0) {
 						ErrPrint("Failed to add i18n name: %s(%s)\n", i18n->name, i18n->lang);
 					}
-					xmlFree(i18n->lang);
-					xmlFree(i18n->name);
-					free(i18n);
+					destroy_i18n_name(i18n);
 				}
 				commit_transaction();
 			}

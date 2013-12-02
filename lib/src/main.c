@@ -644,43 +644,65 @@ static inline int open_db(void)
 /*!
  * \note this function will returns allocated(heap) string
  */
-static inline char *get_i18n_name(const char *lang, int id)
+static inline int get_i18n_name(const char *lang, int id, char **name, char **icon)
 {
 	sqlite3_stmt *stmt;
-	static const char *query = "SELECT name FROM shortcut_name WHERE id = ? AND lang = ? COLLATE NOCASE";
-	const unsigned char *name;
-	char *ret;
+	static const char *query = "SELECT name, icon FROM shortcut_name WHERE id = ? AND lang = ? COLLATE NOCASE";
+	const unsigned char *_name;
+	const unsigned char *_icon;
+	int ret;
 	int status;
 
 	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 	if (status != SQLITE_OK) {
 		ErrPrint("Failed to prepare stmt: %s\n", sqlite3_errmsg(s_info.handle));
-		return NULL;
+		return -EFAULT;
 	}
 
 	status = sqlite3_bind_int(stmt, 1, id);
 	if (status != SQLITE_OK) {
 		ErrPrint("Failed to bind id: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = NULL;
+		ret = -EFAULT;
 		goto out;
 	}
 
 	status = sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT);
 	if (status != SQLITE_OK) {
 		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = NULL;
+		ret = -EFAULT;
 		goto out;
 	}
 
 	DbgPrint("id: %d, lang: %s\n", id, lang);
 	if (SQLITE_ROW != sqlite3_step(stmt)) {
 		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(s_info.handle));
-		ret = NULL;
+		ret = -ENOENT;
 		goto out;
 	}
 
-	name = sqlite3_column_text(stmt, 0);
-	ret = name ? strdup((const char *)name) : NULL;
+	_name = sqlite3_column_text(stmt, 0);
+	if (name) {
+		if (_name && strlen((const char *)_name)) {
+			*name = strdup((const char *)_name);
+			if (!*name) {
+				ErrPrint("strdup: %s\n", strerror(errno));
+			}
+		} else {
+			*name = NULL;
+		}
+	}
+
+	_icon = sqlite3_column_text(stmt, 1);
+	if (icon) {
+		if (_icon && strlen((const char *)_icon)) {
+			*icon = strdup((const char *)_icon);
+			if (!*icon) {
+				ErrPrint("strdup: %s\n", strerror(errno));
+			}
+		} else {
+			*icon = NULL;
+		}
+	}
 
 out:
 	sqlite3_reset(stmt);
@@ -731,7 +753,8 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	sqlite3_stmt *stmt;
 	const char *query;
 	const unsigned char *name;
-	char *i18n_name;
+	char *i18n_name = NULL;
+	char *i18n_icon = NULL;
 	const unsigned char *extra_data;
 	const unsigned char *extra_key;
 	const unsigned char *icon;
@@ -819,15 +842,18 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		 * \todo
 		 * Implement the "GET LOCALE" code
 		 */
-		i18n_name = get_i18n_name(language, id);
+		if (get_i18n_name(language, id, &i18n_name, &i18n_icon) < 0) {
+			/* Okay, we can't manage this. just use the fallback string */
+		}
 
 		cnt++;
-		if (cb(appid, (char *)icon, (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
+		if (cb(appid, (i18n_icon != NULL ? i18n_icon : (char *)icon), (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
 			free(i18n_name);
 			break;
 		}
 
 		free(i18n_name);
+		free(i18n_icon);
 	}
 
 	sqlite3_reset(stmt);
