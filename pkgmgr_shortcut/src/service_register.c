@@ -623,7 +623,7 @@ out:
 
 static int db_insert_name(int id, const char *pkgid, const char *lang, const char *name, const char *icon)
 {
-	static const char *dml = "INSERT INTO shortcut_name (id, pkgid, lang, name) VALUES (?, ?, ?, ?, ?)";
+	static const char *dml = "INSERT INTO shortcut_name (id, pkgid, lang, name, icon) VALUES (?, ?, ?, ?, ?)";
 	sqlite3_stmt *stmt;
 	int ret;
 
