@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.6.10
+Version: 0.6.11
 Release: 0
 Group: HomeTF/Framework
 License: Apache
