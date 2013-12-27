@@ -870,6 +870,4 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	return cnt;
 }
 
-
-
 /* End of a file */

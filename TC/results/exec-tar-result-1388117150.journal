@@ -1,0 +1,15 @@
+0|3.7-lite 04:05:50 20131227|User: root (0) TCC Start, Command line: /var/tmp/dts_fw/TETware/tetware-target/bin/tcc -e -j results/exec-tar-result-1388117150.journal -p ./
+5|Linux nclinux 3.1.0-rc6 #5 SMP Sun Jan 20 00:39:54 KST 2013 armv7l|System Information
+20|/var/tmp/dts_fw/./tetexec.cfg 1|Config Start
+30||TET_OUTPUT_CAPTURE=True
+30||TET_EXEC_TOOL=
+30||TET_EXEC_FILE=
+30||TET_API_COMPLIANT=True
+30||TET_PASS_TC_NAME=True
+30||TET_VERSION=3.7-lite
+40||Config End
+10|0 /testcase/utc_livebox_service 04:05:50|TC Start, scenario ref 1-0
+50||(exec.c, 131): can't exec /var/tmp/dts_fw/./tet_tmp_dir/23996aa/testcase/utc_livebox_service, reply code = ER_NOENT
+80|0 -1 04:05:50|TC End, scenario ref 1-0
+50||(copysave.c, 405): can't change directory to /opt/home/livebox/TETware/tetware-target: No such file or directory
+900|04:05:50|TCC End
