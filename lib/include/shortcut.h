@@ -217,7 +217,7 @@ enum shortcut_response {
  * \remarks None
  *
  */
-#define SHORTCUT_ERROR_CODE(status)	(type & ~SHORTCUT_STATUS_CARED)
+#define SHORTCUT_ERROR_CODE(status)	((status) & ~SHORTCUT_STATUS_CARED)
 
 /**
  * @fn int shortcut_set_request_cb(request_cb_t request_cb, void *data)
