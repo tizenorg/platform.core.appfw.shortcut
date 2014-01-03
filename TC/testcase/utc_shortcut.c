@@ -57,6 +57,7 @@ static void utc_shortcut_set_request_cb_n(void)
 	 * \note
 	 * Unable to test negative case
 	 */
+	dts_pass("shortcut_set_request_cb", "pass negative test");
 }
 
 static int shortcut_request_cb(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, double period, int allow_duplicate, void *data)
@@ -114,7 +115,7 @@ static void utc_shortcut_get_list_n(void)
 	 * \note
 	 * Unable to test negative case
 	 */
-	dts_check_pass("shortcut_get_list", "negative test");
+	dts_pass("shortcut_get_list", "negative test");
 }
 
 static int shortcut_list_cb(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data)
@@ -168,7 +169,7 @@ static void utc_add_to_home_remove_shortcut_p(void)
 static void utc_add_to_home_remove_livebox_n(void)
 {
 	int ret;
-	ret = add_to_home_remove_livebox("fail", NULL, NULL, response_cb, (void *)1);
+	ret = add_to_home_remove_livebox("fail", NULL, response_cb, (void *)1);
 	if (ret != SHORTCUT_SUCCESS) {
 		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID, "Invalid");
 	}
@@ -177,7 +178,7 @@ static void utc_add_to_home_remove_livebox_n(void)
 static void utc_add_to_home_remove_livebox_p(void)
 {
 	int ret;
-	ret = add_to_home_remove_livebox("success", NULL, NULL, response_cb, (void *)2);
+	ret = add_to_home_remove_livebox("success", NULL, response_cb, (void *)2);
 	if (ret != SHORTCUT_SUCCESS) {
 		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID, "Invalid");
 	}
@@ -189,7 +190,7 @@ static void utc_shortcut_icon_service_init_n(void)
 	 * \note
 	 * Unable to test negative case
 	 */
-	dts_check_pass("shortcut_icon_service_init", "negative test");
+	dts_pass("shortcut_icon_service_init", "negative test");
 }
 
 static int icon_service_cb(int status, void *data)
@@ -214,7 +215,7 @@ static void utc_shortcut_icon_service_fini_n(void)
 	 * \note
 	 * Unable to test negative case
 	 */
-	dts_check_pass("shortcut_icon_service_fini", "negative test");
+	dts_pass("shortcut_icon_service_fini", "negative test");
 }
 
 static void utc_shortcut_icon_service_fini_p(void)
@@ -226,7 +227,7 @@ static void utc_shortcut_icon_service_fini_p(void)
 
 static void utc_shortcut_icon_request_create_n(void)
 {
-	dts_check_pass("shortcut_icon_request_create", "negative test");
+	dts_pass("shortcut_icon_request_create", "negative test");
 }
 
 static void utc_shortcut_icon_request_create_p(void)
@@ -247,7 +248,7 @@ static void utc_shortcut_icon_request_set_info_p(void)
 	int ret;
 
 	if (!s_info.handle) {
-		dts_check_pass("shortcut_icon_request_set_info", "handle is not initialized");
+		dts_pass("shortcut_icon_request_set_info", "handle is not initialized");
 		return;
 	}
 
@@ -273,7 +274,7 @@ static void utc_shortcut_icon_request_send_p(void)
 	int ret;
 
 	if (!s_info.handle) {
-		dts_check_pass("shortcut_icon_request_set_info", "handle is not initialized");
+		dts_pass("shortcut_icon_request_set_info", "handle is not initialized");
 		return;
 	}
 
@@ -294,7 +295,7 @@ static void utc_shortcut_icon_request_destroy_p(void)
 	int ret;
 
 	if (!s_info.handle) {
-		dts_check_pass("shortcut_icon_request_set_info", "handle is not initialized");
+		dts_pass("shortcut_icon_request_set_info", "handle is not initialized");
 		return;
 	}
 
@@ -315,7 +316,7 @@ static void utc_shortcut_icon_request_set_data_p(void)
 	int ret;
 
 	if (!s_info.handle) {
-		dts_check_pass("shortcut_icon_request_set_data", "failed to set data");
+		dts_pass("shortcut_icon_request_set_data", "failed to set data");
 		return;
 	}
 
@@ -325,14 +326,14 @@ static void utc_shortcut_icon_request_set_data_p(void)
 
 static void utc_shortcut_icon_request_data_n(void)
 {
-	dts_check_pass("shortcut_icon_request_data", "get_data");
+	dts_pass("shortcut_icon_request_data", "get_data");
 }
 
 static void utc_shortcut_icon_request_data_p(void)
 {
 	void *data;
 	if (!s_info.handle) {
-		dts_check_pass("shortcut_icon_request_data", "invalid handle");
+		dts_pass("shortcut_icon_request_data", "invalid handle");
 		return;
 	}
 
