@@ -650,7 +650,7 @@ static inline int get_i18n_name(const char *lang, int id, char **name, char **ic
 	static const char *query = "SELECT name, icon FROM shortcut_name WHERE id = ? AND lang = ? COLLATE NOCASE";
 	const unsigned char *_name;
 	const unsigned char *_icon;
-	int ret;
+	int ret = 0;
 	int status;
 
 	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
@@ -686,6 +686,8 @@ static inline int get_i18n_name(const char *lang, int id, char **name, char **ic
 			*name = strdup((const char *)_name);
 			if (!*name) {
 				ErrPrint("strdup: %s\n", strerror(errno));
+				ret = -ENOMEM;
+				goto out;
 			}
 		} else {
 			*name = NULL;
@@ -698,6 +700,11 @@ static inline int get_i18n_name(const char *lang, int id, char **name, char **ic
 			*icon = strdup((const char *)_icon);
 			if (!*icon) {
 				ErrPrint("strdup: %s\n", strerror(errno));
+				ret = -ENOMEM;
+				if (name && *name) {
+					free(*name);
+				}
+				goto out;
 			}
 		} else {
 			*icon = NULL;
@@ -862,7 +869,5 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	free(language);
 	return cnt;
 }
-
-
 
 /* End of a file */

@@ -1,11 +1,11 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.6.10
+Version: 0.6.11
 Release: 0
 Group: HomeTF/Framework
 License: Apache
 Source0: %{name}-%{version}.tar.gz
-Source1001: 	libshortcut.manifest
+Source1001: %{name}.manifest
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -36,6 +36,11 @@ Requires:   %{name} = %{version}-%{release}
 cp %{SOURCE1001} .
 
 %build
+%if 0%{?sec_build_binary_debug_enable}
+export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"
+export CXXFLAGS="$CXXFLAGS -DTIZEN_DEBUG_ENABLE"
+export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
+%endif
 %if 0%{?tizen_build_binary_release_type_eng}
 export CFLAGS="${CFLAGS} -DTIZEN_ENGINEER_MODE"
 export CXXFLAGS="${CXXFLAGS} -DTIZEN_ENGINEER_MODE"

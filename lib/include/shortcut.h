@@ -70,6 +70,18 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
  */
 typedef int (*result_cb_t)(int ret, int pid, void *data);
 
+/**
+ * @brief After send a request to create a icon snapshot image, this callback will be called with its result.
+ * @param[in] handle Handle of requestor
+ * @param[in] ret status of request
+ * @param[in] data Callback data
+ * @return int result state of callback call
+ * @retval 0 If it is successfully completed
+ * @see shortcut_icon_request_send()
+ * @pre None
+ * @post None
+ * @remarks None
+ */
 typedef int (*icon_request_cb_t)(struct shortcut_icon *handle, int ret, void *data);
 
 /**
@@ -79,59 +91,131 @@ typedef int (*icon_request_cb_t)(struct shortcut_icon *handle, int ret, void *da
  *        LAUNCH_BY_PACKAGE is used for adding a package itself as a shortcut
  *        LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
  */
+//! [Enumeration values for type of shortcuts]
 enum shortcut_type {
 	/*!< Deprecated type */
-	SHORTCUT_PACKAGE	= 0x00000000, /**< Launch the package using given pakcage name. */
-	SHORTCUT_DATA		= 0x00000001, /**< Launch the related package with given data(content_info). */
-	SHORTCUT_FILE		= 0x00000002, /**< Launch the related package with given filename(content_info). */
+	SHORTCUT_PACKAGE	= 0x00000000,	/*!< Launch the package using given pakcage name. */
+	SHORTCUT_DATA		= 0x00000001,	/*!< Launch the related package with given data(content_info). */
+	SHORTCUT_FILE		= 0x00000002,	/*!< Launch the related package with given filename(content_info). */
 
 	/*!< Use these */
-	LAUNCH_BY_PACKAGE	= 0x00000000, /*!< Launch the package using given pakcage name. */
-	LAUNCH_BY_URI		= 0x00000001, /*!< Launch the related package with given data(URI). */
+	LAUNCH_BY_PACKAGE	= 0x00000000,	/*!< Launch the package using given pakcage name. */
+	LAUNCH_BY_URI		= 0x00000001,	/*!< Launch the related package with given data(URI). */
 
-	SHORTCUT_REMOVE		= 0x40000000, /*!< Remove a shortcut */
-	LIVEBOX_REMOVE		= 0x80000000, /*!< Remove a livebox */
+	SHORTCUT_REMOVE		= 0x40000000,	/*!< Remove a shortcut */
+	LIVEBOX_REMOVE		= 0x80000000,	/*!< Remove a livebox */
 
-	LIVEBOX_TYPE_DEFAULT	  = 0x10000000,
-	LIVEBOX_TYPE_EASY_DEFAULT = 0x30000000,
-	LIVEBOX_TYPE_1x1	  = 0x10010000,
-	LIVEBOX_TYPE_2x1	  = 0x10020000,
-	LIVEBOX_TYPE_2x2	  = 0x10040000,
-	LIVEBOX_TYPE_4x1	  = 0x10080000,
-	LIVEBOX_TYPE_4x2	  = 0x10100000,
-	LIVEBOX_TYPE_4x3  	  = 0x10200000,
-	LIVEBOX_TYPE_4x4	  = 0x10400000,
-	LIVEBOX_TYPE_4x5	  = 0x11000000,
-	LIVEBOX_TYPE_4x6	  = 0x12000000,
-	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,
-	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,
-	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,
-	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000
+	LIVEBOX_TYPE_DEFAULT	  = 0x10000000,	/*!< Type mask for default livebox */
+	LIVEBOX_TYPE_EASY_DEFAULT = 0x30000000,	/*!< Type mask for easy mode livebox */
+	LIVEBOX_TYPE_1x1	  = 0x10010000,	/*!< 1x1 */
+	LIVEBOX_TYPE_2x1	  = 0x10020000,	/*!< 2x1 */
+	LIVEBOX_TYPE_2x2	  = 0x10040000,	/*!< 2x2 */
+	LIVEBOX_TYPE_4x1	  = 0x10080000,	/*!< 4x1 */
+	LIVEBOX_TYPE_4x2	  = 0x10100000,	/*!< 4x2 */
+	LIVEBOX_TYPE_4x3  	  = 0x10200000,	/*!< 4x3 */
+	LIVEBOX_TYPE_4x4	  = 0x10400000,	/*!< 4x4 */
+	LIVEBOX_TYPE_4x5	  = 0x11000000,	/*!< 4x5 */
+	LIVEBOX_TYPE_4x6	  = 0x12000000, /*!< 4x6 */
+	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,	/*!< Easy mode 1x1 */
+	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,	/*!< Easy mode 3x2 */
+	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,	/*!< Easy mode 3x3 */
+	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000	/*!< Error */
 };
+//! [Enumeration values for type of shortcuts]
 
 enum shortcut_response {
-	SHORTCUT_SUCCESS = 0x00000000, /*!< Successfully handled */
-	SHORTCUT_ERROR = 0x80000000,	/*!< MSB(1). Check this using SHORTCUT_STATUS_IS_ERROR macro  */
-	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001, /*!< There is no space to add new shortcut */
-	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002, /*!< Shortcut is already added */
-	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004, /*!< Failed to add a shortcut. Unrecoverable error */
-	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008, /*!< Unsupported shortcut */
-	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010, /*!< Receiver is busy, try again later */
-	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020, /*!< Shortcut request is not valid, invalid parameter or invalid argument value */
-	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040, /*!< Connection is not estabilished. or there is a problem of communication */ 
-	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080, /*!< Memory is not enough to handle new request */
-	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100, /*!< Unable to access file or DB. Check your resource files */
-	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200, /*!< Has no permission to add a shortcut */
+	SHORTCUT_SUCCESS = 0x00000000,				/*!< Successfully handled */
+	SHORTCUT_ERROR = 0x80000000,				/*!< MSB(1). Check this using SHORTCUT_STATUS_IS_ERROR macro  */
+	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,	/*!< There is no space to add new shortcut */
+	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002,		/*!< Shortcut is already added */
+	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004,		/*!< Failed to add a shortcut. Unrecoverable error */
+	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008,	/*!< Unsupported shortcut */
+	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010,		/*!< Receiver is busy, try again later */
+	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020,	/*!< Shortcut request is not valid, invalid parameter or invalid argument value */
+	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,		/*!< Connection is not estabilished. or there is a problem of communication */ 
+	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080,	/*!< Memory is not enough to handle new request */
+	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100,		/*!< Unable to access file or DB. Check your resource files */
+	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200,	/*!< Has no permission to add a shortcut */
 
-	SHORTCUT_STATUS_CARED = 0x08000000 /*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
+	SHORTCUT_STATUS_CARED = 0x08000000			/*!< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
 };
 
+/*!
+ * \brief Macro function for checking the type
+ * \param[in] type Type of box
+ * \return bool
+ * \retval true(1) If it is a livebox
+ * \retval false(0) if it is not a livebox
+ * \see shortcut_type
+ * \pre None
+ * \post None
+ * \remarks None
+ */
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
-#define ADD_TO_HOME_IS_REMOVE_REQUEST(type)	(!!((type) & SHORTCUT_REMOVE))
 
+/*!
+ * \brief Macro function for checking the request type
+ * \param[in] type Request type
+ * \return bool
+ * \retval true(1) Shortcut remove request
+ * \retval false(0) Not a remove request
+ * \see shortcut_type
+ * \pre None
+ * \post None
+ * \remarks None
+ */
+#define ADD_TO_HOME_IS_REMOVE_SHORTCUT(type)	(!!((type) & SHORTCUT_REMOVE))
+
+/*!
+ * \brief Macro function for checking the request type
+ * \param[in] type Request type
+ * \return bool
+ * \retval true(1) Livebox remove request
+ * \retval false(0) Not a remove request
+ * \see shortcut_type
+ * \pre None
+ * \post None
+ * \remarks None
+ */
+#define ADD_TO_HOME_IS_REMOVE_LIVEBOX(type)	(!!((type) & LIVEBOX_REMOVE))
+
+/*!
+ * \brief Macro function for checking the status of request
+ * \param[in] type Status
+ * \return bool
+ * \retval true(1) Error
+ * \retval false(0) Not an error
+ * \see shortcut_response
+ * \pre None
+ * \post None
+ * \remarks None
+ */
 #define SHORTCUT_STATUS_IS_ERROR(type)	(!!((type) & SHORTCUT_ERROR))
+
+/*!
+ * \brief Macro function for checking the status of request
+ * \param[in] type Status
+ * \return bool
+ * \retval true(1) Shortcut request is already handled by requestee (homescreen, viewer, ...)
+ * \retval false(0) Request result should be cared by requestor
+ * \see shortcut_response
+ * \pre None
+ * \post None
+ * \remarks None
+ */
 #define SHORTCUT_STATUS_IS_CARED(type)	(!!((type) & SHORTCUT_STATUS_CARED))
-#define SHORTCUT_ERROR_CODE(type)	(type & ~SHORTCUT_STATUS_CARED)
+
+/*!
+ * \brief Filtering the pure error code from given status
+ * \param[in] status status
+ * \return status code (error)
+ * \see shortcut_response
+ * \pre None
+ * \post None
+ * \remarks None
+ *
+ */
+#define SHORTCUT_ERROR_CODE(status)	((status) & ~SHORTCUT_STATUS_CARED)
 
 /**
  * @fn int shortcut_set_request_cb(request_cb_t request_cb, void *data)
@@ -195,7 +279,7 @@ enum shortcut_response {
 extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
 
 /**
- * @fn int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
+ * @fn add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
  *
  * @brief The application, which supporting the add_to_home feature, should invoke this.
  *
@@ -203,28 +287,33 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * This is an asynchronous API.
  *
  * @par Important Notes:
- * - Application should check the return value of this function.
- * - Application should check the return status from the callback function
+ * - Application must check the return value of this function.
+ * - Application must check the return status from the callback function
  * - Application should set the callback function to get the result of this request.
  *
  * @param[in] appid Package name of owner of this shortcut.
  * @param[in] name Name for created shortcut icon.
- * @param[in] type 3 kinds of types are defined.
- * @param[in] content_info Specific information for delivering to the creating shortcut.
+ * @param[in] type Type of shortcuts (livebox or shortcut, and its size if it is for the livebox)
+ * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut.
  * @param[in] icon Absolute path of an icon file
  * @param[in] allow_duplicate set 1 If accept the duplicated shortcut or 0
- * @param[in] result_cb Callback function pointer which will be invoked after add_to_home request.
- * @param[in] data Callback data to deliver to the callback function.
+ * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer.
+ * @param[in] data Callback data which will be used in callback function
  *
  * @return Return Type (int)
- * - 0 - Succeed to send the request
- * - <0 - Failed to send the request
+ * \retval 0 Succeed to send the request
+ * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * \retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * \retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
  *
  * @see result_cb_t
  *
- * @pre - You have to prepare the callback function
+ * @pre You have to prepare the callback function
  *
- * @post - You have to check the return status from callback function which is passed by argument.
+ * @post You have to check the return status from callback function which is passed by argument.
  *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  *
@@ -249,7 +338,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * static int app_create(void *data)
  * {
  * 	add_to_home_shortcut("org.tizen.gallery", "With friends",
- * 					SHORTCUT_DATA, "gallery:0000-0000",
+ * 					LAUNCH_BY_URI, "gallery:0000-0000",
  * 					"/opt/media/Pictures/Friends.jpg", 0, result_cb, NULL);
  * 	return 0;
  * }
@@ -261,10 +350,120 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * @endcode
  */
-extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data);
-
 extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data);
 
+/**
+ * @fn shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data)
+ *
+ * @brief Getting the installed shortcut view list
+ *
+ * @par Sync (or) Async:
+ * This is a synchronous API.
+ *
+ * @par Important Notes:
+ * - Application must check the return value of this function.
+ * - Application must check the return status from the callback function
+ * - Application should set the callback function to get the result of this request.
+ *
+ * @param[in] appid Package name
+ * @param[in] cb Callback function to get the shortcut item information
+ * @param[in] data Callback data which will be used in callback function
+ *
+ * @return Return Type (int)
+ * \retval Number of items (call count of callback function) 
+ * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ *
+ * @see result_cb_t
+ *
+ * @pre You have to prepare the callback function
+ *
+ * @post You have to check the return status from callback function which is passed by argument.
+ *
+ * @remarks - If a homescreen does not support this feature, you will get proper error code.
+ *
+ * @par Prospective Clients:
+ * Inhouse Apps.
+ *
+ * @par Example
+ * @code
+ * @endcode
+ */
+extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data);
+
+/**
+ * @fn add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
+ *
+ * @brief The application, which supporting the add_to_home feature, should invoke this.
+ *
+ * @par Sync (or) Async:
+ * This is an asynchronous API.
+ *
+ * @par Important Notes:
+ * - Application must check the return value of this function.
+ * - Application must check the return status from the callback function
+ * - Application should set the callback function to get the result of this request.
+ *
+ * @param[in] appid Package name of owner of this shortcut.
+ * @param[in] name Name for created shortcut icon.
+ * @param[in] type Type of shortcuts (livebox or shortcut, and its size if it is for the livebox)
+ * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut.
+ * @param[in] icon Absolute path of an icon file
+ * @param[in] period Update period
+ * @param[in] allow_duplicate set 1 If accept the duplicated shortcut or 0
+ * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer.
+ * @param[in] data Callback data which will be used in callback function
+ *
+ * @return Return Type (int)
+ * \retval 0 Succeed to send the request
+ * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * \retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * \retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ *
+ * @see result_cb_t
+ *
+ * @pre You have to prepare the callback function
+ *
+ * @post You have to check the return status from callback function which is passed by argument.
+ *
+ * @remarks - If a homescreen does not support this feature, you will get proper error code.
+ *
+ * @par Prospective Clients:
+ * Inhouse Apps.
+ *
+ * @par Example
+ * @code
+ *
+ * #include <stdio.h>
+ * #include <shortcut.h>
+ *
+ * static int result_cb(int ret, int pid, void *data)
+ * {
+ * 	if (ret < 0)
+ * 		printf("Failed to add a shortcut: %s\n", perror(ret));
+ *
+ *	printf("Processed by the %d\n", pid);
+ * 	return 0;
+ * }
+ *
+ * static int app_create(void *data)
+ * {
+ * 	add_to_home_livebox("org.tizen.gallery.livebox", "With friends",
+ * 					LAUNCH_BY_URI, "gallery:0000-0000",
+ * 					"/opt/media/Pictures/Friends.jpg", -1.0f, 0, result_cb, NULL);
+ * 	return 0;
+ * }
+ *
+ * int main(int argc, char *argv[])
+ * {
+ * 	appcore....
+ * }
+ *
+ * @endcode
+ */
 extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
 
 extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
@@ -277,6 +476,7 @@ extern int add_to_home_remove_livebox(const char *appid, const char *name, resul
  * \note
  * Example)
  *
+ * \code
  * static int init_cb(int status, void *data)
  * {
  *    printf("Initializer returns: %d\n", status);
@@ -334,6 +534,7 @@ extern int add_to_home_remove_livebox(const char *appid, const char *name, resul
  *
  *     return 0;
  * }
+ * \endcode
  */
 
 #define DEFAULT_ICON_PART		"icon"
@@ -342,15 +543,132 @@ extern int add_to_home_remove_livebox(const char *appid, const char *name, resul
 #define SHORTCUT_ICON_TYPE_TEXT		"text"
 #define SHORTCUT_ICON_TYPE_SCRIPT	"script"
 
+/*!
+ * \brief Initialize the icon creation service
+ * \remarks N/A
+ * \details N/A
+ * \param[in] init_cb Initialized result will be delievered via this callback
+ * \param[in] data Callback data
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval SHORTCUT_ERROR_INVALID Already initialized
+ * \retval SHORTCUT_ERROR_SUCCESS Successfully initialized
+ * \see shortcut_icon_service_fini
+ */
 extern int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void *data);
+
+/*!
+ * \brief Finalize the icon creation service
+ * \remarks N/A
+ * \details N/A
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval SHORTCUT_SUCCESS Successfully initialized
+ * \retval SHORTCUT_ERROR_INVALID icon service is not initialized
+ * \see shortcut_icon_service_init
+ */
 extern int shortcut_icon_service_fini(void);
 
+/*!
+ * \brief Create a request object to create a new icon image
+ * \remarks N/A
+ * \details N/A
+ * \pre N/A
+ * \post N/A
+ * \return struct shortcut_icon *
+ * \retval NULL If it fails to create a new handle
+ * \retval pointer Handle address
+ * \see shortcut_icon_request_destroy
+ */
 extern struct shortcut_icon *shortcut_icon_request_create(void);
+
+/*!
+ * \brief Set infomration for creating icon image
+ * \details N/A
+ * \remarks N/A
+ * \param[in] handle Request handle
+ * \param[in] id Target ID to be affected by this data
+ * \param[in] type SHORTCUT_ICON_TYPE_IMAGE, SHORTCUT_ICON_TYPE_TEXT, SHORTCUT_ICON_TYPE_SCRIPT can be used
+ * \param[in] part Target part to be affect by this data
+ * \param[in] data type == IMAGE ? Image file path : type == TEXT ? text string : type == SCRIPT ? script file path : N/A
+ * \param[in] option Image load option or group name of script file to be loaded
+ * \param[in] subid ID for script. this ID will be used as "id"
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval Index of data set
+ * \retval SHORTCUT_ERROR_INVALID Invalid handle
+ * \retval SHORTCUT_ERROR_MEMORY Out of memory
+ * \see shortcut_icon_request_create
+ */
 extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *subid);
+
+/*!
+ * \brief Send request to create an icon image
+ * \remarks N/A
+ * \details N/A
+ * \param[in] handle Icon request handle
+ * \param[in] size_type Size type to be created
+ * \param[in] layout layout filename (edje filename)
+ * \param[in] group group name
+ * \param[in] outfile output image filename
+ * \param[in] result_cb Result callback
+ * \param[in] data Callback data
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval SHORTCUT_ERROR_INVALID Invalid parameters
+ * \retval SHORTCUT_ERROR_MEMORY Out of memory
+ * \retval SHORTCUT_ERROR_FAULT Failed to send a request
+ * \retval SHORTCUT_SUCCESS Successfully sent
+ * \see shortcut_icon_service_fini
+ */
 extern int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type, const char *layout, const char *group, const char *outfile, icon_request_cb_t result_cb, void *data);
+
+/*!
+ * \brief Destroy handle of creating shortcut icon request
+ * \remarks N/A
+ * \details N/A
+ * \param[in] handle Shortcut request handle
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval SHORTCUT_ERROR_INVALID Invalid handle
+ * \retval SHORTCUT_SUCCESS Successfully destroyed
+ * \see shortcut_icon_service_fini
+ */
 extern int shortcut_icon_request_destroy(struct shortcut_icon *handle);
 
+
+/*!
+ * \brief Set private data to the handle to carry it with a handle.
+ * \remarks N/A
+ * \details N/A
+ * \param[in] handle Handle to be used for carrying a data
+ * \param[in] data Private data
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval SHORTCUT_ERROR_INVALID Invalid handle
+ * \retval SHORTCUT_SUCCESS Successfully done
+ * \see shortcut_icon_service_fini
+ */
 extern int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *data);
+
+/*!
+ * \brief Get the private data from handle
+ * \remarks N/A
+ * \details N/A
+ * \param[in] handle
+ * \pre N/A
+ * \post N/A
+ * \return int
+ * \retval NULL If there is no data
+ * \retval pointer data pointer
+ * \see shortcut_icon_request_set_data
+ */
 extern void *shortcut_icon_request_data(struct shortcut_icon *handle);
 
 #ifdef __cplusplus
