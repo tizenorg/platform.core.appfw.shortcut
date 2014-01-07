@@ -72,7 +72,6 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %files devel
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
-%{_includedir}/shortcut/shortcut_PG.h
 %{_includedir}/shortcut/shortcut.h
 %{_libdir}/pkgconfig/shortcut.pc
 
