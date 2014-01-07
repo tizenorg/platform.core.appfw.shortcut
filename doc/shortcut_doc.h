@@ -13,12 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
+
+#ifndef __SHORTCUT_DOC_H__
+#define __SHORTCUT_DOC_H__
 
 /**
- * @ingroup SLP_PG
- * @defgroup SHORTCUT_PG Add to home (shortcut)
- * @{
+ * @defgroup SHORTCUT_MODULE Shortcut
+ * @brief To enhance the Add to home feature. Two types of API set are supported.
+ *   - One for the homescreen developers.
+ *   - The others for the application developers who should implement the Add to home feature.
+ * @ingroup CORE_LIB_GROUP 
+ * @section SHORTCUT_MODULE_HEADER Required Header
+ *   \#include <shortcut.h>
+ * @section SHORTCUT_MODULE_OVERVIEW Overview
 <H1>1. Shortcut</H1>
 Tizen is supporting the "add shortcut or add to home" for various applications.
 Developers may use the shortcut library (libshortcut) to implement features sending (applications) and receiving (possibly home screen) shortcuts.
@@ -222,5 +230,6 @@ It will returns the number of shortcut items, or return <0 as an error value.
 -EIO : failed to access shortcut list DB
 > 0 : Number of shortcut items (count of callback function calling)
  *
- * @}
-*/
+ */
+
+#endif /* __SHORTCUT_DOC_H__ */
