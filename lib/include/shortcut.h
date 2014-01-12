@@ -23,18 +23,8 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup APPLICATION_FRAMEWORK
+ * @addtogroup SHORTCUT_MODULE
  * @{
- */
-
-/**
- * @defgroup SHORTCUT Add to home (shortcut)
- * @author Sung-jae Park <nicesj.park@samsung.com>
- * @author Youngjoo Park <yjoo93.park@samsung.com>
- * @version 0.1
- * @brief To enhance the Add to home feature. Two types of API set are supported.
- *        One for the homescreen developers.
- *        The others for the application developers who should implement the Add to home feature.
  */
 
 struct shortcut_icon;
