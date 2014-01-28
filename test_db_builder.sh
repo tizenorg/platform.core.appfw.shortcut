@@ -16,7 +16,8 @@
 # *
 #*/
 
-DBFILE="/opt/dbspace/.shortcut_service.db"
+eval $(tzplatform-get TZ_SYS_DB)
+DBFILE=$TZ_SYS_DB"/.shortcut_service.db"
 
 APPID=(
 "org.tizen.facebook"

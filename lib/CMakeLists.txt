@@ -17,6 +17,7 @@ pkg_check_modules(svc_pkgs REQUIRED
 	db-util
 	com-core
 	vconf
+	libtzplatform-config
 )
 
 FOREACH(flag ${svc_pkgs_CFLAGS})

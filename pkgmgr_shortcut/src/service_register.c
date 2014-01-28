@@ -29,6 +29,9 @@
 #include <libxml/tree.h>
 #include <dlog.h>
 
+/* For multi-user support */
+#include <tzplatform_config.h>
+
 #include "dlist.h"
 
 #if !defined(SECURE_LOGD)
@@ -81,7 +84,7 @@ static struct {
 	const char *dbfile;
 	sqlite3 *handle;
 } s_info = {
-	.dbfile = "/opt/dbspace/.shortcut_service.db",
+	.dbfile = "",
 	.handle = NULL,
 };
 
@@ -759,6 +762,7 @@ static int db_init(void)
 	int ret;
 	struct stat stat;
 
+	s_info.dbfile = tzplatform_mkpath(TZ_SYS_DB, ".shortcut_service.db");
 	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
 	if (ret != SQLITE_OK) {
 		ErrPrint("Failed to open a DB\n");

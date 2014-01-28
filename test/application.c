@@ -18,6 +18,11 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
+/* For multi-user support */
+#include <tzplatform_config.h>
+
+#define FILE_PNG tzplatform_mkpath(TZ_SYS_SHARE, "image/what.png")
+
 static int result_cb(int ret, int pid, void *data)
 {
 	printf("Client: Return %d (%d)\n", ret, pid);
@@ -29,10 +34,10 @@ static Eina_Bool shortcut_add_cb(void *data)
 {
 	int ret;
 
-	ret = add_to_home_shortcut("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", result_cb, NULL);
+	ret = add_to_home_shortcut("pkgname", "MyName", 0, "/usr/bin/true", FILE_PNG, result_cb, NULL);
 	printf("Client: shortcut_add_to_home returns: %d\n", ret);
 
-	ret = add_to_home_livebox("pkgname", "MyName", 0, "/usr/bin/true", "/opt/share/image/what.png", 1.0f, result_cb, NULL);
+	ret = add_to_home_livebox("pkgname", "MyName", 0, "/usr/bin/true", FILE_PNG, 1.0f, result_cb, NULL);
 	printf("Client: shortcut_add_to_home_with_period returns: %d\n", ret);
 
 	return ECORE_CALLBACK_RENEW;

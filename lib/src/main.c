@@ -34,6 +34,9 @@
 #include <com-core.h>
 #include <com-core_packet.h>
 
+/* For multi-user support */
+#include <tzplatform_config.h>
+
 #include "shortcut.h"
 #include "shortcut_internal.h"
 
@@ -56,7 +59,7 @@ static struct info {
 	.server_fd = -1,
 	.client_fd = -1,
 	.socket_file = "/tmp/.shortcut.service",
-	.dbfile = "/opt/dbspace/.shortcut_service.db",
+	.dbfile = "",
 	.handle = NULL,
 	.initialized = 0,
 	.db_opened = 0,
@@ -630,6 +633,7 @@ static inline int open_db(void)
 {
 	int ret;
 
+	s_info.dbfile = tzplatform_mkpath(TZ_SYS_DB, ".shortcut_service.db");
 	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
 	if (ret != SQLITE_OK) {
 		DbgPrint("Failed to open a %s\n", s_info.dbfile);
