@@ -1,14 +1,15 @@
-Name: libshortcut
-Summary: Shortcut add feature supporting library
-Version: 0.6.11
-Release: 0
-Group: HomeTF/Framework
-License: Apache
-Source0: %{name}-%{version}.tar.gz
+Name:       libshortcut
+Summary:    Shortcut add feature supporting library
+Version:    0.6.11
+Release:    0
+Group:      Graphics & UI Framework/Libraries
+License:    Apache-2.0
+Source0:    %{name}-%{version}.tar.gz
 Source1001: %{name}.manifest
 
-Requires(post): /sbin/ldconfig
+Requires(post):   /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
+Requires:         tizen-platform-config-tools
 
 BuildRequires: cmake, gettext-tools, coreutils
 BuildRequires: pkgconfig(glib-2.0)
@@ -18,6 +19,7 @@ BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(com-core)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(libtzplatform-config)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.
@@ -52,13 +54,13 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
-mkdir -p %{buildroot}/opt/dbspace
-touch %{buildroot}/opt/dbspace/.shortcut_service.db
-touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
+mkdir -p %{buildroot}%{TZ_SYS_DB}
+touch %{buildroot}%{TZ_SYS_DB}/.shortcut_service.db
+touch %{buildroot}%{TZ_SYS_DB}/.shortcut_service.db-journal
 
-%post
+%post -n libshortcut -p /sbin/ldconfig
 
-%postun
+%postun -n libshortcut -p /sbin/ldconfig
 
 %files -n libshortcut
 %manifest %{name}.manifest
@@ -66,8 +68,8 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
 %{_datarootdir}/license/*
-%attr(640,root,app) /opt/dbspace/.shortcut_service.db
-%attr(640,root,app) /opt/dbspace/.shortcut_service.db-journal
+%attr(640,root,%{TZ_SYS_USER_GROUP}) %{TZ_SYS_DB}/.shortcut_service.db
+%attr(640,root,%{TZ_SYS_USER_GROUP}) %{TZ_SYS_DB}/.shortcut_service.db-journal
 
 %files devel
 %manifest %{name}.manifest

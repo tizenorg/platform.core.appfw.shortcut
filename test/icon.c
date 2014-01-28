@@ -18,6 +18,11 @@
 #include <Elementary.h>
 #include <shortcut.h>
 
+/* For multi-user support */
+#include <tzplatform_config.h>
+
+#define USR_SHARE tzplatform_getenv(TZ_USER_SHARE)
+
 static int result_cb(struct shortcut_icon *handle, int ret, void *data)
 {
 	printf("Client: Return %d (%p)\n", ret, handle);
@@ -48,7 +53,7 @@ static Eina_Bool test_main(void *data)
 	ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, DEFAULT_NAME_PART, filename, NULL, NULL);
 	printf("TEXT set_info: %d\n", ret);
 
-	snprintf(filename, sizeof(filename), "/opt/usr/share/live_magazine/always/out%d.png", idx);
+	snprintf(filename, sizeof(filename), "%s/live_magazine/always/out%d.png", USR_SHARE, idx);
 
 	switch (idx % 7) {
 	case 0: type = LIVEBOX_TYPE_1x1; break;
