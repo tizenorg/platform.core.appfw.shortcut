@@ -569,8 +569,6 @@ static int db_insert_record(const char *pkgid, const char *appid, const char *ic
 		return -EINVAL;
 	}
 
-	icon = icon ? icon : "";
-
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		ErrPrint("Failed to prepare the initial DML(%s)\n", sqlite3_errmsg(s_info.handle));
@@ -630,14 +628,6 @@ static int db_insert_name(int id, const char *pkgid, const char *lang, const cha
 	if (id < 0 || !lang) {
 		ErrPrint("Invalid parameters\n");
 		return -EINVAL;
-	}
-
-	if (!name) {
-		name = "";
-	}
-
-	if (!icon) {
-		icon = "";
 	}
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
@@ -1112,7 +1102,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 		DbgPrint("key: %s\n", key);
 		DbgPrint("data: %s\n", data);
 
-		id = db_get_id("", (char *)appid, (char *)key, (char *)data);
+		id = db_get_id(NULL, (char *)appid, (char *)key, (char *)data);
 		if (id < 0) {
 			ErrPrint("No records found\n");
 			xmlFree(appid);
@@ -1122,7 +1112,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 		}
 
 		begin_transaction();
-		if (db_remove_record("", (char *)appid, (char *)key, (char *)data) < 0) {
+		if (db_remove_record(NULL, (char *)appid, (char *)key, (char *)data) < 0) {
 			ErrPrint("Failed to remove a record\n");
 			rollback_transaction();
 			xmlFree(appid);
