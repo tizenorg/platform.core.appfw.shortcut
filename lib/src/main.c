@@ -204,9 +204,7 @@ static void master_started_cb(keynode_t *node, void *user_data)
 	}
 
 	if (state == 1 && make_connection() == SHORTCUT_SUCCESS) {
-		int ret;
-		ret = vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
-		DbgPrint("Ignore VCONF [%d]\n", ret);
+		(void)vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
 	}
 }
 
