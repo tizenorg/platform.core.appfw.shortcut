@@ -858,7 +858,10 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		}
 
 		free(i18n_name);
+		i18n_name = NULL;
+
 		free(i18n_icon);
+		i18n_icon = NULL;
 	}
 
 	sqlite3_reset(stmt);
