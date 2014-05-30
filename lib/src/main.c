@@ -496,8 +496,9 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	struct result_cb_item *item;
 	int ret;
 
-	if (ADD_TO_HOME_IS_LIVEBOX(type)) {
+	if (!appid || ADD_TO_HOME_IS_LIVEBOX(type)) {
 		ErrPrint("Invalid type used for adding a shortcut\n");
+		return SHORTCUT_ERROR_INVALID;
 	}
 
 	if (!s_info.initialized) {
@@ -528,10 +529,6 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 
 	item->result_cb = result_cb;
 	item->data = data;
-
-	if (!appid) {
-		appid = "";
-	}
 
 	if (!name) {
 		name = "";
@@ -572,8 +569,9 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	struct result_cb_item *item;
 	int ret;
 
-	if (!ADD_TO_HOME_IS_LIVEBOX(type)) {
+	if (!appid || !ADD_TO_HOME_IS_LIVEBOX(type)) {
 		ErrPrint("Invalid type is used for adding a livebox\n");
+		return SHORTCUT_ERROR_INVALID;
 	}
 
 	if (!s_info.initialized) {
@@ -767,6 +765,10 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	int ret;
 	int cnt;
 	char *language;
+
+	if (cb == NULL) {
+		return SHORTCUT_ERROR_INVALID;
+	}
 
 	if (!s_info.db_opened) {
 		s_info.db_opened = (open_db() == 0);
