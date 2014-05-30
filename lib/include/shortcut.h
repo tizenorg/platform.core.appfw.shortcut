@@ -458,8 +458,143 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  */
 extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
 
+/*!
+ * @fn add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
+ *
+ * @brief The application, which supporting the add_to_home feature, should invoke this.
+ *
+ * @par Sync (or) Async:
+ * This is an asynchronous API.
+ *
+ * @par Important Notes:
+ * - Application must check the return value of this function.
+ * - Application must check the return status from the callback function
+ * - Application should set the callback function to get the result of this request.
+ *
+ * @param[in] appid Package name of owner of this shortcut.
+ * @param[in] name Name for created shortcut icon.
+ * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut.
+ * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer.
+ * @param[in] data Callback data which will be used in callback function
+ *
+ * @return Return Type (int)
+ * \retval 0 Succeed to send the request
+ * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * \retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * \retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ *
+ * @see result_cb_t
+ *
+ * @pre You have to prepare the callback function
+ *
+ * @post You have to check the return status from callback function which is passed by argument.
+ *
+ * @remarks - If a homescreen does not support this feature, you will get proper error code.
+ *
+ * @par Prospective Clients:
+ * Inhouse Apps.
+ *
+ * @par Example
+ * @code
+ *
+ * #include <stdio.h>
+ * #include <shortcut.h>
+ *
+ * static int result_cb(int ret, int pid, void *data)
+ * {
+ * 	if (ret < 0)
+ * 		printf("Failed to add a shortcut: %s\n", perror(ret));
+ *
+ *	printf("Processed by the %d\n", pid);
+ * 	return 0;
+ * }
+ *
+ * static int app_create(void *data)
+ * {
+ * 	add_to_home_remove_shortcut("com.samsung.gallery.livebox", "With friends",
+ * 					"gallery:0000-0000",
+ * 					result_cb, NULL);
+ * 	return 0;
+ * }
+ *
+ * int main(int argc, char *argv[])
+ * {
+ * 	appcore....
+ * }
+ *
+ * @endcode
+ */
 extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
 
+/*!
+ * @fn add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
+ *
+ * @brief The application, which supporting the add_to_home feature, should invoke this.
+ *
+ * @par Sync (or) Async:
+ * This is an asynchronous API.
+ *
+ * @par Important Notes:
+ * - Application must check the return value of this function.
+ * - Application must check the return status from the callback function
+ * - Application should set the callback function to get the result of this request.
+ *
+ * @param[in] appid Package name of owner of this shortcut.
+ * @param[in] name Name for created shortcut icon.
+ * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer.
+ * @param[in] data Callback data which will be used in callback function
+ *
+ * @return Return Type (int)
+ * \retval 0 Succeed to send the request
+ * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * \retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * \retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ *
+ * @see result_cb_t
+ *
+ * @pre You have to prepare the callback function
+ *
+ * @post You have to check the return status from callback function which is passed by argument.
+ *
+ * @remarks - If a homescreen does not support this feature, you will get proper error code.
+ *
+ * @par Prospective Clients:
+ * Inhouse Apps.
+ *
+ * @par Example
+ * @code
+ *
+ * #include <stdio.h>
+ * #include <shortcut.h>
+ *
+ * static int result_cb(int ret, int pid, void *data)
+ * {
+ * 	if (ret < 0)
+ * 		printf("Failed to add a shortcut: %s\n", perror(ret));
+ *
+ *	printf("Processed by the %d\n", pid);
+ * 	return 0;
+ * }
+ *
+ * static int app_create(void *data)
+ * {
+ * 	add_to_home_remove_livebox("com.samsung.gallery.livebox", "With friends", result_cb, NULL);
+ * 	return 0;
+ * }
+ *
+ * int main(int argc, char *argv[])
+ * {
+ * 	appcore....
+ * }
+ *
+ * @endcode
+ */
 extern int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
 
 
