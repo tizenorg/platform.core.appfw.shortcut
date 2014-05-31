@@ -1,0 +1,19 @@
+0|3.7-lite 04:12:14 20131227|User: root (0) TCC Start, Command line: /var/tmp/dts_fw/TETware/tetware-target/bin/tcc -b -j results/build-tar-result-1388117533.journal -p ./
+5|Linux nclinux 3.1.0-rc6 #5 SMP Sun Jan 20 00:39:54 KST 2013 armv7l|System Information
+20|/var/tmp/dts_fw/./tetbuild.cfg 0|Config Start
+30||TET_OUTPUT_CAPTURE=True
+30||TET_BUILD_TOOL=make
+30||TET_BUILD_FILE=-f Makefile
+30||TET_API_COMPLIANT=True
+30||TET_PASS_TC_NAME=True
+30||TET_VERSION=3.7-lite
+40||Config End
+110|0 /testcase/utc_livebox_service 04:12:14|Build Start, scenario ref 1-0
+100|0|cc -o utc_livebox_service utc_livebox_service.c -I. `pkg-config --cflags livebox-service glib-2.0` -I/var/tmp/dts_fw/TC/TETware/tetware-target/inc/tet3 -Wall `pkg-config --libs livebox-service glib-2.0`
+100|0|utc_livebox_service.c:18:21: fatal error: tet_api.h: No such file or directory
+100|0| #include <tet_api.h>
+100|0|                     ^
+100|0|compilation terminated.
+100|0|make: *** [utc_livebox_service] Error 1
+130|0 2 04:12:15|Build End, scenario ref 1-0
+900|04:12:15|TCC End

@@ -1,0 +1,22 @@
+<manifest>
+	<!-- Shortcut service -->
+	<define>
+		<domain name="shortcut-service" policy="restricted" />
+		<provide>
+			<label name="shortcut-service::db" />
+		</provide>
+	</define>
+	<request>
+		<domain name="_" />
+	</request>
+
+	<assign>
+		<!-- Executable file -->
+		<filesystem path="/usr/lib/libshortcut.so.0.0.1" label="_" />
+		<filesystem path="/usr/etc/package-manager/parserlib/libshortcut-list.so" label="_" />
+
+		<!-- Database file -->
+		<filesystem path="/opt/dbspace/.shortcut_service.db" label="shortcut-service::db" />
+		<filesystem path="/opt/dbspace/.shortcut_service.db-journal" label="shortcut-service::db" />
+	</assign>
+</manifest>
