@@ -3,6 +3,6 @@
     <domain name="_"/>
  </request>
  <assign>
-    <filesystem path="/opt/dbspace/.shortcut_service.db*" label="User" />
+    <filesystem path="TZ_SYS_DB/.shortcut_service.db*" label="User" />
  </assign>
 </manifest>

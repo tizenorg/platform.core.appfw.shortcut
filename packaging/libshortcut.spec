@@ -35,6 +35,7 @@ Requires:   %{name} = %{version}-%{release}
 
 %prep
 %setup -q
+sed -i %{SOURCE1001} -e "s|TZ_SYS_DB|%TZ_SYS_DB|g"
 cp %{SOURCE1001} .
 
 %build
