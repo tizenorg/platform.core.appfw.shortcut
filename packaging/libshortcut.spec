@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.6.13
+Version: 0.6.14
 Release: 0
 Group: HomeTF/Framework
 License: Apache
@@ -73,6 +73,7 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/shortcut/shortcut.h
+%{_includedir}/shortcut/shortcut_internal.h
 %{_libdir}/pkgconfig/shortcut.pc
 
 # End of a file

@@ -39,6 +39,7 @@
 #include "shortcut_internal.h"
 #include "shortcut.h"
 #include "dlist.h"
+#include "shortcut_private.h"
 
 
 

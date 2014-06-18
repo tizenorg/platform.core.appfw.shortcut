@@ -36,6 +36,7 @@
 
 #include "shortcut.h"
 #include "shortcut_internal.h"
+#include "shortcut_private.h"
 
 int errno;
 
