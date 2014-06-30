@@ -73,7 +73,7 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/shortcut/shortcut.h
-%{_includedir}/shortcut/shortcut_internal.h
+%{_includedir}/shortcut/shortcut_product.h
 %{_libdir}/pkgconfig/shortcut.pc
 
 # End of a file

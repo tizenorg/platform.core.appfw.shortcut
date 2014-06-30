@@ -15,8 +15,8 @@
  *
 */
 
-#if !defined(__SHORTCUT_INTERNAL_H__)
-#define __SHORTCUT_INTERNAL_H__
+#if !defined(__SHORTCUT_PRODUCT_H__)
+#define __SHORTCUT_PRODUCT_H__
 
 #ifdef __cplusplus
 extern "C" {
