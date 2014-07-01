@@ -23,7 +23,7 @@
  * @brief To enhance the Add to home feature. Two types of API set are supported.
  *   - One for the homescreen developers.
  *   - The others for the application developers who should implement the Add to home feature.
- * @ingroup CORE_LIB_GROUP 
+ * @ingroup CAPI_APPLICATION_FRAMEWORK 
  * @section SHORTCUT_MODULE_HEADER Required Header
  *   \#include <shortcut.h>
  * @section SHORTCUT_MODULE_OVERVIEW Overview
