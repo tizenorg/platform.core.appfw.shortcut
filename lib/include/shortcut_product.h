@@ -15,8 +15,8 @@
  *
 */
 
-#if !defined(__SHORTCUT_INTERNAL_H__)
-#define __SHORTCUT_INTERNAL_H__
+#if !defined(__SHORTCUT_PRODUCT_H__)
+#define __SHORTCUT_PRODUCT_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,27 +122,27 @@ typedef int (*icon_request_cb_t)(struct shortcut_icon *handle, int ret, void *da
  * @param[in] init_cb Initialized result will be delievered via this callback
  * @param[in] data Callback data
  * @return int value
- * @retval SHORTCUT_ERROR_INVALID Already initialized
- * @retval SHORTCUT_ERROR_SUCCESS Successfully initialized
- * @see shortcut_icon_service_fini
+ * @retval #SHORTCUT_ERROR_INVALID Already initialized
+ * @retval #SHORTCUT_ERROR_SUCCESS Successfully initialized
+ * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void *data);
 
 /**
  * @brief Finalizes the icon creation service.
  * @return int value
- * @retval SHORTCUT_SUCCESS Successfully initialized
- * @retval SHORTCUT_ERROR_INVALID icon service is not initialized
- * @see shortcut_icon_service_init
+ * @retval #SHORTCUT_SUCCESS Successfully initialized
+ * @retval #SHORTCUT_ERROR_INVALID icon service is not initialized
+ * @see shortcut_icon_service_init()
  */
 extern int shortcut_icon_service_fini(void);
 
 /**
  * @brief Creates a request object to create a new icon image.
  * @return struct shortcut_icon * value
- * @retval NULL If it fails to create a new handle
+ * @retval @c NULL If it fails to create a new handle
  * @retval pointer Handle address
- * @see shortcut_icon_request_destroy
+ * @see shortcut_icon_request_destroy()
  */
 extern struct shortcut_icon *shortcut_icon_request_create(void);
 
@@ -150,16 +150,16 @@ extern struct shortcut_icon *shortcut_icon_request_create(void);
  * @brief Sets information for creating icon image.
  * @param[in] handle Request handle
  * @param[in] id Target ID to be affected by this data
- * @param[in] type SHORTCUT_ICON_TYPE_IMAGE, SHORTCUT_ICON_TYPE_TEXT, SHORTCUT_ICON_TYPE_SCRIPT can be used
+ * @param[in] type #SHORTCUT_ICON_TYPE_IMAGE, #SHORTCUT_ICON_TYPE_TEXT, #SHORTCUT_ICON_TYPE_SCRIPT can be used
  * @param[in] part Target part to be affect by this data
  * @param[in] data type == IMAGE ? Image file path : type == TEXT ? text string : type == SCRIPT ? script file path : N/A
  * @param[in] option Image load option or group name of script file to be loaded
  * @param[in] subid ID for script. this ID will be used as "id"
  * @return int value
  * @retval index Index of data set
- * @retval SHORTCUT_ERROR_INVALID Invalid handle
- * @retval SHORTCUT_ERROR_MEMORY Out of memory
- * @see shortcut_icon_request_create
+ * @retval #SHORTCUT_ERROR_INVALID Invalid handle
+ * @retval #SHORTCUT_ERROR_MEMORY Out of memory
+ * @see shortcut_icon_request_create()
  */
 extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *subid);
 
@@ -173,11 +173,11 @@ extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const ch
  * @param[in] result_cb Result callback
  * @param[in] data Callback data
  * @return int value
- * @retval SHORTCUT_ERROR_INVALID Invalid parameters
- * @retval SHORTCUT_ERROR_MEMORY Out of memory
- * @retval SHORTCUT_ERROR_FAULT Failed to send a request
- * @retval SHORTCUT_SUCCESS Successfully sent
- * @see shortcut_icon_service_fini
+ * @retval #SHORTCUT_ERROR_INVALID Invalid parameters
+ * @retval #SHORTCUT_ERROR_MEMORY Out of memory
+ * @retval #SHORTCUT_ERROR_FAULT Failed to send a request
+ * @retval #SHORTCUT_SUCCESS Successfully sent
+ * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type, const char *layout, const char *group, const char *outfile, icon_request_cb_t result_cb, void *data);
 
@@ -185,9 +185,9 @@ extern int shortcut_icon_request_send(struct shortcut_icon *handle, int size_typ
  * @brief Destroys handle of creating shortcut icon request.
  * @param[in] handle Shortcut request handle
  * @return int value
- * @retval SHORTCUT_ERROR_INVALID Invalid handle
- * @retval SHORTCUT_SUCCESS Successfully destroyed
- * @see shortcut_icon_service_fini
+ * @retval #SHORTCUT_ERROR_INVALID Invalid handle
+ * @retval #SHORTCUT_SUCCESS Successfully destroyed
+ * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_request_destroy(struct shortcut_icon *handle);
 
@@ -197,9 +197,9 @@ extern int shortcut_icon_request_destroy(struct shortcut_icon *handle);
  * @param[in] handle Handle to be used for carrying a data
  * @param[in] data Private data
  * @return int value
- * @retval SHORTCUT_ERROR_INVALID Invalid handle
- * @retval SHORTCUT_SUCCESS Successfully done
- * @see shortcut_icon_service_fini
+ * @retval #SHORTCUT_ERROR_INVALID Invalid handle
+ * @retval #SHORTCUT_SUCCESS Successfully done
+ * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *data);
 
@@ -207,9 +207,9 @@ extern int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *da
  * @brief Gets the private data from handle.
  * @param[in] handle
  * @return int value
- * @retval NULL If there is no data
+ * @retval @c NULL If there is no data
  * @retval pointer data pointer
- * @see shortcut_icon_request_set_data
+ * @see shortcut_icon_request_set_data()
  */
 extern void *shortcut_icon_request_data(struct shortcut_icon *handle);
 

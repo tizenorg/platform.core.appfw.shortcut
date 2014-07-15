@@ -35,7 +35,7 @@
 #include <com-core_packet.h>
 
 #include "shortcut.h"
-#include "shortcut_internal.h"
+#include "shortcut_product.h"
 #include "shortcut_private.h"
 
 int errno;

@@ -46,7 +46,7 @@ extern "C" {
  * @param[in] data Callback data
  * @return Developer should returns the result of handling shortcut creation request\n
  *             Returns 0, if succeed to handles the add_to_home request, or returns proper errno
- * @see shortcut_set_request_cb
+ * @see shortcut_set_request_cb()
  */
 typedef int (*request_cb_t)(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, double period, int allow_duplicate, void *data);
 
@@ -261,12 +261,12 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * @return Return Type (int)
  * @retval 0 Succeed to send the request
- * @retval SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
- * @retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * @retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * @retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
- * @retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
+ * @retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * @retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * @retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function.
  *
@@ -329,8 +329,8 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  *
  * @return Return Type (int)
  * @retval @c N Number of items (call count of callback function)
- * @retval SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
+ * @retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
  *
  * @pre You have to prepare the callback function.
  *
@@ -369,12 +369,12 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  *
  * @return Return Type (int)
  * @retval 0 Succeed to send the request
- * @retval SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
- * @retval SHORTCUT_ERROR_COMM Connection is not estabilished or there is a problem of communication
- * @retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * @retval SHORTCUT_ERROR_IO Unable to access file or DB  Check your resource files
- * @retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
+ * @retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished or there is a problem of communication
+ * @retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * @retval #SHORTCUT_ERROR_IO Unable to access file or DB  Check your resource files
+ * @retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function.
  *
@@ -439,12 +439,12 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
  *
  * @return Return Type (int)
  * \retval 0 Succeed to send the request
- * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
- * \retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
- * \retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * \retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
- * \retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * \retval #SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * \retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * \retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * \retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function
  *
@@ -508,19 +508,18 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  *
  * @return Return Type (int)
  * \retval 0 Succeed to send the request
- * \retval SHORTCUT_ERROR_FAULT Unrecoverable error
- * \retval SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
- * \retval SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * \retval SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * \retval SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
- * \retval SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * \retval #SHORTCUT_ERROR_FAULT Unrecoverable error
+ * \retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
+ * \retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
+ * \retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * \retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function
  *
  * @post You have to check the return status from callback function which is passed by argument.
  *
  * @see result_cb_t
- *
  *
  * @par Example
  * @code

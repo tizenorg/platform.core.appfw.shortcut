@@ -36,7 +36,7 @@
 #include <com-core.h>
 #include <com-core_packet.h>
 
-#include "shortcut_internal.h"
+#include "shortcut_product.h"
 #include "shortcut.h"
 #include "dlist.h"
 #include "shortcut_private.h"
