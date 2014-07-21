@@ -36,6 +36,7 @@ extern "C" {
  * @brief Called to the add_to_home request.
  * @details The homescreen should define a callback as this type and implement the service code
  *        for adding a new application shortcut.
+ * @since_tizen 2.3
  * @param[in] appid Shortcut is added for this package
  * @param[in] name Name for created shortcut icon
  * @param[in] type 3 kinds of types are defined
@@ -52,6 +53,7 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
 
 /**
  * @brief Called to receive the result of add_to_home_shortcut().
+ * @since_tizen 2.3
  * @param[in] ret Result value, it could be 0 if succeed to add a shortcut, or errno
  * @param[in] pid Process ID of who handles this add_to_home request
  * @param[in] data Callback data
@@ -67,6 +69,7 @@ typedef int (*result_cb_t)(int ret, int pid, void *data);
  *        Or return proper errno to figure out why the application failed to add a shortcut.
  *        LAUNCH_BY_PACKAGE is used for adding a package itself as a shortcut.
  *        LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
+ * @since_tizen 2.3
  */
 enum shortcut_type {
 	/**< Deprecated type */
@@ -100,6 +103,7 @@ enum shortcut_type {
 
 /**
  * @brief Enumeration for values of type of shortcut response.
+ * @since_tizen 2.3
  */
 enum shortcut_response {
 	SHORTCUT_SUCCESS = 0x00000000,				/**< Successfully handled */
@@ -120,6 +124,7 @@ enum shortcut_response {
 
 /**
  * @brief Definition for a macro to check the type.
+ * @since_tizen 2.3
  * @param[in] type Type of box
  * @return bool
  * @retval true(1) If it is a livebox
@@ -130,6 +135,7 @@ enum shortcut_response {
 
 /**
  * @brief Definition for a macro to check the request type.
+ * @since_tizen 2.3
  * @param[in] type Request type
  * @return bool
  * @retval true(1) Shortcut remove request
@@ -140,6 +146,7 @@ enum shortcut_response {
 
 /**
  * @brief Definition for a macro to check the request type.
+ * @since_tizen 2.3
  * @param[in] type Request type
  * @return bool
  * @retval true(1) Livebox remove request
@@ -150,6 +157,7 @@ enum shortcut_response {
 
 /**
  * @brief Definition for a macro to check the request status.
+ * @since_tizen 2.3
  * @param[in] type Status
  * @return bool
  * @retval true(1) Error
@@ -160,6 +168,7 @@ enum shortcut_response {
 
 /**
  * @brief Definition for a macro to check the request status.
+ * @since_tizen 2.3
  * @param[in] type Status
  * @return bool
  * @retval true(1) Shortcut request is already handled by requestee (homescreen, viewer, ...)
@@ -170,6 +179,7 @@ enum shortcut_response {
 
 /**
  * @brief Definition for filtering the pure error code from given status.
+ * @since_tizen 2.3
  * @param[in] status status
  * @return status code (error)
  * @see shortcut_response
@@ -189,6 +199,11 @@ enum shortcut_response {
  *
  * Prospective Clients:
  * Homescreen.
+ *
+ * @since_tizen 2.3
+ *
+ * @privlevel public
+ * @privilege http://tizen.org/privilege/core/shortcut
  *
  * @param[in] request_cb Callback function pointer which will be invoked when add_to_home is requested
  * @param[in] data Callback data to deliver to the callback function
@@ -249,6 +264,11 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * Prospective Clients:
  * Inhouse Apps.
  *
+ * @since_tizen 2.3
+ *
+ * @privlevel public
+ * @privilege http://tizen.org/privilege/core/shortcut
+ *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
  * @param[in] name Name for created shortcut icon
@@ -308,6 +328,8 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
 
 /**
  *
+ * @internal
+ *
  * @brief Gets the installed shortcut view list.
  *
  * @details
@@ -321,6 +343,11 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  *
  * Prospective Clients:
  * Inhouse Apps.
+ *
+ * @since_tizen 2.3
+ *
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/core/shortcut.admin
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name
@@ -355,6 +382,11 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  *
  * Prospective Clients:
  * Inhouse Apps.
+ *
+ * @since_tizen 2.3
+ *
+ * @privlevel public
+ * @privilege http://tizen.org/privilege/core/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
@@ -430,6 +462,11 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
  * Prospective Clients:
  * Inhouse Apps.
  *
+ * @since_tizen 2.3
+ *
+ * @privlevel public
+ * @privilege http://tizen.org/privilege/core/shortcut
+ *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut.
  * @param[in] name Name for created shortcut icon.
@@ -499,6 +536,11 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  *
  * Prospective Clients:
  * Inhouse Apps.
+ *
+ * @since_tizen 2.3
+ *
+ * @privlevel public
+ * @privilege http://tizen.org/privilege/core/shortcut
  *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut.
