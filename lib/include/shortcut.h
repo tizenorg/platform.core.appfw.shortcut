@@ -18,6 +18,8 @@
 #ifndef __SHORTCUT_H__
 #define __SHORTCUT_H__
 
+#include <tizen.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -105,21 +107,27 @@ enum shortcut_type {
  * @brief Enumeration for values of type of shortcut response.
  * @since_tizen 2.3
  */
-enum shortcut_response {
-	SHORTCUT_SUCCESS = 0x00000000,				/**< Successfully handled */
+enum shortcut_error_e {
+	SHORTCUT_ERROR_NONE = 0x00000000,				/**< Successfully handled */
 	SHORTCUT_ERROR = 0x80000000,				/**< MSB(1). Check this using SHORTCUT_STATUS_IS_ERROR macro  */
 	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,	/**< There is no space to add new shortcut */
 	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002,		/**< Shortcut is already added */
 	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004,		/**< Failed to add a shortcut. Unrecoverable error */
 	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008,	/**< Unsupported shortcut */
 	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010,		/**< Receiver is busy, try again later */
-	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020,	/**< Shortcut request is not valid, invalid parameter or invalid argument value */
+	SHORTCUT_ERROR_INVALID_PARAMETER = SHORTCUT_ERROR | 0x0020,	/**< Shortcut request is not valid, invalid parameter or invalid argument value */
 	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,		/**< Connection is not estabilished. or there is a problem of communication */ 
-	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< Memory is not enough to handle new request */
-	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100,		/**< Unable to access file or DB. Check your resource files */
-	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200,	/**< Has no permission to add a shortcut */
+	SHORTCUT_ERROR_OUT_OF_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< Memory is not enough to handle new request */
+	SHORTCUT_ERROR_IO_ERROR = SHORTCUT_ERROR | 0x0100,		/**< Unable to access file or DB. Check your resource files */
+	SHORTCUT_ERROR_PERMISSION_DENIED = SHORTCUT_ERROR | 0x0200,	/**< Has no permission to add a shortcut */
 
-	SHORTCUT_STATUS_CARED = 0x08000000			/**< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
+	SHORTCUT_STATUS_CARED = 0x08000000,			/**< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
+
+	SHORTCUT_SUCCESS = 0x00000000,				/**< @internal */
+	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020,	/**< @internal */
+	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< @internal */
+	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100,		/**< @internal */
+	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200	/**< @internal */
 };
 
 /**
@@ -162,7 +170,7 @@ enum shortcut_response {
  * @return bool
  * @retval true(1) Error
  * @retval false(0) Not an error
- * @see shortcut_response
+ * @see shortcut_error_e
  */
 #define SHORTCUT_STATUS_IS_ERROR(type)	(!!((type) & SHORTCUT_ERROR))
 
@@ -173,7 +181,7 @@ enum shortcut_response {
  * @return bool
  * @retval true(1) Shortcut request is already handled by requestee (homescreen, viewer, ...)
  * @retval false(0) Request result should be cared by requestor
- * @see shortcut_response
+ * @see shortcut_error_e
  */
 #define SHORTCUT_STATUS_IS_CARED(type)	(!!((type) & SHORTCUT_STATUS_CARED))
 
@@ -182,7 +190,7 @@ enum shortcut_response {
  * @since_tizen 2.3
  * @param[in] status status
  * @return status code (error)
- * @see shortcut_response
+ * @see shortcut_error_e
  */
 #define SHORTCUT_ERROR_CODE(status)	((status) & ~SHORTCUT_STATUS_CARED)
 
@@ -203,7 +211,7 @@ enum shortcut_response {
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/core/shortcut
+ * @privilege http://tizen.org/privilege/shortcut
  *
  * @param[in] request_cb Callback function pointer which will be invoked when add_to_home is requested
  * @param[in] data Callback data to deliver to the callback function
@@ -267,7 +275,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/core/shortcut
+ * @privilege http://tizen.org/privilege/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
@@ -347,7 +355,7 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  * @since_tizen 2.3
  *
  * @privlevel platform
- * @privilege http://tizen.org/privilege/core/shortcut.admin
+ * @privilege http://tizen.org/privilege/shortcut.admin
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name
@@ -386,7 +394,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/core/shortcut
+ * @privilege http://tizen.org/privilege/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
@@ -465,7 +473,7 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/core/shortcut
+ * @privilege http://tizen.org/privilege/shortcut
  *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut.
@@ -540,7 +548,7 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/core/shortcut
+ * @privilege http://tizen.org/privilege/shortcut
  *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut.
