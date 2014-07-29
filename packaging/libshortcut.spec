@@ -18,6 +18,7 @@ BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(com-core)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(capi-base-common)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.

@@ -18,6 +18,7 @@ pkg_check_modules(svc_pkgs REQUIRED
 	db-util
 	com-core
 	vconf
+	capi-base-common
 )
 
 FOREACH(flag ${svc_pkgs_CFLAGS})
