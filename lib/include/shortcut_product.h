@@ -28,6 +28,12 @@ extern "C" {
  */
 
 /**
+* @defgroup SHORTCUT_ICON_MODULE Shortcut Icon
+* @ingroup SHORTCUT_MODULE
+* @{
+*/
+
+/**
  * @addtogroup SHORTCUT_ICON_MODULE
  * @{
  */
