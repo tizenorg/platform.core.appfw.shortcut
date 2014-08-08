@@ -122,12 +122,6 @@ enum shortcut_error_e {
 	SHORTCUT_ERROR_PERMISSION_DENIED = SHORTCUT_ERROR | 0x0200,	/**< Has no permission to add a shortcut */
 
 	SHORTCUT_STATUS_CARED = 0x08000000,			/**< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
-
-	SHORTCUT_SUCCESS = 0x00000000,				/**< @internal */
-	SHORTCUT_ERROR_INVALID = SHORTCUT_ERROR | 0x0020,	/**< @internal */
-	SHORTCUT_ERROR_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< @internal */
-	SHORTCUT_ERROR_IO = SHORTCUT_ERROR | 0x0100,		/**< @internal */
-	SHORTCUT_ERROR_PERMISSION = SHORTCUT_ERROR | 0x0200	/**< @internal */
 };
 
 /**
@@ -290,11 +284,11 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @return Return Type (int)
  * @retval 0 Succeed to send the request
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
  * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * @retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * @retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
- * @retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function.
  *
@@ -365,7 +359,7 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  * @return Return Type (int)
  * @retval @c N Number of items (call count of callback function)
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
  *
  * @pre You have to prepare the callback function.
  *
@@ -410,11 +404,11 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @return Return Type (int)
  * @retval 0 Succeed to send the request
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
  * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished or there is a problem of communication
- * @retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * @retval #SHORTCUT_ERROR_IO Unable to access file or DB  Check your resource files
- * @retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB  Check your resource files
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function.
  *
@@ -485,11 +479,11 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
  * @return Return Type (int)
  * \retval 0 Succeed to send the request
  * \retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * \retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
  * \retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * \retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * \retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
- * \retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * \retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
+ * \retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
+ * \retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function
  *
@@ -559,11 +553,11 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  * @return Return Type (int)
  * \retval 0 Succeed to send the request
  * \retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * \retval #SHORTCUT_ERROR_INVALID Shortcut request is not valid, invalid parameter or invalid argument value
+ * \retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
  * \retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * \retval #SHORTCUT_ERROR_MEMORY Memory is not enough to handle new request
- * \retval #SHORTCUT_ERROR_IO Unable to access file or DB. Check your resource files
- * \retval #SHORTCUT_ERROR_PERMISSION Has no permission to add a shortcut
+ * \retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
+ * \retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
+ * \retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
  *
  * @pre You have to prepare the callback function
  *

@@ -204,7 +204,7 @@ static void master_started_cb(keynode_t *node, void *user_data)
 		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
 	}
 
-	if (state == 1 && make_connection() == SHORTCUT_SUCCESS) {
+	if (state == 1 && make_connection() == SHORTCUT_ERROR_NONE) {
 		(void)vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
 	}
 }
@@ -233,13 +233,13 @@ static gboolean timeout_cb(void *data)
 static int disconnected_cb(int handle, void *data)
 {
 	if (s_info.client_fd == handle) {
-		s_info.client_fd = SHORTCUT_ERROR_INVALID;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return 0;
 	}
 
 	if (s_info.server_fd == handle) {
 		if (!s_info.timer_id) {
-			s_info.server_fd = SHORTCUT_ERROR_INVALID;
+			s_info.server_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 			s_info.timer_id = g_timeout_add(1000, timeout_cb, NULL);
 			if (!s_info.timer_id) {
 				ErrPrint("Unable to add timer\n");
@@ -305,7 +305,7 @@ static inline int make_connection(void)
 		s_info.server_fd = -1;
 		ret = SHORTCUT_ERROR_COMM;
 	} else {
-		ret = SHORTCUT_SUCCESS;
+		ret = SHORTCUT_ERROR_NONE;
 	}
 
 	DbgPrint("Server FD: %d\n", s_info.server_fd);
@@ -332,7 +332,7 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 		master_started_cb(NULL, NULL);
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -354,13 +354,13 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 		ret = SHORTCUT_ERROR_FAULT;
 	} else if (packet_get(packet, "i", &ret) != 1) {
 		ErrPrint("Packet is not valid\n");
-		ret = SHORTCUT_ERROR_INVALID;
+		ret = SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (item->result_cb) {
 		ret = item->result_cb(ret, pid, item->data);
 	} else {
-		ret = SHORTCUT_SUCCESS;
+		ret = SHORTCUT_ERROR_NONE;
 	}
 	free(item);
 	return ret;
@@ -376,7 +376,7 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 
 	if (!appid || !name) {
 		ErrPrint("Invalid argument\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!s_info.initialized) {
@@ -402,7 +402,7 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_MEMORY;
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
 	item->result_cb = result_cb;
@@ -420,11 +420,11 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return SHORTCUT_ERROR_COMM;
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -437,7 +437,7 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 
 	if (!appid || !name) {
 		ErrPrint("Invalid argument\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!s_info.initialized) {
@@ -464,7 +464,7 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_MEMORY;
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
 	item->result_cb = result_cb;
@@ -482,11 +482,11 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return SHORTCUT_ERROR_COMM;
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -499,7 +499,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 
 	if (!appid || ADD_TO_HOME_IS_LIVEBOX(type)) {
 		ErrPrint("Invalid type used for adding a shortcut\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!s_info.initialized) {
@@ -525,7 +525,7 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_MEMORY;
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
 	item->result_cb = result_cb;
@@ -555,11 +555,11 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return SHORTCUT_ERROR_COMM;
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -572,7 +572,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 
 	if (!appid || !ADD_TO_HOME_IS_LIVEBOX(type)) {
 		ErrPrint("Invalid type is used for adding a livebox\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!s_info.initialized) {
@@ -597,7 +597,7 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	item = malloc(sizeof(*item));
 	if (!item) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_MEMORY;
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
 	item->result_cb = result_cb;
@@ -615,11 +615,11 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 		packet_destroy(packet);
 		free(item);
 		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID;
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return SHORTCUT_ERROR_COMM;
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -630,10 +630,10 @@ static inline int open_db(void)
 	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
 	if (ret != SQLITE_OK) {
 		DbgPrint("Failed to open a %s\n", s_info.dbfile);
-		return SHORTCUT_ERROR_IO;
+		return SHORTCUT_ERROR_IO_ERROR;
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -768,7 +768,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	char *language;
 
 	if (cb == NULL) {
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!s_info.db_opened) {
@@ -777,7 +777,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 
 	if (!s_info.db_opened) {
 		ErrPrint("Failed to open a DB\n");
-		return SHORTCUT_ERROR_IO;
+		return SHORTCUT_ERROR_IO_ERROR;
 	}
 
 	language = cur_locale();
@@ -792,7 +792,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		if (ret != SQLITE_OK) {
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
 			free(language);
-			return SHORTCUT_ERROR_IO;
+			return SHORTCUT_ERROR_IO_ERROR;
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
@@ -800,7 +800,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
 			sqlite3_finalize(stmt);
 			free(language);
-			return SHORTCUT_ERROR_IO;
+			return SHORTCUT_ERROR_IO_ERROR;
 		}
 	} else {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service";
@@ -808,7 +808,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		if (ret != SQLITE_OK) {
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
 			free(language);
-			return SHORTCUT_ERROR_IO;
+			return SHORTCUT_ERROR_IO_ERROR;
 		}
 	}
 

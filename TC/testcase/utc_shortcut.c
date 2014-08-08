@@ -66,18 +66,18 @@ static int shortcut_request_cb(const char *appid, const char *name, int type, co
 		if (!strcmp(appid, "fail")) {
 			return SHORTCUT_ERROR_UNSUPPORTED;
 		} else if (!strcmp(appid, "success")) {
-			return SHORTCUT_SUCCESS;
+			return SHORTCUT_ERROR_NONE;
 		}
 	}
 
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 static void utc_shortcut_set_request_cb_p(void)
 {
 	int ret;
 	ret = shortcut_set_request_cb(shortcut_request_cb, NULL);
-	dts_check_eq("shortcut_set_request_cb", ret, SHORTCUT_SUCCESS, "success");
+	dts_check_eq("shortcut_set_request_cb", ret, SHORTCUT_ERROR_NONE, "success");
 }
 
 static int response_cb(int ret, int pid, void *data)
@@ -85,7 +85,7 @@ static int response_cb(int ret, int pid, void *data)
 	if ((int)data == 1) {
 		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_ERROR_UNSUPPORTED, "success");
 	} else if ((int)data == 2) {
-		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_SUCCESS, "success");
+		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 
 	return 0;
@@ -95,8 +95,8 @@ static void utc_add_to_home_shortcut_n(void)
 {
 	int ret;
 	ret = add_to_home_shortcut("fail", NULL, LAUNCH_BY_PACKAGE, NULL, NULL, 1, response_cb, (void *)1);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_SUCCESS, "success");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 }
 
@@ -104,8 +104,8 @@ static void utc_add_to_home_shortcut_p(void)
 {
 	int ret;
 	ret = add_to_home_shortcut("success", NULL, LAUNCH_BY_PACKAGE, NULL, NULL, 1, response_cb, (void *)2);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_SUCCESS, "success");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_shortcut", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 }
 
@@ -134,8 +134,8 @@ static void utc_add_to_home_livebox_n(void)
 {
 	int ret;
 	ret = add_to_home_livebox("fail", NULL, LIVEBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)1);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_livebox", ret, SHORTCUT_SUCCESS, "success");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_livebox", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 }
 
@@ -143,8 +143,8 @@ static void utc_add_to_home_livebox_p(void)
 {
 	int ret;
 	ret = add_to_home_livebox("success", NULL, LIVEBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)2);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_livebox", ret, SHORTCUT_SUCCESS, "success");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_livebox", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 }
 
@@ -152,8 +152,8 @@ static void utc_add_to_home_remove_shortcut_n(void)
 {
 	int ret;
 	ret = add_to_home_remove_shortcut("fail", NULL, NULL, response_cb, (void *)1);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID, "Invalid");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "Invalid");
 	}
 }
 
@@ -161,8 +161,8 @@ static void utc_add_to_home_remove_shortcut_p(void)
 {
 	int ret;
 	ret = add_to_home_remove_shortcut("success", NULL, NULL, response_cb, (void *)2);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID, "Invalid");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "Invalid");
 	}
 }
 
@@ -170,8 +170,8 @@ static void utc_add_to_home_remove_livebox_n(void)
 {
 	int ret;
 	ret = add_to_home_remove_livebox("fail", NULL, response_cb, (void *)1);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID, "Invalid");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "Invalid");
 	}
 }
 
@@ -179,8 +179,8 @@ static void utc_add_to_home_remove_livebox_p(void)
 {
 	int ret;
 	ret = add_to_home_remove_livebox("success", NULL, response_cb, (void *)2);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID, "Invalid");
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "Invalid");
 	}
 }
 
@@ -195,7 +195,7 @@ static void utc_shortcut_icon_service_init_n(void)
 
 static int icon_service_cb(int status, void *data)
 {
-	dts_check_eq("shortcut_icon_service_init", status, SHORTCUT_SUCCESS);
+	dts_check_eq("shortcut_icon_service_init", status, SHORTCUT_ERROR_NONE);
 	return 0;
 }
 
@@ -204,8 +204,8 @@ static void utc_shortcut_icon_service_init_p(void)
 	int ret;
 
 	ret = shortcut_icon_service_init(icon_service_cb, NULL);
-	if (ret != SHORTCUT_SUCCESS) {
-		dts_check_eq("shortcut_icon_service_init", ret, SHORTCUT_SUCCESS);
+	if (ret != SHORTCUT_ERROR_NONE) {
+		dts_check_eq("shortcut_icon_service_init", ret, SHORTCUT_ERROR_NONE);
 	}
 }
 
@@ -222,7 +222,7 @@ static void utc_shortcut_icon_service_fini_p(void)
 {
 	int ret;
 	ret = shortcut_icon_service_fini();
-	dts_check_eq("shortcut_icon_service_fini", ret, SHORTCUT_SUCCESS, "success");
+	dts_check_eq("shortcut_icon_service_fini", ret, SHORTCUT_ERROR_NONE, "success");
 }
 
 static void utc_shortcut_icon_request_create_n(void)
@@ -240,7 +240,7 @@ static void utc_shortcut_icon_request_set_info_n(void)
 {
 	int ret;
 	ret = shortcut_icon_request_set_info(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-	dts_check_ne("shortcut_icon_request_set_info", ret, SHORTCUT_ERROR_INVALID, "invalid handle");
+	dts_check_ne("shortcut_icon_request_set_info", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "invalid handle");
 }
 
 static void utc_shortcut_icon_request_set_info_p(void)
@@ -261,7 +261,7 @@ static void utc_shortcut_icon_request_send_n(void)
 	int ret;
 	
 	ret = shortcut_icon_request_send(NULL, LIVEBOX_TYPE_1x1, NULL, NULL, NULL, NULL, NULL);
-	dts_check_eq("shortcut_icon_request_send", ret, SHORTCUT_ERROR_INVALID, "success");
+	dts_check_eq("shortcut_icon_request_send", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "success");
 }
 
 static int result_cb(struct shortcut_icon *handle, int ret, void *data)
@@ -287,7 +287,7 @@ static void utc_shortcut_icon_request_destroy_n(void)
 	int ret;
 
 	ret = shortcut_icon_request_destroy(NULL);
-	dts_check_eq("shortcut_icon_request_destroy", ret, SHORTCUT_ERROR_INVALID, "invalid");
+	dts_check_eq("shortcut_icon_request_destroy", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "invalid");
 }
 
 static void utc_shortcut_icon_request_destroy_p(void)
@@ -300,7 +300,7 @@ static void utc_shortcut_icon_request_destroy_p(void)
 	}
 
 	ret = shortcut_icon_request_destroy(s_info.handle);
-	dts_check_eq("shortcut_icon_request_destroy", ret, SHORTCUT_SUCCESS, "Destroy");
+	dts_check_eq("shortcut_icon_request_destroy", ret, SHORTCUT_ERROR_NONE, "Destroy");
 	s_info.handle = NULL;
 }
 
@@ -308,7 +308,7 @@ static void utc_shortcut_icon_request_set_data_n(void)
 {
 	int ret;
 	ret = shortcut_icon_request_set_data(NULL, NULL);
-	dts_check_eq("shortcut_icon_request_set_data", ret, SHORTCUT_ERROR_INVALID, "invalid");
+	dts_check_eq("shortcut_icon_request_set_data", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "invalid");
 }
 
 static void utc_shortcut_icon_request_set_data_p(void)
@@ -321,7 +321,7 @@ static void utc_shortcut_icon_request_set_data_p(void)
 	}
 
 	ret = shortcut_icon_request_set_data(s_info.handle, (void *)1);
-	dts_check_eq("shortcut_icon_request_set_data", ret, SHORTCUT_SUCCESS, "success");
+	dts_check_eq("shortcut_icon_request_set_data", ret, SHORTCUT_ERROR_NONE, "success");
 }
 
 static void utc_shortcut_icon_request_data_n(void)
