@@ -21,8 +21,8 @@
 #include <shortcut.h>
 
 #define MUSIC_APP "com.samsung.music-player"
-#define MUSIC_LIVEBOX MUSIC_APP ".livebox"
-#define MUSIC_EASYBOX "com.samsung.music-player.easymode.livebox"
+#define MUSIC_DYNAMICBOX MUSIC_APP ".dynamicbox"
+#define MUSIC_EASYBOX "com.samsung.music-player.easymode.dynamicbox"
 
 enum {
 	POSITIVE_TC_IDX = 0x01,
@@ -130,21 +130,21 @@ static void utc_shortcut_get_list_p(void)
 	dts_check_ge("shortcut_get_list", ret, 0, "get_list");
 }
 
-static void utc_add_to_home_livebox_n(void)
+static void utc_add_to_home_dynamicbox_n(void)
 {
 	int ret;
-	ret = add_to_home_livebox("fail", NULL, LIVEBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)1);
+	ret = add_to_home_dynamicbox("fail", NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)1);
 	if (ret != SHORTCUT_ERROR_NONE) {
-		dts_check_eq("add_to_home_livebox", ret, SHORTCUT_ERROR_NONE, "success");
+		dts_check_eq("add_to_home_dynamicbox", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 }
 
-static void utc_add_to_home_livebox_p(void)
+static void utc_add_to_home_dynamicbox_p(void)
 {
 	int ret;
-	ret = add_to_home_livebox("success", NULL, LIVEBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)2);
+	ret = add_to_home_dynamicbox("success", NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)2);
 	if (ret != SHORTCUT_ERROR_NONE) {
-		dts_check_eq("add_to_home_livebox", ret, SHORTCUT_ERROR_NONE, "success");
+		dts_check_eq("add_to_home_dynamicbox", ret, SHORTCUT_ERROR_NONE, "success");
 	}
 }
 
@@ -166,19 +166,19 @@ static void utc_add_to_home_remove_shortcut_p(void)
 	}
 }
 
-static void utc_add_to_home_remove_livebox_n(void)
+static void utc_add_to_home_remove_dynamicbox_n(void)
 {
 	int ret;
-	ret = add_to_home_remove_livebox("fail", NULL, response_cb, (void *)1);
+	ret = add_to_home_remove_dynamicbox("fail", NULL, response_cb, (void *)1);
 	if (ret != SHORTCUT_ERROR_NONE) {
 		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "Invalid");
 	}
 }
 
-static void utc_add_to_home_remove_livebox_p(void)
+static void utc_add_to_home_remove_dynamicbox_p(void)
 {
 	int ret;
-	ret = add_to_home_remove_livebox("success", NULL, response_cb, (void *)2);
+	ret = add_to_home_remove_dynamicbox("success", NULL, response_cb, (void *)2);
 	if (ret != SHORTCUT_ERROR_NONE) {
 		dts_check_eq("add_to_home_remove_shortcut", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "Invalid");
 	}
@@ -260,7 +260,7 @@ static void utc_shortcut_icon_request_send_n(void)
 {
 	int ret;
 	
-	ret = shortcut_icon_request_send(NULL, LIVEBOX_TYPE_1x1, NULL, NULL, NULL, NULL, NULL);
+	ret = shortcut_icon_request_send(NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, NULL, NULL, NULL);
 	dts_check_eq("shortcut_icon_request_send", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "success");
 }
 
@@ -278,7 +278,7 @@ static void utc_shortcut_icon_request_send_p(void)
 		return;
 	}
 
-	ret = shortcut_icon_request_send(s_info.handle, LIVEBOX_TYPE_1x1, NULL, NULL, "/tmp/icon.png", result_cb, NULL);
+	ret = shortcut_icon_request_send(s_info.handle, DYNAMICBOX_TYPE_1x1, NULL, NULL, "/tmp/icon.png", result_cb, NULL);
 	dts_check_eq("shortcut_icon_request_send", ret, 0, "success");
 }
 
@@ -348,12 +348,12 @@ struct tet_testlist tet_testlist[] = {
 	{ utc_add_to_home_shortcut_p, POSITIVE_TC_IDX },
 	{ utc_shortcut_get_list_n, NEGATIVE_TC_IDX },
 	{ utc_shortcut_get_list_p, POSITIVE_TC_IDX },
-	{ utc_add_to_home_livebox_n, NEGATIVE_TC_IDX },
-	{ utc_add_to_home_livebox_p, POSITIVE_TC_IDX },
+	{ utc_add_to_home_dynamicbox_n, NEGATIVE_TC_IDX },
+	{ utc_add_to_home_dynamicbox_p, POSITIVE_TC_IDX },
 	{ utc_add_to_home_remove_shortcut_n, NEGATIVE_TC_IDX },
 	{ utc_add_to_home_remove_shortcut_p, POSITIVE_TC_IDX },
-	{ utc_add_to_home_remove_livebox_n, NEGATIVE_TC_IDX },
-	{ utc_add_to_home_remove_livebox_p, POSITIVE_TC_IDX },
+	{ utc_add_to_home_remove_dynamicbox_n, NEGATIVE_TC_IDX },
+	{ utc_add_to_home_remove_dynamicbox_p, POSITIVE_TC_IDX },
 	{ utc_shortcut_icon_service_init_n, NEGATIVE_TC_IDX },
 	{ utc_shortcut_icon_service_init_p, POSITIVE_TC_IDX },
 	{ utc_shortcut_icon_request_create_n, NEGATIVE_TC_IDX },

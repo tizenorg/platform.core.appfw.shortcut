@@ -42,14 +42,14 @@ typedef int (*result_cb_t)(int ret, int pid, void *data)
 
 extern int add_to_home_shortcut(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
  
-extern int add_to_home_livebox(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+extern int add_to_home_dynamicbox(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
 \endcode
 
-Currently, our home screen can contain two different types of contents (that are pure shortcuts and liveboxes).
+Currently, our home screen can contain two different types of contents (that are pure shortcuts and dynamicboxes).
 
 To add a pure shortcut i.e., simply for launching an app, developers can use "add_to_home_shortcut" API to deliver their shortcuts to a home screen.
 
-If your application supports our livebox service and implments livebox type shortcut, then you can use "add_to_home_livebox" API to have a home screen add the livebox on its screen.
+If your application supports our dynamicbox service and implments dynamicbox type shortcut, then you can use "add_to_home_dynamicbox" API to have a home screen add the dynamicbox on its screen.
 
 <TABLE>
 <TR><TH>Parameters</TH><TH>Comment</TH></TR>
@@ -57,7 +57,7 @@ If your application supports our livebox service and implments livebox type shor
 <TR><TD>name</TD><TD>Application name wich will be displayed on the screen</TD></TR>
 <TR><TD>type</TD><TD>Basically it describes launching options whether to use a package name or URI. LAUNCH_BY_PACKAGE or LAUNCH_BY_URI</TD></TR>
 <TR><TD>content</TD><TD>
-Application data used for creating a pure shortcut or creating a livebox
+Application data used for creating a pure shortcut or creating a dynamicbox
 
     Shortcut
 
@@ -65,11 +65,11 @@ Application data used for creating a pure shortcut or creating a livebox
 
 2. if the type is Launch by URI: put the URI in the content
 
-    Livebox: any data necessary to create a livebox. Basically, it will passed to the livebox plug-in's create function.
+    Dynamicbox: any data necessary to create a dynamicbox. Basically, it will passed to the dynamicbox plug-in's create function.
 </TD></TR>
 <TR><TD>icon</TD><TD>Absolute path to the icon file, If you set this "NULL", the home screen will use the deafult icon file (but it is depends on the homescreen implementations)</TD></TR>
-<TR><TD>period</TD><TD>&lt;Only for livebox> Update period. The period must be greater than 0.0f</TD></TR>
-<TR><TD>result_cb</TD><TD>Result callback. The callback will be called after a shortcut or livebox has been added. Don't forget to check the return value.</TD></TR>
+<TR><TD>period</TD><TD>&lt;Only for dynamicbox> Update period. The period must be greater than 0.0f</TD></TR>
+<TR><TD>result_cb</TD><TD>Result callback. The callback will be called after a shortcut or dynamicbox has been added. Don't forget to check the return value.</TD></TR>
 <TR><TD>data</TD><TD>Callback data</TD></TR>
 </TABLE>
 
@@ -157,7 +157,7 @@ service_destroy(service);
 \endcode
 </TD></TR>
 </TABLE>
-When your app is launched, the app should send a selected item as a shortcut or livebox to the home screen using "add_to_home" series functions mentioned above.
+When your app is launched, the app should send a selected item as a shortcut or dynamicbox to the home screen using "add_to_home" series functions mentioned above.
 
 <H3>2.2.3 What each app has to do</H3>
 You can implement your shortcut list view using App or UG.
@@ -173,7 +173,7 @@ Who is going to handle the shortcut
 </LI>
 </UL>
 
-In your shortcut list view, you just call the "add_to_home_shortcut" or "add_to_home_livebox" which are described in the section 2.1
+In your shortcut list view, you just call the "add_to_home_shortcut" or "add_to_home_dynamicbox" which are described in the section 2.1
 
 <H4>2.2.3.1 Handled by App</H4>
 \image html ShortcutApp.png
@@ -204,10 +204,10 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 <TR><TD>pkgname</TD><TD>Package name to be added</TD></TR>
 <TR><TD>name</TD><TD>Application name to be displayed on the screen</TD></TR>
 <TR><TD>type</TD><TD>LAUNCH_BY_PACKAGE or LAUNCH_BY_URI</TD></TR>
-<TR><TD>content_info</TD><TD>Used for the livebox, or homescreen by itself if it required.</TD></TR>
+<TR><TD>content_info</TD><TD>Used for the dynamicbox, or homescreen by itself if it required.</TD></TR>
 <TR><TD>icon</TD><TD>Absolute path of the icon file. (If it is not exists, the homescreen can use the deafult icon file)</TD></TR>
 <TR><TD>pid</TD><TD>Reuquestor's Process ID</TD></TR>
-<TR><TD>period</TD><TD>Update period only for the livebox</TD></TR>
+<TR><TD>period</TD><TD>Update period only for the dynamicbox</TD></TR>
 <TR><TD>data</TD><TD>Callback data</TD></TR>
 </TABLE>
 

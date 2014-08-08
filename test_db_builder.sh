@@ -43,11 +43,11 @@ NAME=(
 )
 
 KEY=(
-"livebox_shortcut_type"
-"livebox_shortcut_type"
-"livebox_shortcut_type"
-"livebox_shortcut_type"
-"livebox_shortcut_type"
+"dynamicbox_shortcut_type"
+"dynamicbox_shortcut_type"
+"dynamicbox_shortcut_type"
+"dynamicbox_shortcut_type"
+"dynamicbox_shortcut_type"
 )
 
 VALUE=(

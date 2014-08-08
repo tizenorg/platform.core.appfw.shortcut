@@ -99,7 +99,7 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 
 
 
-static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct packet *packet)
+static struct packet *remove_dynamicbox_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *appid;
 	const char *name;
@@ -119,7 +119,7 @@ static struct packet *remove_livebox_handler(pid_t pid, int handle, const struct
 	DbgPrint("appid[%s], name[%s]\n", appid, name);
 
 	if (s_info.server_cb.request_cb) {
-		ret = s_info.server_cb.request_cb(appid, name, LIVEBOX_REMOVE, NULL, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
+		ret = s_info.server_cb.request_cb(appid, name, DYNAMICBOX_REMOVE, NULL, NULL, sender_pid, -1.0f, 0, s_info.server_cb.data);
 	} else {
 		ret = SHORTCUT_ERROR_UNSUPPORTED;
 	}
@@ -162,7 +162,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 
 
 
-static struct packet *add_livebox_handler(pid_t pid, int handle, const struct packet *packet)
+static struct packet *add_dynamicbox_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *appid;
 	const char *name;
@@ -263,16 +263,16 @@ static inline int make_connection(void)
 			.handler = add_shortcut_handler,
 		},
 		{
-			.cmd = "add_livebox",
-			.handler = add_livebox_handler,
+			.cmd = "add_dynamicbox",
+			.handler = add_dynamicbox_handler,
 		},
 		{
 			.cmd = "rm_shortcut",
 			.handler = remove_shortcut_handler,
 		},
 		{
-			.cmd = "rm_livebox",
-			.handler = remove_livebox_handler,
+			.cmd = "rm_dynamicbox",
+			.handler = remove_dynamicbox_handler,
 		},
 		{
 			.cmd = NULL,
@@ -429,6 +429,66 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 
 
 
+EAPI int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data)
+{
+	struct packet *packet;
+	struct result_cb_item *item;
+	int ret;
+
+	if (!appid || !name) {
+		ErrPrint("Invalid argument\n");
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	}
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
+
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0) {
+			ErrPrint("Failed to make connection\n");
+			return SHORTCUT_ERROR_COMM;
+		}
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	item->result_cb = result_cb;
+	item->data = data;
+
+	packet = packet_create("rm_dynamicbox", "iss", getpid(), appid, name);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	return SHORTCUT_ERROR_NONE;
+}
+
 EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
@@ -470,7 +530,7 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("rm_livebox", "iss", getpid(), appid, name);
+	packet = packet_create("rm_dynamicbox", "iss", getpid(), appid, name);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -489,15 +549,13 @@ EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_
 	return SHORTCUT_ERROR_NONE;
 }
 
-
-
 EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
 	int ret;
 
-	if (!appid || ADD_TO_HOME_IS_LIVEBOX(type)) {
+	if (!appid || ADD_TO_HOME_IS_DYNAMICBOX(type)) {
 		ErrPrint("Invalid type used for adding a shortcut\n");
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
@@ -564,14 +622,14 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 
 
 
-EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
+EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
 	int ret;
 
-	if (!appid || !ADD_TO_HOME_IS_LIVEBOX(type)) {
-		ErrPrint("Invalid type is used for adding a livebox\n");
+	if (!appid || !ADD_TO_HOME_IS_DYNAMICBOX(type)) {
+		ErrPrint("Invalid type is used for adding a dynamicbox\n");
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
@@ -603,7 +661,65 @@ EAPI int add_to_home_livebox(const char *appid, const char *name, int type, cons
 	item->result_cb = result_cb;
 	item->data = data;
 
-	packet = packet_create("add_livebox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
+	packet = packet_create("add_dynamicbox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	return SHORTCUT_ERROR_NONE;
+}
+
+EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
+{
+	struct packet *packet;
+	struct result_cb_item *item;
+	int ret;
+
+	if (!appid || !ADD_TO_HOME_IS_DYNAMICBOX(type)) {
+		ErrPrint("Invalid type is used for adding a dynamicbox\n");
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	}
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0) {
+			return SHORTCUT_ERROR_COMM;
+		}
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	item->result_cb = result_cb;
+	item->data = data;
+
+	packet = packet_create("add_dynamicbox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);

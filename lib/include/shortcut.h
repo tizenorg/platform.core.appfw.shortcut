@@ -84,23 +84,39 @@ enum shortcut_type {
 	LAUNCH_BY_URI		= 0x00000001,	/**< Launch the related package with given data(URI). */
 
 	SHORTCUT_REMOVE		= 0x40000000,	/**< Remove a shortcut */
-	LIVEBOX_REMOVE		= 0x80000000,	/**< Remove a livebox */
+	DYNAMICBOX_REMOVE		= 0x80000000,	/**< Remove a dynamicbox */
 
-	LIVEBOX_TYPE_DEFAULT	  = 0x10000000,	/**< Type mask for default livebox */
-	LIVEBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< Type mask for easy mode livebox */
-	LIVEBOX_TYPE_1x1	  = 0x10010000,	/**< 1x1 */
-	LIVEBOX_TYPE_2x1	  = 0x10020000,	/**< 2x1 */
-	LIVEBOX_TYPE_2x2	  = 0x10040000,	/**< 2x2 */
-	LIVEBOX_TYPE_4x1	  = 0x10080000,	/**< 4x1 */
-	LIVEBOX_TYPE_4x2	  = 0x10100000,	/**< 4x2 */
-	LIVEBOX_TYPE_4x3  	  = 0x10200000,	/**< 4x3 */
-	LIVEBOX_TYPE_4x4	  = 0x10400000,	/**< 4x4 */
-	LIVEBOX_TYPE_4x5	  = 0x11000000,	/**< 4x5 */
-	LIVEBOX_TYPE_4x6	  = 0x12000000, /**< 4x6 */
-	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,	/**< Easy mode 1x1 */
-	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,	/**< Easy mode 3x2 */
-	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< Easy mode 3x3 */
-	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000	/**< Error */
+	DYNAMICBOX_TYPE_DEFAULT	  = 0x10000000,	/**< Type mask for default dynamicbox */
+	DYNAMICBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< Type mask for easy mode dynamicbox */
+	DYNAMICBOX_TYPE_1x1	  = 0x10010000,	/**< 1x1 */
+	DYNAMICBOX_TYPE_2x1	  = 0x10020000,	/**< 2x1 */
+	DYNAMICBOX_TYPE_2x2	  = 0x10040000,	/**< 2x2 */
+	DYNAMICBOX_TYPE_4x1	  = 0x10080000,	/**< 4x1 */
+	DYNAMICBOX_TYPE_4x2	  = 0x10100000,	/**< 4x2 */
+	DYNAMICBOX_TYPE_4x3  	  = 0x10200000,	/**< 4x3 */
+	DYNAMICBOX_TYPE_4x4	  = 0x10400000,	/**< 4x4 */
+	DYNAMICBOX_TYPE_4x5	  = 0x11000000,	/**< 4x5 */
+	DYNAMICBOX_TYPE_4x6	  = 0x12000000, /**< 4x6 */
+	DYNAMICBOX_TYPE_EASY_1x1	  = 0x30010000,	/**< Easy mode 1x1 */
+	DYNAMICBOX_TYPE_EASY_3x1	  = 0x30020000,	/**< Easy mode 3x2 */
+	DYNAMICBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< Easy mode 3x3 */
+	DYNAMICBOX_TYPE_UNKNOWN	  = 0x1FFF0000,	/**< Error */
+
+	LIVEBOX_TYPE_DEFAULT	  = 0x10000000,	/**< @internal Type mask for default dynamicbox */
+	LIVEBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< @internal Type mask for easy mode dynamicbox */
+	LIVEBOX_TYPE_1x1	  = 0x10010000,	/**< @internal 1x1 */
+	LIVEBOX_TYPE_2x1	  = 0x10020000,	/**< @internal 2x1 */
+	LIVEBOX_TYPE_2x2	  = 0x10040000,	/**< @internal 2x2 */
+	LIVEBOX_TYPE_4x1	  = 0x10080000,	/**< @internal 4x1 */
+	LIVEBOX_TYPE_4x2	  = 0x10100000,	/**< @internal 4x2 */
+	LIVEBOX_TYPE_4x3  	  = 0x10200000,	/**< @internal 4x3 */
+	LIVEBOX_TYPE_4x4	  = 0x10400000,	/**< @internal 4x4 */
+	LIVEBOX_TYPE_4x5	  = 0x11000000,	/**< @internal 4x5 */
+	LIVEBOX_TYPE_4x6	  = 0x12000000, /**< @internal 4x6 */
+	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,	/**< @internal Easy mode 1x1 */
+	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,	/**< @internal Easy mode 3x2 */
+	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< @internal Easy mode 3x3 */
+	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000	/**< @internal Error */
 };
 
 /**
@@ -129,9 +145,15 @@ enum shortcut_error_e {
  * @since_tizen 2.3
  * @param[in] type Type of box
  * @return bool
- * @retval true(1) If it is a livebox
- * @retval false(0) if it is not a livebox
+ * @retval true(1) If it is a dynamicbox
+ * @retval false(0) if it is not a dynamicbox
  * @see shortcut_type
+ */
+#define ADD_TO_HOME_IS_DYNAMICBOX(type)	(!!((type) & 0x10000000))
+
+/**
+ * @internal
+ * @brief It will be removed
  */
 #define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
 
@@ -151,11 +173,17 @@ enum shortcut_error_e {
  * @since_tizen 2.3
  * @param[in] type Request type
  * @return bool
- * @retval true(1) Livebox remove request
+ * @retval true(1) Dynamicbox remove request
  * @retval false(0) Not a remove request
  * @see shortcut_type
  */
-#define ADD_TO_HOME_IS_REMOVE_LIVEBOX(type)	(!!((type) & LIVEBOX_REMOVE))
+#define ADD_TO_HOME_IS_REMOVE_DYNAMICBOX(type)	(!!((type) & DYNAMICBOX_REMOVE))
+
+/**
+ * @internal
+ * @brief It will be removed
+ */
+#define ADD_TO_HOME_IS_REMOVE_LIVEBOX(type)	(!!((type) & DYNAMICBOX_REMOVE))
 
 /**
  * @brief Definition for a macro to check the request status.
@@ -274,7 +302,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
  * @param[in] name Name for created shortcut icon
- * @param[in] type Type of shortcuts (livebox or shortcut, and its size if it is for the livebox)
+ * @param[in] type Type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
  * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut
  * @param[in] icon Absolute path of an icon file
  * @param[in] allow_duplicate set 1 If accept the duplicated shortcut or 0
@@ -393,7 +421,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
  * @param[in] name Name for created shortcut icon
- * @param[in] type Type of shortcuts (livebox or shortcut, and its size if it is for the livebox)
+ * @param[in] type Type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
  * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut
  * @param[in] icon Absolute path of an icon file
  * @param[in] period Update period
@@ -433,7 +461,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_livebox("com.samsung.gallery.livebox", "With friends",
+ * 	add_to_home_dynamicbox("com.samsung.gallery.dynamicbox", "With friends",
  * 					LAUNCH_BY_URI, "gallery:0000-0000",
  * 					"/opt/media/Pictures/Friends.jpg", -1.0f, 0, result_cb, NULL);
  * 	return 0;
@@ -445,6 +473,12 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * }
  *
  * @endcode
+ */
+extern int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
+
+/**
+ * @internal
+ * @brief It will be removed
  */
 extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
 
@@ -505,7 +539,7 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_remove_shortcut("com.samsung.gallery.livebox", "With friends",
+ * 	add_to_home_remove_shortcut("com.samsung.gallery.dynamicbox", "With friends",
  * 					"gallery:0000-0000",
  * 					result_cb, NULL);
  * 	return 0;
@@ -576,7 +610,7 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_remove_livebox("com.samsung.gallery.livebox", "With friends", result_cb, NULL);
+ * 	add_to_home_remove_dynamicbox("com.samsung.gallery.dynamicbox", "With friends", result_cb, NULL);
  * 	return 0;
  * }
  *
@@ -586,6 +620,12 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  * }
  *
  * @endcode
+ */
+extern int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data);
+
+/**
+ * @internal
+ * @brief It will be removed
  */
 extern int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
 
