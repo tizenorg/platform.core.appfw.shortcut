@@ -348,8 +348,8 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  *
  * @since_tizen 2.3
  *
- * @privlevel platform
- * @privilege http://tizen.org/privilege/shortcut.admin
+ * @privlevel public
+ * @privilege http://tizen.org/privilege/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name
@@ -466,9 +466,6 @@ extern int add_to_home_livebox(const char *appid, const char *name, int type, co
  *
  * @since_tizen 2.3
  *
- * @privlevel public
- * @privilege http://tizen.org/privilege/shortcut
- *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut.
  * @param[in] name Name for created shortcut icon.
@@ -540,9 +537,6 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  * Inhouse Apps.
  *
  * @since_tizen 2.3
- *
- * @privlevel public
- * @privilege http://tizen.org/privilege/shortcut
  *
  * @remarks - If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut.
