@@ -101,22 +101,6 @@ enum shortcut_type {
 	DYNAMICBOX_TYPE_EASY_3x1	  = 0x30020000,	/**< Easy mode 3x2 */
 	DYNAMICBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< Easy mode 3x3 */
 	DYNAMICBOX_TYPE_UNKNOWN	  = 0x1FFF0000,	/**< Error */
-
-	LIVEBOX_TYPE_DEFAULT	  = 0x10000000,	/**< @internal Type mask for default dynamicbox */
-	LIVEBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< @internal Type mask for easy mode dynamicbox */
-	LIVEBOX_TYPE_1x1	  = 0x10010000,	/**< @internal 1x1 */
-	LIVEBOX_TYPE_2x1	  = 0x10020000,	/**< @internal 2x1 */
-	LIVEBOX_TYPE_2x2	  = 0x10040000,	/**< @internal 2x2 */
-	LIVEBOX_TYPE_4x1	  = 0x10080000,	/**< @internal 4x1 */
-	LIVEBOX_TYPE_4x2	  = 0x10100000,	/**< @internal 4x2 */
-	LIVEBOX_TYPE_4x3  	  = 0x10200000,	/**< @internal 4x3 */
-	LIVEBOX_TYPE_4x4	  = 0x10400000,	/**< @internal 4x4 */
-	LIVEBOX_TYPE_4x5	  = 0x11000000,	/**< @internal 4x5 */
-	LIVEBOX_TYPE_4x6	  = 0x12000000, /**< @internal 4x6 */
-	LIVEBOX_TYPE_EASY_1x1	  = 0x30010000,	/**< @internal Easy mode 1x1 */
-	LIVEBOX_TYPE_EASY_3x1	  = 0x30020000,	/**< @internal Easy mode 3x2 */
-	LIVEBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< @internal Easy mode 3x3 */
-	LIVEBOX_TYPE_UNKNOWN	  = 0x1FFF0000	/**< @internal Error */
 };
 
 /**
@@ -152,12 +136,6 @@ enum shortcut_error_e {
 #define ADD_TO_HOME_IS_DYNAMICBOX(type)	(!!((type) & 0x10000000))
 
 /**
- * @internal
- * @brief It will be removed
- */
-#define ADD_TO_HOME_IS_LIVEBOX(type)	(!!((type) & 0x10000000))
-
-/**
  * @brief Definition for a macro to check the request type.
  * @since_tizen 2.3
  * @param[in] type Request type
@@ -178,12 +156,6 @@ enum shortcut_error_e {
  * @see shortcut_type
  */
 #define ADD_TO_HOME_IS_REMOVE_DYNAMICBOX(type)	(!!((type) & DYNAMICBOX_REMOVE))
-
-/**
- * @internal
- * @brief It will be removed
- */
-#define ADD_TO_HOME_IS_REMOVE_LIVEBOX(type)	(!!((type) & DYNAMICBOX_REMOVE))
 
 /**
  * @brief Definition for a macro to check the request status.
@@ -477,12 +449,6 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
 extern int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
 
 /**
- * @internal
- * @brief It will be removed
- */
-extern int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
-
-/**
  *
  * @brief The application, which supporting the add_to_home feature, should invoke this.
  *
@@ -622,15 +588,6 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  * @endcode
  */
 extern int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data);
-
-/**
- * @internal
- * @brief It will be removed
- */
-extern int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data);
-
-
-
 
 #ifdef __cplusplus
 }
