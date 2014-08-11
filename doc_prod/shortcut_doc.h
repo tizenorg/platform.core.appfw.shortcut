@@ -25,7 +25,7 @@
  *   - The others for the application developers who should implement the Add to home feature.
  * @ingroup CAPI_APPLICATION_FRAMEWORK 
  * @section SHORTCUT_MODULE_HEADER Required Header
- *   \#include <shortcut.h>
+ *   \#include <shortcut_product.h>
  * @section SHORTCUT_MODULE_OVERVIEW Overview
 <H1>1. Shortcut</H1>
 Tizen is supporting the "add shortcut or add to home" for various applications.

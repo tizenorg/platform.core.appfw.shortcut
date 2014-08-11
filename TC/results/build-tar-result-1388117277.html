@@ -62,20 +62,20 @@ Execute mode summary</b></font></td></tr></table></p>
 <p><table border="1" cellpadding="3" cellspacing="0">
 <tr><td bgcolor="#ccccff" class="heading2"><font size="+2"><b>
 Inline report</b></font></td></tr></table></p>
-<h3>/testcase/utc_livebox_service [build]</h3>
+<h3>/testcase/utc_dynamicbox_service [build]</h3>
 <p><table border="0" cellpadding="5" cellspacing="4">
 <tr>
 <td align="left" bgcolor="#cccccc" class="neutral"><b>Captured Output</b></td>
 </tr>
 <tr>
 <td align="left" bgcolor="#cccccc" class="neutral"><ul>
-<li>cc -o utc_livebox_service utc_livebox_service.c -I. `pkg-config --cflags livebox glib-2.0` -I/var/tmp/dts_fw/TC/TETware/tetware-target/inc/tet3 -Wall `pkg-config --libs livebox glib-2.0` /var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3/tcm_s.o -L/var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3 -ltcm_s -L/var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3 -lapi_s
-<li>Package livebox was not found in the pkg-config search path.
-<li>Perhaps you should add the directory containing `livebox.pc'
+<li>cc -o utc_dynamicbox_service utc_dynamicbox_service.c -I. `pkg-config --cflags dynamicbox glib-2.0` -I/var/tmp/dts_fw/TC/TETware/tetware-target/inc/tet3 -Wall `pkg-config --libs dynamicbox glib-2.0` /var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3/tcm_s.o -L/var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3 -ltcm_s -L/var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3 -lapi_s
+<li>Package dynamicbox was not found in the pkg-config search path.
+<li>Perhaps you should add the directory containing `dynamicbox.pc'
 <li>to the PKG_CONFIG_PATH environment variable
-<li>No package 'livebox' found
+<li>No package 'dynamicbox' found
 <li>cc: error: /var/tmp/dts_fw/TC/TETware/tetware-target/lib/tet3/tcm_s.o: No such file or directory
-<li>make: *** [utc_livebox_service] Error 1
+<li>make: *** [utc_dynamicbox_service] Error 1
 </ul>
 </td>
 </tr>

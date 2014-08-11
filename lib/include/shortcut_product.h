@@ -28,6 +28,12 @@ extern "C" {
  */
 
 /**
+* @defgroup SHORTCUT_ICON_MODULE Shortcut Icon
+* @ingroup SHORTCUT_MODULE
+* @{
+*/
+
+/**
  * @addtogroup SHORTCUT_ICON_MODULE
  * @{
  */
@@ -122,7 +128,7 @@ typedef int (*icon_request_cb_t)(struct shortcut_icon *handle, int ret, void *da
  * @param[in] init_cb Initialized result will be delievered via this callback
  * @param[in] data Callback data
  * @return int value
- * @retval #SHORTCUT_ERROR_INVALID Already initialized
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Already initialized
  * @retval #SHORTCUT_ERROR_SUCCESS Successfully initialized
  * @see shortcut_icon_service_fini()
  */
@@ -131,8 +137,8 @@ extern int shortcut_icon_service_init(int (*init_cb)(int status, void *data), vo
 /**
  * @brief Finalizes the icon creation service.
  * @return int value
- * @retval #SHORTCUT_SUCCESS Successfully initialized
- * @retval #SHORTCUT_ERROR_INVALID icon service is not initialized
+ * @retval #SHORTCUT_ERROR_NONE Successfully initialized
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER icon service is not initialized
  * @see shortcut_icon_service_init()
  */
 extern int shortcut_icon_service_fini(void);
@@ -157,8 +163,8 @@ extern struct shortcut_icon *shortcut_icon_request_create(void);
  * @param[in] subid ID for script. this ID will be used as "id"
  * @return int value
  * @retval index Index of data set
- * @retval #SHORTCUT_ERROR_INVALID Invalid handle
- * @retval #SHORTCUT_ERROR_MEMORY Out of memory
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid handle
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Out of memory
  * @see shortcut_icon_request_create()
  */
 extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char *id, const char *type, const char *part, const char *data, const char *option, const char *subid);
@@ -173,10 +179,10 @@ extern int shortcut_icon_request_set_info(struct shortcut_icon *handle, const ch
  * @param[in] result_cb Result callback
  * @param[in] data Callback data
  * @return int value
- * @retval #SHORTCUT_ERROR_INVALID Invalid parameters
- * @retval #SHORTCUT_ERROR_MEMORY Out of memory
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameters
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Out of memory
  * @retval #SHORTCUT_ERROR_FAULT Failed to send a request
- * @retval #SHORTCUT_SUCCESS Successfully sent
+ * @retval #SHORTCUT_ERROR_NONE Successfully sent
  * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type, const char *layout, const char *group, const char *outfile, icon_request_cb_t result_cb, void *data);
@@ -185,8 +191,8 @@ extern int shortcut_icon_request_send(struct shortcut_icon *handle, int size_typ
  * @brief Destroys handle of creating shortcut icon request.
  * @param[in] handle Shortcut request handle
  * @return int value
- * @retval #SHORTCUT_ERROR_INVALID Invalid handle
- * @retval #SHORTCUT_SUCCESS Successfully destroyed
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid handle
+ * @retval #SHORTCUT_ERROR_NONE Successfully destroyed
  * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_request_destroy(struct shortcut_icon *handle);
@@ -197,8 +203,8 @@ extern int shortcut_icon_request_destroy(struct shortcut_icon *handle);
  * @param[in] handle Handle to be used for carrying a data
  * @param[in] data Private data
  * @return int value
- * @retval #SHORTCUT_ERROR_INVALID Invalid handle
- * @retval #SHORTCUT_SUCCESS Successfully done
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid handle
+ * @retval #SHORTCUT_ERROR_NONE Successfully done
  * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *data);
