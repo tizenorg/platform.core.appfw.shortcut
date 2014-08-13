@@ -489,65 +489,7 @@ EAPI int add_to_home_remove_dynamicbox(const char *appid, const char *name, resu
 	return SHORTCUT_ERROR_NONE;
 }
 
-EAPI int add_to_home_remove_livebox(const char *appid, const char *name, result_cb_t result_cb, void *data)
-{
-	struct packet *packet;
-	struct result_cb_item *item;
-	int ret;
 
-	if (!appid || !name) {
-		ErrPrint("Invalid argument\n");
-		return SHORTCUT_ERROR_INVALID_PARAMETER;
-	}
-
-	if (!s_info.initialized) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	if (s_info.client_fd < 0) {
-		static struct method service_table[] = {
-			{
-				.cmd = NULL,
-				.handler = NULL,
-			},
-		};
-
-
-		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0) {
-			ErrPrint("Failed to make connection\n");
-			return SHORTCUT_ERROR_COMM;
-		}
-	}
-
-	item = malloc(sizeof(*item));
-	if (!item) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_OUT_OF_MEMORY;
-	}
-
-	item->result_cb = result_cb;
-	item->data = data;
-
-	packet = packet_create("rm_dynamicbox", "iss", getpid(), appid, name);
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		free(item);
-		return SHORTCUT_ERROR_FAULT;
-	}
-
-	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
-	if (ret < 0) {
-		packet_destroy(packet);
-		free(item);
-		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
-		return SHORTCUT_ERROR_COMM;
-	}
-
-	return SHORTCUT_ERROR_NONE;
-}
 
 EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 {
@@ -680,63 +622,6 @@ EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, c
 	return SHORTCUT_ERROR_NONE;
 }
 
-EAPI int add_to_home_livebox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
-{
-	struct packet *packet;
-	struct result_cb_item *item;
-	int ret;
-
-	if (!appid || !ADD_TO_HOME_IS_DYNAMICBOX(type)) {
-		ErrPrint("Invalid type is used for adding a dynamicbox\n");
-		return SHORTCUT_ERROR_INVALID_PARAMETER;
-	}
-
-	if (!s_info.initialized) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	if (s_info.client_fd < 0) {
-		static struct method service_table[] = {
-			{
-				.cmd = NULL,
-				.handler = NULL,
-			},
-		};
-
-		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0) {
-			return SHORTCUT_ERROR_COMM;
-		}
-	}
-
-	item = malloc(sizeof(*item));
-	if (!item) {
-		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_OUT_OF_MEMORY;
-	}
-
-	item->result_cb = result_cb;
-	item->data = data;
-
-	packet = packet_create("add_dynamicbox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		free(item);
-		return SHORTCUT_ERROR_FAULT;
-	}
-
-	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
-	if (ret < 0) {
-		packet_destroy(packet);
-		free(item);
-		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
-		return SHORTCUT_ERROR_COMM;
-	}
-
-	return SHORTCUT_ERROR_NONE;
-}
 
 
 static inline int open_db(void)
