@@ -205,7 +205,7 @@ enum shortcut_error_e {
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/shortcut
+ * @privilege %http://tizen.org/privilege/shortcut
  *
  * @param[in] request_cb Callback function pointer which will be invoked when add_to_home is requested
  * @param[in] data Callback data to deliver to the callback function
@@ -269,7 +269,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/shortcut
+ * @privilege %http://tizen.org/privilege/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
@@ -349,7 +349,7 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/shortcut
+ * @privilege %http://tizen.org/privilege/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name
@@ -388,7 +388,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @since_tizen 2.3
  *
  * @privlevel public
- * @privilege http://tizen.org/privilege/shortcut
+ * @privilege %http://tizen.org/privilege/shortcut
  *
  * @remarks If a homescreen does not support this feature, you will get proper error code.
  * @param[in] appid Package name of owner of this shortcut
