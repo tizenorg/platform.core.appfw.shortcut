@@ -304,6 +304,7 @@ static inline int update_block(struct block *block, const char *data, const char
 		_option = strdup(option);
 		if (!_option) {
 			ErrPrint("Heap: %s\n", strerror(errno));
+			free(_data);
 			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 	}
