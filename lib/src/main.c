@@ -316,6 +316,10 @@ static inline int make_connection(void)
 
 EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 {
+	if (request_cb == NULL) {
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	}
+
 	s_info.server_cb.request_cb = request_cb;
 	s_info.server_cb.data = data;
 
@@ -325,6 +329,7 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 		ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
 		if (ret < 0) {
 			ErrPrint("Failed to add vconf for service state [%d]\n", ret);
+			return SHORTCUT_ERROR_COMM;
 		} else {
 			DbgPrint("vconf is registered\n");
 		}
