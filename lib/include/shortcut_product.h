@@ -23,15 +23,9 @@ extern "C" {
 #endif
 
 /**
- * @file shortcut_internal.h
+ * @file shortcut_product.h
  * @brief This file declares API of libshortcut library (platform only)
  */
-
-/**
-* @defgroup SHORTCUT_ICON_MODULE Shortcut Icon
-* @ingroup SHORTCUT_MODULE
-* @{
-*/
 
 /**
  * @addtogroup SHORTCUT_ICON_MODULE
@@ -129,7 +123,7 @@ typedef int (*icon_request_cb_t)(struct shortcut_icon *handle, int ret, void *da
  * @param[in] data Callback data
  * @return int value
  * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Already initialized
- * @retval #SHORTCUT_ERROR_SUCCESS Successfully initialized
+ * @retval #SHORTCUT_ERROR_NONE Successfully initialized
  * @see shortcut_icon_service_fini()
  */
 extern int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void *data);
@@ -156,7 +150,7 @@ extern struct shortcut_icon *shortcut_icon_request_create(void);
  * @brief Sets information for creating icon image.
  * @param[in] handle Request handle
  * @param[in] id Target ID to be affected by this data
- * @param[in] type #SHORTCUT_ICON_TYPE_IMAGE, #SHORTCUT_ICON_TYPE_TEXT, #SHORTCUT_ICON_TYPE_SCRIPT can be used
+ * @param[in] type SHORTCUT_ICON_TYPE_IMAGE, SHORTCUT_ICON_TYPE_TEXT, SHORTCUT_ICON_TYPE_SCRIPT can be used
  * @param[in] part Target part to be affect by this data
  * @param[in] data type == IMAGE ? Image file path : type == TEXT ? text string : type == SCRIPT ? script file path : N/A
  * @param[in] option Image load option or group name of script file to be loaded
@@ -219,11 +213,12 @@ extern int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *da
  */
 extern void *shortcut_icon_request_data(struct shortcut_icon *handle);
 
+/**
+ * @}
+ */
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-/* @}
- * End of a file 
- */

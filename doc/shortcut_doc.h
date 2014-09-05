@@ -74,7 +74,7 @@ Application data used for creating a pure shortcut or creating a dynamicbox
 </TABLE>
 
 <H3>2.1.1 Supported types</H3>
-\snippet lib/include/shortcut.h Enumeration values for type of shortcuts
+shortcut.h Enumeration values for type of shortcuts
 
 <H2>2.2 Add shortcut (Home screen retrieves shortcuts from app)</H2>
 "Add shortcut " service enables home screen to retrieve all shortcuts that applications promised to support and request an app to send their shortcuts to home directly, as opposed to "add to home".
@@ -91,7 +91,7 @@ The following table describes the format and information necessary to define the
 Then, the information will be shown and used in home screen when a user selects "add shortcut" service.
 
 <TABLE>
-<TH><TD>Syntax of the shortcut manifest file</TD></TH>
+<caption>Syntax of the shortcut manifest file</caption>
 <TR><TD>
 \code
 <manifest xmlns="http://tizen.org/ns/packages" package="com.samsung.APP_PKGNAME">
@@ -144,7 +144,7 @@ It will use the pkgname and param attrbute to launch your application.
 Shortcut list view will launch your "[App] Shortcut list" using followed code.
 
 <TABLE>
-<TH><TD>Launch your app from shortcut list viewer</TD></TH>
+<caption>Launch your app from shortcut list viewer</caption>
 <TR><TD>
 \code
 service_h service;

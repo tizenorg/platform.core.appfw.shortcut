@@ -394,7 +394,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @param[in] appid Package name of owner of this shortcut
  * @param[in] name Name for created shortcut icon
  * @param[in] type Type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
- * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut
+ * @param[in] content Specific information for delivering to the viewer for creating a shortcut
  * @param[in] icon Absolute path of an icon file
  * @param[in] period Update period
  * @param[in] allow_duplicate Set 1 If accept the duplicated shortcut or 0
@@ -589,11 +589,12 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  */
 extern int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data);
 
+/**
+ * @}
+ */
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-/* @}
- * End of a file 
- */
