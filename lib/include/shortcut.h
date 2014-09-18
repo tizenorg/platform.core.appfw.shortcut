@@ -35,6 +35,7 @@ extern "C" {
  */
 
 /**
+ * @internal
  * @brief Called to the add_to_home request.
  * @details The homescreen should define a callback as this type and implement the service code
  *        for adding a new application shortcut.
@@ -168,6 +169,9 @@ enum shortcut_error_e {
 #define SHORTCUT_ERROR_CODE(status)	((status) & ~SHORTCUT_STATUS_CARED)
 
 /**
+ *
+ * @internal
+ *
  * @brief Supports the shortcut creating request.
  *
  * @details
