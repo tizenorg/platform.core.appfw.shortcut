@@ -143,20 +143,6 @@ Shortcut listing application will launch your application using app-svc with pac
 It will use the pkgname and param attrbute to launch your application.
 Shortcut list view will launch your "[App] Shortcut list" using followed code.
 
-<TABLE>
-<caption>Launch your app from shortcut list viewer</caption>
-<TR><TD>
-\code
-service_h service;
-service_create(&service);
-service_set_package(service, APPID); /* <shortcut appid="APPID" ...> */
-service_add_extra_data(service, EXTRA_KEY, EXTRA_DATA); /* <shortcut extra_key="EXTRA_KEY" extra_data="EXTRA_DATA" ...> */
-ret = service_send_launch_request(service, NULL, NULL);
-if (ret ...) { }
-service_destroy(service);
-\endcode
-</TD></TR>
-</TABLE>
 When your app is launched, the app should send a selected item as a shortcut or dynamicbox to the home screen using "add_to_home" series functions mentioned above.
 
 <H3>2.2.3 What each app has to do</H3>

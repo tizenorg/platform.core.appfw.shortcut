@@ -120,6 +120,7 @@ enum shortcut_error_e {
 	SHORTCUT_ERROR_OUT_OF_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< Memory is not enough to handle new request */
 	SHORTCUT_ERROR_IO_ERROR = SHORTCUT_ERROR | 0x0100,		/**< Unable to access file or DB. Check your resource files */
 	SHORTCUT_ERROR_PERMISSION_DENIED = SHORTCUT_ERROR | 0x0200,	/**< Has no permission to add a shortcut */
+	SHORTCUT_ERROR_NOT_SUPPORTED = SHORTCUT_ERROR | 0x0400,	/**< Shortcut is not supported */
 
 	SHORTCUT_STATUS_CARED = 0x08000000,			/**< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
 };
@@ -134,28 +135,6 @@ enum shortcut_error_e {
  * @see shortcut_type
  */
 #define ADD_TO_HOME_IS_DYNAMICBOX(type)	(!!((type) & 0x10000000))
-
-/**
- * @brief Definition for a macro to check the request type.
- * @since_tizen 2.3
- * @param[in] type Request type
- * @return bool
- * @retval true(1) Shortcut remove request
- * @retval false(0) Not a remove request
- * @see shortcut_type
- */
-#define ADD_TO_HOME_IS_REMOVE_SHORTCUT(type)	(!!((type) & SHORTCUT_REMOVE))
-
-/**
- * @brief Definition for a macro to check the request type.
- * @since_tizen 2.3
- * @param[in] type Request type
- * @return bool
- * @retval true(1) Dynamicbox remove request
- * @retval false(0) Not a remove request
- * @see shortcut_type
- */
-#define ADD_TO_HOME_IS_REMOVE_DYNAMICBOX(type)	(!!((type) & DYNAMICBOX_REMOVE))
 
 /**
  * @brief Definition for a macro to check the request status.
@@ -289,6 +268,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
  * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
  * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
+ * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Shortcut is not supported
  *
  * @pre You have to prepare the callback function.
  *
@@ -371,6 +351,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
 
 /**
  *
+ *
  * @brief Supports the add_to_home feature, should invoke this.
  *
  * @details
@@ -409,6 +390,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
  * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB  Check your resource files
  * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
+ * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Shortcut is not supported
  *
  * @pre You have to prepare the callback function.
  *
@@ -447,147 +429,6 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @endcode
  */
 extern int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
-
-/**
- *
- * @brief The application, which supporting the add_to_home feature, should invoke this.
- *
- * @details
- * Sync (or) Async:
- * This is an asynchronous API.
- *
- * Important Notes:\n
- * Application must check the return value of this function.\n
- * Application must check the return status from the callback function\n
- * Application should set the callback function to get the result of this request.
- *
- * Prospective Clients:
- * Inhouse Apps.
- *
- * @since_tizen 2.3
- *
- * @remarks - If a homescreen does not support this feature, you will get proper error code.
- * @param[in] appid Package name of owner of this shortcut.
- * @param[in] name Name for created shortcut icon.
- * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut.
- * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer.
- * @param[in] data Callback data which will be used in callback function
- *
- * @return Return Type (int)
- * \retval 0 Succeed to send the request
- * \retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * \retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
- * \retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * \retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
- * \retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
- * \retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
- *
- * @pre You have to prepare the callback function
- *
- * @post You have to check the return status from callback function which is passed by argument.
- *
- * @see result_cb_t
- *
- * @par Example
- * @code
- *
- * #include <stdio.h>
- * #include <shortcut.h>
- *
- * static int result_cb(int ret, int pid, void *data)
- * {
- * 	if (ret < 0)
- * 		printf("Failed to add a shortcut: %s\n", perror(ret));
- *
- *	printf("Processed by the %d\n", pid);
- * 	return 0;
- * }
- *
- * static int app_create(void *data)
- * {
- * 	add_to_home_remove_shortcut("com.samsung.gallery.dynamicbox", "With friends",
- * 					"gallery:0000-0000",
- * 					result_cb, NULL);
- * 	return 0;
- * }
- *
- * int main(int argc, char *argv[])
- * {
- * 	appcore....
- * }
- *
- * @endcode
- */
-extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
-
-/**
- *
- * @brief The application, which supporting the add_to_home feature, should invoke this.
- *
- * @details
- * Sync (or) Async:
- * This is an asynchronous API.
- *
- * Important Notes:\n
- * Application must check the return value of this function.\n
- * Application must check the return status from the callback function\n
- * Application should set the callback function to get the result of this request.
- *
- * Prospective Clients:
- * Inhouse Apps.
- *
- * @since_tizen 2.3
- *
- * @remarks - If a homescreen does not support this feature, you will get proper error code.
- * @param[in] appid Package name of owner of this shortcut.
- * @param[in] name Name for created shortcut icon.
- * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer.
- * @param[in] data Callback data which will be used in callback function
- *
- * @return Return Type (int)
- * \retval 0 Succeed to send the request
- * \retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * \retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
- * \retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * \retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
- * \retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
- * \retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
- *
- * @pre You have to prepare the callback function
- *
- * @post You have to check the return status from callback function which is passed by argument.
- *
- * @see result_cb_t
- *
- * @par Example
- * @code
- *
- * #include <stdio.h>
- * #include <shortcut.h>
- *
- * static int result_cb(int ret, int pid, void *data)
- * {
- * 	if (ret < 0)
- * 		printf("Failed to add a shortcut: %s\n", perror(ret));
- *
- *	printf("Processed by the %d\n", pid);
- * 	return 0;
- * }
- *
- * static int app_create(void *data)
- * {
- * 	add_to_home_remove_dynamicbox("com.samsung.gallery.dynamicbox", "With friends", result_cb, NULL);
- * 	return 0;
- * }
- *
- * int main(int argc, char *argv[])
- * {
- * 	appcore....
- * }
- *
- * @endcode
- */
-extern int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data);
 
 /**
  * @}
