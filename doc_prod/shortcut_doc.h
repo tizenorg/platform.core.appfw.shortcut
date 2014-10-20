@@ -38,40 +38,27 @@ If home screen implements the shortcut service using the library, the applicatio
 The following are two separate APIs to support the "add to home" feature. 
  
 \code
-typedef int (*result_cb_t)(int ret, int pid, void *data)
+typedef int (*result_cb_t)(int ret, void *data)
 
-extern int shortcut_add_shortcut(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, result_cb_t result_cb, void *data)
- 
-extern int shortcut_add_dynamicbox(const char *pkgname, const char *name, int type, const char *content, const char *icon, double period, result_cb_t result_cb, void *data)
+extern int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 \endcode
 
-Currently, our home screen can contain two different types of contents (that are pure shortcuts and dynamicboxes).
+Currently, our home screen can contain two different types of contents (that are pure shortcuts).
 
-To add a pure shortcut i.e., simply for launching an app, developers can use the "shortcut_add_shortcut" API to deliver their shortcuts to a home screen.
-
-If your application supports our dynamicbox service and implements a dynamicbox type shortcut, then you can use the "shortcut_add_dynamicbox" API to have a home screen add the dynamicbox on its screen.
+To add a pure shortcut i.e., simply for launching an app, developers can use the "shortcut_add_to_home" API to deliver their shortcuts to a home screen.
 
 <TABLE>
 <TR><TH>Parameters</TH><TH>Comment</TH></TR>
-<TR><TD>pkgname</TD><TD>Package name</TD></TR>
 <TR><TD>name</TD><TD>Application name which will be displayed on the screen</TD></TR>
-<TR><TD>type</TD><TD>Basically it describes launching options whether to use a package name or URI. LAUNCH_BY_PACKAGE or LAUNCH_BY_URI</TD></TR>
+<TR><TD>type</TD><TD>Basically it describes launching options whether to use a package name or URI. LAUNCH_BY_APP or LAUNCH_BY_URI</TD></TR>
 <TR><TD>content</TD><TD>
-Application data used for creating a pure shortcut or creating a dynamicbox
+Application data used for creating a pure shortcut
 
     Shortcut
 
-1. If the type is Launch by package: None
+1. If the type is Launch by app: None
 
 2. If the type is Launch by URI: Put the URI in the content
-
-    Dynamicbox: any data necessary to create a dynamicbox. Basically, it will be passed to the dynamicbox plug-in's create function.
-</TD></TR>
-<TR><TD>icon</TD><TD>Absolute path to the icon file, If you set this to "NULL", the home screen will use the deafult icon file (but it is depends on the homescreen implementations)</TD></TR>
-<TR><TD>period</TD><TD>&lt;Only for dynamicbox> Update period. The period must be greater than 0.0f</TD></TR>
-<TR><TD>result_cb</TD><TD>Result callback. The callback will be called after a shortcut or dynamicbox has been added. Don't forget to check the return value.</TD></TR>
-<TR><TD>data</TD><TD>Callback data</TD></TR>
-</TABLE>
 
 <H3>2.1.1 Supported types</H3>
 shortcut.h Enumeration values for type of shortcuts
@@ -143,7 +130,7 @@ The shortcut listing application will launch your application using app-svc with
 It will use the pkgname and param attrbute to launch your application.
 The shortcut list view will launch your "[App] Shortcut list" using the following code.
 
-When your app is launched, the app should send a selected item as a shortcut or dynamicbox to the home screen using "shortcut_add" series functions mentioned above.
+When your app is launched, the app should send a selected item as a shortcut to the home screen using "shortcut_add" series functions mentioned above.
 
 <H3>2.2.3 What each app has to do</H3>
 You can implement your shortcut list view using App or UG.
@@ -159,7 +146,7 @@ Who is going to handle the shortcut
 </LI>
 </UL>
 
-In your shortcut list view, you just call the "shortcut_add_shortcut" or "shortcut_add_dynamicbox" which are described in the section 2.1
+In your shortcut list view, you just call the "shortcut_add_to_home" which is described in the section 2.1
 
 <H4>2.2.3.1 Handled by App</H4>
 \image html ShortcutApp.png
@@ -178,43 +165,6 @@ If you didn't destroy it, it will be reside on the process list. and it will not
 Currently, the UG container process only supports multiple instance for a process.
 So if the user tries to add a new shortcut again from the shortcut list application, your UG will be launched again if you didn't
 terminate previous UG process (when you got PAUSE event).
-
-<H1>3. What the home screen should do</H1>
-\code
-typedef int (*request_cb_t)(const char *pkgname, const char *name, int type, const char *content_info, const char *icon, int pid, double period, void *data)
-extern int shortcut_set_request_cb(request_cb_t request_cb, void *data)
-\endcode
-
-<TABLE>
-<TR><TH>Parameter</TH><TH>Comment</TH></TR>
-<TR><TD>pkgname</TD><TD>Package name to be added</TD></TR>
-<TR><TD>name</TD><TD>Application name to be displayed on the screen</TD></TR>
-<TR><TD>type</TD><TD>LAUNCH_BY_PACKAGE or LAUNCH_BY_URI</TD></TR>
-<TR><TD>content_info</TD><TD>Used for the dynamicbox, or homescreen by itself if it required.</TD></TR>
-<TR><TD>icon</TD><TD>Absolute path of the icon file. (If it is not exists, the homescreen can use the deafult icon file)</TD></TR>
-<TR><TD>pid</TD><TD>Reuquestor's Process ID</TD></TR>
-<TR><TD>period</TD><TD>Update period only for the dynamicbox</TD></TR>
-<TR><TD>data</TD><TD>Callback data</TD></TR>
-</TABLE>
-
-<H1>4. To list up shortcuts registered in the device</H1>
-<TABLE>
-<TR><TH>shortcut-list viewer will launch your app by this way</TH></TR>
-<TR><TD>
-\code
-int shortcut_get_list(const char *pkgname, int (*cb)(const char *pkgname, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data)
-\endcode
-</TD></TR>
-</TABLE>
-
-If you specified the "pkgname", this API will only gather the given Package's shortcut list.
-If you set is to NULL, this API will gathering all shortcuts.
-Every shortcut item will be passed via "cb" callback function. so it will be invoked N times if the number of registered shortcut item is N.
-pkgname and name and param is described in the XML file of each application package.
-It will returns the number of shortcut items, or return <0 as an error value.
-
--EIO : failed to access the shortcut list DB
-> 0 : Number of shortcut items (count of callback function calling)
  *
  */
 

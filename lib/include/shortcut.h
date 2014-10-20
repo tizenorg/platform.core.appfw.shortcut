@@ -19,6 +19,7 @@
 #define __SHORTCUT_H__
 
 #include <tizen.h>
+#include <shortcut_manager.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,7 +68,7 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
                otherwise errno
  * @see add_to_home_shortcut()
  */
-typedef int (*result_cb_t)(int ret, int pid, void *data);
+typedef int (*result_internal_cb_t)(int ret, int pid, void *data);
 
 /**
  * @brief Enumeration for shortcut types.
@@ -78,15 +79,11 @@ typedef int (*result_cb_t)(int ret, int pid, void *data);
  *          #LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
  * @since_tizen 2.3
  */
-enum shortcut_type {
+enum shortcut_internal_type {
 	/**< Deprecated type */
 	SHORTCUT_PACKAGE	= 0x00000000,	/**< Launch the package using the given package name */
 	SHORTCUT_DATA		= 0x00000001,	/**< Launch the related package with the given data(content_info) */
 	SHORTCUT_FILE		= 0x00000002,	/**< Launch the related package with the given filename(content_info) */
-
-	/**< Use these */
-	LAUNCH_BY_PACKAGE	= 0x00000000,	/**< Launch the package using the given package name */
-	LAUNCH_BY_URI		= 0x00000001,	/**< Launch the related package with the given data(URI) */
 
 	SHORTCUT_REMOVE		= 0x40000000,	/**< Remove a shortcut */
 	DYNAMICBOX_REMOVE		= 0x80000000,	/**< Remove a dynamicbox */
@@ -112,22 +109,13 @@ enum shortcut_type {
  * @brief Enumeration for values of shortcut response types.
  * @since_tizen 2.3
  */
-enum shortcut_error_e {
-	SHORTCUT_ERROR_NONE = 0x00000000,				/**< Successfully handled */
+enum shortcut_internal_error_e {
 	SHORTCUT_ERROR = 0x80000000,				/**< MSB(1). Check this using the #SHORTCUT_STATUS_IS_ERROR macro  */
-	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,	/**< There is no space to add a new shortcut */
-	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002,		/**< Shortcut is already added */
-	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004,		/**< Failed to add a shortcut. Unrecoverable error */
-	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008,	/**< Unsupported shortcut */
-	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010,		/**< Receiver is busy, try again later */
-	SHORTCUT_ERROR_INVALID_PARAMETER = SHORTCUT_ERROR | 0x0020,	/**< Shortcut request is not valid, invalid parameter or invalid argument value */
-	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,		/**< Connection is not established. or there is a problem in the communication */ 
-	SHORTCUT_ERROR_OUT_OF_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< Memory is not enough to handle a new request */
-	SHORTCUT_ERROR_IO_ERROR = SHORTCUT_ERROR | 0x0100,		/**< Unable to access the file or DB. Check your resource files */
-	SHORTCUT_ERROR_PERMISSION_DENIED = SHORTCUT_ERROR | 0x0200,	/**< Has no permission to add a shortcut */
-	SHORTCUT_ERROR_NOT_SUPPORTED = SHORTCUT_ERROR | 0x0400,	/**< Shortcut is not supported */
 
-	SHORTCUT_STATUS_CARED = 0x08000000			/**< Shortcut status is already cared. Check this using the #SHORTCUT_STATUS_IS_CARED macro */
+	SHORTCUT_STATUS_CARED = 0x08000000,			/**< Shortcut status is already cared. Check this using the #SHORTCUT_STATUS_IS_CARED macro */
+
+	SHORTCUT_ERROR_BUSY = TIZEN_ERROR_RESOURCE_BUSY,		/**< Receiver is busy, try again later */
+	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0400	/**< Shortcut is not supported */
 };
 
 /**
@@ -283,7 +271,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * @post You have to check the return status from the callback function which is passed by the argument.
  *
- * @see result_cb_t
+ * @see result_internal_cb_t
  *
  * @par Example
  * @code
@@ -315,7 +303,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * @endcode
  */
-extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data);
+extern int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content_info, const char *icon, int allow_duplicate, result_internal_cb_t result_cb, void *data);
 
 /**
  *
@@ -354,7 +342,7 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  *
  * @post You have to check the return status from the callback function which is passed by the argument.
  *
- * @see result_cb_t
+ * @see result_internal_cb_t
  */
 extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data);
 
@@ -406,7 +394,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  *
  * @post You have to check the return status from the callback function which is passed by the argument.
  *
- * @see result_cb_t
+ * @see result_internal_cb_t
  *
  * @par Example
  * @code
@@ -438,7 +426,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  *
  * @endcode
  */
-extern int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
+extern int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_internal_cb_t result_cb, void *data);
 
 /**
  * @}

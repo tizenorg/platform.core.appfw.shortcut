@@ -97,7 +97,7 @@ extern FILE *__file_log_fp;
  *
  * @post You have to check the return status from callback function which is passed by argument.
  *
- * @see result_cb_t
+ * @see result_internal_cb_t
  *
  * @par Example
  * @code
@@ -129,7 +129,7 @@ extern FILE *__file_log_fp;
  *
  * @endcode
  */
-extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data);
+extern int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_internal_cb_t result_cb, void *data);
 
 /**
  *
@@ -169,7 +169,7 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  *
  * @post You have to check the return status from callback function which is passed by argument.
  *
- * @see result_cb_t
+ * @see result_internal_cb_t
  *
  * @par Example
  * @code
@@ -199,6 +199,6 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  *
  * @endcode
  */
-extern int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data);
+extern int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_internal_cb_t result_cb, void *data);
 
 /* End of a file */

@@ -343,7 +343,7 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 
 
 struct result_cb_item {
-	result_cb_t result_cb;
+	result_internal_cb_t result_cb;
 	void *data;
 };
 
@@ -373,7 +373,7 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 
 
 
-EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_cb_t result_cb, void *data)
+EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const char *content_info, result_internal_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
@@ -434,7 +434,7 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 
 
 
-EAPI int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_cb_t result_cb, void *data)
+EAPI int add_to_home_remove_dynamicbox(const char *appid, const char *name, result_internal_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
@@ -496,7 +496,7 @@ EAPI int add_to_home_remove_dynamicbox(const char *appid, const char *name, resu
 
 
 
-EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
+EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, int allow_duplicate, result_internal_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;
@@ -567,9 +567,13 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 	return SHORTCUT_ERROR_NONE;
 }
 
+EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
+{
+	return 0;
+}
 
 
-EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
+EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_internal_cb_t result_cb, void *data)
 {
 	struct packet *packet;
 	struct result_cb_item *item;

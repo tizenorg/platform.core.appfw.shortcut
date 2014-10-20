@@ -75,6 +75,8 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %defattr(-,root,root,-)
 %{_includedir}/shortcut/shortcut.h
 %{_includedir}/shortcut/shortcut_product.h
+%{_includedir}/shortcut/shortcut_private.h
+%{_includedir}/shortcut/shortcut_manager.h
 %{_libdir}/pkgconfig/shortcut.pc
 
 # End of a file
