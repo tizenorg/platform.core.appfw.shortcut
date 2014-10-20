@@ -26,7 +26,7 @@ extern "C" {
 
 /**
  * @file shortcut.h
- * @brief This file declares API of libshortcut library
+ * @brief This file declares the API of the libshortcut library.
  */
 
 /**
@@ -40,16 +40,18 @@ extern "C" {
  * @details The homescreen should define a callback as this type and implement the service code
  *        for adding a new application shortcut.
  * @since_tizen 2.3
- * @param[in] appid Shortcut is added for this package
- * @param[in] name Name for created shortcut icon
- * @param[in] type 3 kinds of types are defined
- * @param[in] content_info Specific information for creating a new shortcut
- * @param[in] icon Absolute path of an icon file for this shortcut
- * @param[in] pid Process ID of who request add_to_home
- * @param[in] allow_duplicate 1 if shortcut can be duplicated or a shourtcut should be exists only one
- * @param[in] data Callback data
- * @return Developer should returns the result of handling shortcut creation request\n
- *             Returns 0, if succeed to handles the add_to_home request, or returns proper errno
+ * @param[in] appid The shortcut that is added for this package
+ * @param[in] name The name of the created shortcut icon
+ * @param[in] type One of the three defined types
+ * @param[in] content_info The specific information for creating a new shortcut
+ * @param[in] icon The absolute path of an icon file for this shortcut
+ * @param[in] pid The process ID of who request add_to_home
+ * @param[in] allow_duplicate @c 1 if the shortcut can be duplicated,
+ *                            otherwise a shourtcut should exist only once
+ * @param[in] data The callback data
+ * @return The result of handling a shortcut creation request\n
+ *             This returns @c 0 if the add_to_home request is handled successfully, 
+ *             otherwise it returns a proper errno.
  * @see shortcut_set_request_cb()
  */
 typedef int (*request_cb_t)(const char *appid, const char *name, int type, const char *content_info, const char *icon, int pid, double period, int allow_duplicate, void *data);
@@ -57,38 +59,40 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
 /**
  * @brief Called to receive the result of add_to_home_shortcut().
  * @since_tizen 2.3
- * @param[in] ret Result value, it could be 0 if succeed to add a shortcut, or errno
- * @param[in] pid Process ID of who handles this add_to_home request
- * @param[in] data Callback data
- * @return int Returns 0, if there is no error or returns errno
+ * @param[in] ret The result value, it could be @c 0 if it succeeds to add a shortcut, 
+ *                otherwise it returns an errno
+ * @param[in] pid The process ID of who handle this add_to_home request
+ * @param[in] data The callback data
+ * @return int @c 0 if there is no error,
+               otherwise errno
  * @see add_to_home_shortcut()
  */
 typedef int (*result_cb_t)(int ret, int pid, void *data);
 
 /**
  * @brief Enumeration for shortcut types.
- * @details Basically, three types of shortcut is defined.
- *        Every homescreen developer should support these types of shortcut.
- *        Or return proper errno to figure out why the application failed to add a shortcut.
- *        LAUNCH_BY_PACKAGE is used for adding a package itself as a shortcut.
- *        LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
+ * @details Basically, three types of shortcuts are defined.
+ *          Every homescreen developer should support these types of shortcuts.
+ *          Or return a proper errno to figure out why the application failed to add a shortcut.
+ *          #LAUNCH_BY_PACKAGE is used for adding a package itself as a shortcut.
+ *          #LAUNCH_BY_URI is used for adding a shortcut for "uri" data.
  * @since_tizen 2.3
  */
 enum shortcut_type {
 	/**< Deprecated type */
-	SHORTCUT_PACKAGE	= 0x00000000,	/**< Launch the package using given pakcage name. */
-	SHORTCUT_DATA		= 0x00000001,	/**< Launch the related package with given data(content_info). */
-	SHORTCUT_FILE		= 0x00000002,	/**< Launch the related package with given filename(content_info). */
+	SHORTCUT_PACKAGE	= 0x00000000,	/**< Launch the package using the given package name */
+	SHORTCUT_DATA		= 0x00000001,	/**< Launch the related package with the given data(content_info) */
+	SHORTCUT_FILE		= 0x00000002,	/**< Launch the related package with the given filename(content_info) */
 
 	/**< Use these */
-	LAUNCH_BY_PACKAGE	= 0x00000000,	/**< Launch the package using given pakcage name. */
-	LAUNCH_BY_URI		= 0x00000001,	/**< Launch the related package with given data(URI). */
+	LAUNCH_BY_PACKAGE	= 0x00000000,	/**< Launch the package using the given package name */
+	LAUNCH_BY_URI		= 0x00000001,	/**< Launch the related package with the given data(URI) */
 
 	SHORTCUT_REMOVE		= 0x40000000,	/**< Remove a shortcut */
 	DYNAMICBOX_REMOVE		= 0x80000000,	/**< Remove a dynamicbox */
 
-	DYNAMICBOX_TYPE_DEFAULT	  = 0x10000000,	/**< Type mask for default dynamicbox */
-	DYNAMICBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< Type mask for easy mode dynamicbox */
+	DYNAMICBOX_TYPE_DEFAULT	  = 0x10000000,	/**< Type mask for the default dynamicbox */
+	DYNAMICBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< Type mask for the easy mode dynamicbox */
 	DYNAMICBOX_TYPE_1x1	  = 0x10010000,	/**< 1x1 */
 	DYNAMICBOX_TYPE_2x1	  = 0x10020000,	/**< 2x1 */
 	DYNAMICBOX_TYPE_2x2	  = 0x10040000,	/**< 2x2 */
@@ -105,34 +109,34 @@ enum shortcut_type {
 };
 
 /**
- * @brief Enumeration for values of type of shortcut response.
+ * @brief Enumeration for values of shortcut response types.
  * @since_tizen 2.3
  */
 enum shortcut_error_e {
 	SHORTCUT_ERROR_NONE = 0x00000000,				/**< Successfully handled */
-	SHORTCUT_ERROR = 0x80000000,				/**< MSB(1). Check this using SHORTCUT_STATUS_IS_ERROR macro  */
-	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,	/**< There is no space to add new shortcut */
+	SHORTCUT_ERROR = 0x80000000,				/**< MSB(1). Check this using the #SHORTCUT_STATUS_IS_ERROR macro  */
+	SHORTCUT_ERROR_NO_SPACE = SHORTCUT_ERROR | 0x0001,	/**< There is no space to add a new shortcut */
 	SHORTCUT_ERROR_EXIST = SHORTCUT_ERROR | 0x0002,		/**< Shortcut is already added */
 	SHORTCUT_ERROR_FAULT = SHORTCUT_ERROR | 0x0004,		/**< Failed to add a shortcut. Unrecoverable error */
 	SHORTCUT_ERROR_UNSUPPORTED = SHORTCUT_ERROR | 0x0008,	/**< Unsupported shortcut */
 	SHORTCUT_ERROR_BUSY = SHORTCUT_ERROR | 0x0010,		/**< Receiver is busy, try again later */
 	SHORTCUT_ERROR_INVALID_PARAMETER = SHORTCUT_ERROR | 0x0020,	/**< Shortcut request is not valid, invalid parameter or invalid argument value */
-	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,		/**< Connection is not estabilished. or there is a problem of communication */ 
-	SHORTCUT_ERROR_OUT_OF_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< Memory is not enough to handle new request */
-	SHORTCUT_ERROR_IO_ERROR = SHORTCUT_ERROR | 0x0100,		/**< Unable to access file or DB. Check your resource files */
+	SHORTCUT_ERROR_COMM = SHORTCUT_ERROR | 0x0040,		/**< Connection is not established. or there is a problem in the communication */ 
+	SHORTCUT_ERROR_OUT_OF_MEMORY = SHORTCUT_ERROR | 0x0080,	/**< Memory is not enough to handle a new request */
+	SHORTCUT_ERROR_IO_ERROR = SHORTCUT_ERROR | 0x0100,		/**< Unable to access the file or DB. Check your resource files */
 	SHORTCUT_ERROR_PERMISSION_DENIED = SHORTCUT_ERROR | 0x0200,	/**< Has no permission to add a shortcut */
 	SHORTCUT_ERROR_NOT_SUPPORTED = SHORTCUT_ERROR | 0x0400,	/**< Shortcut is not supported */
 
-	SHORTCUT_STATUS_CARED = 0x08000000,			/**< Shortcut status is already cared. check this using SHORTCUT_STATUS_IS_CARED macro */
+	SHORTCUT_STATUS_CARED = 0x08000000			/**< Shortcut status is already cared. Check this using the #SHORTCUT_STATUS_IS_CARED macro */
 };
 
 /**
- * @brief Definition for a macro to check the type.
+ * @brief Definition for a macro to check type.
  * @since_tizen 2.3
- * @param[in] type Type of box
+ * @param[in] type The type of box
  * @return bool
  * @retval true(1) If it is a dynamicbox
- * @retval false(0) if it is not a dynamicbox
+ * @retval false(0) If it is not a dynamicbox
  * @see shortcut_type
  */
 #define ADD_TO_HOME_IS_DYNAMICBOX(type)	(!!((type) & 0x10000000))
@@ -140,7 +144,7 @@ enum shortcut_error_e {
 /**
  * @brief Definition for a macro to check the request status.
  * @since_tizen 2.3
- * @param[in] type Status
+ * @param[in] type The status
  * @return bool
  * @retval true(1) Error
  * @retval false(0) Not an error
@@ -151,19 +155,19 @@ enum shortcut_error_e {
 /**
  * @brief Definition for a macro to check the request status.
  * @since_tizen 2.3
- * @param[in] type Status
+ * @param[in] type The status
  * @return bool
- * @retval true(1) Shortcut request is already handled by requestee (homescreen, viewer, ...)
- * @retval false(0) Request result should be cared by requestor
+ * @retval true(1) Shortcut request is already handled by the requestee (homescreen, viewer, ...)
+ * @retval false(0) Request result should be cared by the requestor
  * @see shortcut_error_e
  */
 #define SHORTCUT_STATUS_IS_CARED(type)	(!!((type) & SHORTCUT_STATUS_CARED))
 
 /**
- * @brief Definition for filtering the pure error code from given status.
+ * @brief Definition for filtering the pure error code from the given status.
  * @since_tizen 2.3
- * @param[in] status status
- * @return status code (error)
+ * @param[in] status The status
+ * @return The status code (error)
  * @see shortcut_error_e
  */
 #define SHORTCUT_ERROR_CODE(status)	((status) & ~SHORTCUT_STATUS_CARED)
@@ -190,12 +194,12 @@ enum shortcut_error_e {
  * @privlevel public
  * @privilege %http://tizen.org/privilege/shortcut
  *
- * @param[in] request_cb Callback function pointer which will be invoked when add_to_home is requested
- * @param[in] data Callback data to deliver to the callback function
+ * @param[in] request_cb The callback function pointer that is invoked when add_to_home is requested
+ * @param[in] data The callback data to deliver to the callback function
  *
- * @return Return Type (int)
+ * @return The return type (int)
  * @retval 0 Callback function is successfully registered
- * @retval <0 Failed to register the callback function for request
+ * @retval <0 Failed to register the callback function for the request
  *
  * @pre You have to prepare a callback function.
  *
@@ -254,29 +258,30 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/shortcut
  *
- * @remarks If a homescreen does not support this feature, you will get proper error code.
- * @param[in] appid Package name of owner of this shortcut
- * @param[in] name Name for created shortcut icon
- * @param[in] type Type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
- * @param[in] content_info Specific information for delivering to the viewer for creating a shortcut
- * @param[in] icon Absolute path of an icon file
- * @param[in] allow_duplicate set 1 If accept the duplicated shortcut or 0
- * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer
- * @param[in] data Callback data which will be used in callback function
+ * @remarks If a homescreen does not support this feature, you will get a proper error code.
+ * @param[in] appid The package name of the owner of this shortcut
+ * @param[in] name The name of the created shortcut icon
+ * @param[in] type The type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
+ * @param[in] content_info The specific information for delivering to the viewer for creating a shortcut
+ * @param[in] icon The absolute path of an icon file
+ * @param[in] allow_duplicate @c 1 if it accepts the duplicated shortcut,
+ *                            otherwise @c 0
+ * @param[in] result_cb The address of the callback function that is called when the result comes back from the viewer
+ * @param[in] data The callback data that is used in the callback function
  *
- * @return Return Type (int)
- * @retval 0 Succeed to send the request
+ * @return The return type (int)
+ * @retval 0 Succeeded to send the request
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
  * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
- * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem of communication
- * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
- * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished. or there is a problem in the communication
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle a new request
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB. Check your resource files
  * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
  * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Shortcut is not supported
  *
  * @pre You have to prepare the callback function.
  *
- * @post You have to check the return status from callback function which is passed by argument.
+ * @post You have to check the return status from the callback function which is passed by the argument.
  *
  * @see result_cb_t
  *
@@ -335,19 +340,19 @@ extern int add_to_home_shortcut(const char *appid, const char *name, int type, c
  * @privlevel public
  * @privilege %http://tizen.org/privilege/shortcut
  *
- * @remarks If a homescreen does not support this feature, you will get proper error code.
- * @param[in] appid Package name
- * @param[in] cb Callback function to get the shortcut item information
- * @param[in] data Callback data which will be used in callback function
+ * @remarks If a homescreen does not support this feature, you will get a proper error code.
+ * @param[in] appid The  package name
+ * @param[in] cb The callback function to get the shortcut item information
+ * @param[in] data The callback data that is used in the callback function
  *
- * @return Return Type (int)
- * @retval @c N Number of items (call count of callback function)
+ * @return The return type (int)
+ * @retval @c N Number of items (call count of the callback function)
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB. Check your resource files
  *
  * @pre You have to prepare the callback function.
  *
- * @post You have to check the return status from callback function which is passed by argument.
+ * @post You have to check the return status from the callback function which is passed by the argument.
  *
  * @see result_cb_t
  */
@@ -375,30 +380,31 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  * @privlevel public
  * @privilege %http://tizen.org/privilege/shortcut
  *
- * @remarks If a homescreen does not support this feature, you will get proper error code.
- * @param[in] appid Package name of owner of this shortcut
- * @param[in] name Name for created shortcut icon
- * @param[in] type Type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
- * @param[in] content Specific information for delivering to the viewer for creating a shortcut
- * @param[in] icon Absolute path of an icon file
- * @param[in] period Update period
- * @param[in] allow_duplicate Set 1 If accept the duplicated shortcut or 0
- * @param[in] result_cb Address of callback function which will be called when the result comes back from the viewer
- * @param[in] data Callback data which will be used in callback function
+ * @remarks If a homescreen does not support this feature, you will get a proper error code.
+ * @param[in] appid The package name of the owner of this shortcut
+ * @param[in] name The name of the created shortcut icon
+ * @param[in] type The type of shortcuts (dynamicbox or shortcut, and its size if it is for the dynamicbox)
+ * @param[in] content_info The specific information for delivering to the viewer for creating a shortcut
+ * @param[in] icon The absolute path of an icon file
+ * @param[in] period The update period
+ * @param[in] allow_duplicate @c 1 if it accepts the duplicated shortcut,
+ *                            otherwise @c 0
+ * @param[in] result_cb The address of the callback function that is called when the result comes back from the viewer
+ * @param[in] data The callback data that is used in the callback function
  *
- * @return Return Type (int)
- * @retval 0 Succeed to send the request
+ * @return The return type (int)
+ * @retval 0 Succeeded to send the request
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
  * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
- * @retval #SHORTCUT_ERROR_COMM Connection is not estabilished or there is a problem of communication
- * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle new request
- * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or DB  Check your resource files
+ * @retval #SHORTCUT_ERROR_COMM Connection is not established or there is a problem in the communication
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle a new request
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB  Check your resource files
  * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
  * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Shortcut is not supported
  *
  * @pre You have to prepare the callback function.
  *
- * @post You have to check the return status from callback function which is passed by argument.
+ * @post You have to check the return status from the callback function which is passed by the argument.
  *
  * @see result_cb_t
  *
