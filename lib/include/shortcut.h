@@ -85,6 +85,8 @@ enum shortcut_internal_type {
 	SHORTCUT_DATA		= 0x00000001,	/**< Launch the related package with the given data(content_info) */
 	SHORTCUT_FILE		= 0x00000002,	/**< Launch the related package with the given filename(content_info) */
 
+	LAUNCH_BY_PACKAGE	= 0x00000000,
+
 	SHORTCUT_REMOVE		= 0x40000000,	/**< Remove a shortcut */
 	DYNAMICBOX_REMOVE		= 0x80000000,	/**< Remove a dynamicbox */
 
