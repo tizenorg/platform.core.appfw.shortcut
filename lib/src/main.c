@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <libgen.h>
 
+#include <aul.h>
 #include <dlog.h>
 #include <glib.h>
 #include <db-util.h>
@@ -37,6 +38,9 @@
 #include "shortcut.h"
 #include "shortcut_product.h"
 #include "shortcut_private.h"
+#include "shortcut_manager.h"
+
+#define SHORTCUT_PKGNAME_LEN 512
 
 int errno;
 
@@ -211,6 +215,23 @@ static void master_started_cb(keynode_t *node, void *user_data)
 
 
 
+int shortcut_is_master_ready(void)
+{
+	int ret = -1, is_master_started = 0;
+
+	ret = vconf_get_bool(VCONFKEY_MASTER_STARTED, &is_master_started);
+	if (ret == 0 && is_master_started == 1) {
+		ErrPrint("the master has been started");
+	} else {
+		is_master_started = 0;
+		ErrPrint("the master has been stopped");
+	}
+
+	return is_master_started;
+}
+
+
+
 static gboolean timeout_cb(void *data)
 {
 	int ret;
@@ -314,6 +335,54 @@ static inline int make_connection(void)
 
 
 
+static char *_shortcut_get_pkgname_by_pid(void)
+{
+	char pkgname[SHORTCUT_PKGNAME_LEN + 1] = { 0, };
+	int pid = 0, ret = 0;
+	int fd;
+	char  *dup_pkgname;
+
+	pid = getpid();
+
+	ret = aul_app_get_pkgname_bypid(pid, pkgname, sizeof(pkgname));
+	if (ret != 0) {
+		char buf[SHORTCUT_PKGNAME_LEN + 1] = { 0, };
+
+		snprintf(buf, sizeof(buf), "/proc/%d/cmdline", pid);
+
+		fd = open(buf, O_RDONLY);
+		if (fd < 0) {
+			return NULL;
+		}
+
+		ret = read(fd, pkgname, sizeof(pkgname) - 1);
+		close(fd);
+
+		if (ret <= 0) {
+			return NULL;
+		}
+
+		pkgname[ret] = '\0';
+		/*!
+		 * \NOTE
+		 * "ret" is not able to be larger than "sizeof(pkgname) - 1",
+		 * if the system is not going wrong.
+		 */
+	} else {
+		if (strlen(pkgname) <= 0) {
+			return NULL;
+		}
+	}
+
+	dup_pkgname = strdup(pkgname);
+	if (!dup_pkgname)
+		ErrPrint("Heap: %s\n", strerror(errno));
+
+	return dup_pkgname;
+}
+
+
+
 EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 {
 	if (request_cb == NULL) {
@@ -343,7 +412,8 @@ EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
 
 
 struct result_cb_item {
-	result_internal_cb_t result_cb;
+	result_internal_cb_t result_internal_cb;
+	result_cb_t result_cb;
 	void *data;
 };
 
@@ -362,8 +432,10 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 		ret = SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
-	if (item->result_cb) {
-		ret = item->result_cb(ret, pid, item->data);
+	if (item->result_internal_cb) {
+		ret = item->result_internal_cb(ret, pid, item->data);
+	} else if (item->result_cb) {
+		ret = item->result_cb(ret, item->data);
 	} else {
 		ret = SHORTCUT_ERROR_NONE;
 	}
@@ -410,7 +482,8 @@ EAPI int add_to_home_remove_shortcut(const char *appid, const char *name, const 
 		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
-	item->result_cb = result_cb;
+	item->result_internal_cb = result_cb;
+	item->result_cb = NULL;
 	item->data = data;
 
 	packet = packet_create("rm_shortcut", "isss", getpid(), appid, name, content_info);
@@ -472,7 +545,8 @@ EAPI int add_to_home_remove_dynamicbox(const char *appid, const char *name, resu
 		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
-	item->result_cb = result_cb;
+	item->result_internal_cb = result_cb;
+	item->result_cb = NULL;
 	item->data = data;
 
 	packet = packet_create("rm_dynamicbox", "iss", getpid(), appid, name);
@@ -533,7 +607,8 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
-	item->result_cb = result_cb;
+	item->result_internal_cb = result_cb;
+	item->result_cb = NULL;
 	item->data = data;
 
 	if (!name) {
@@ -569,7 +644,81 @@ EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, con
 
 EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 {
-	return 0;
+	struct packet *packet;
+	struct result_cb_item *item;
+	char *appid = NULL;
+	int ret;
+
+	if (ADD_TO_HOME_IS_DYNAMICBOX(type)) {
+		ErrPrint("Invalid type used for adding a shortcut\n");
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	}
+
+	appid = _shortcut_get_pkgname_by_pid();
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0) {
+			if (shortcut_is_master_ready() == 1) {
+				return SHORTCUT_ERROR_PERMISSION_DENIED;
+			}
+			else {
+				return SHORTCUT_ERROR_COMM;
+			}
+		}
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	item->result_cb = result_cb;
+	item->result_internal_cb = NULL;
+	item->data = data;
+
+	if (!name) {
+		name = "";
+	}
+
+	if (!uri) {
+		uri = "";
+	}
+
+	if (!icon) {
+		icon = "";
+	}
+
+	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, uri, icon, allow_duplicate);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -609,7 +758,8 @@ EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, c
 		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
-	item->result_cb = result_cb;
+	item->result_internal_cb = result_cb;
+	item->result_cb = NULL;
 	item->data = data;
 
 	packet = packet_create("add_dynamicbox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);

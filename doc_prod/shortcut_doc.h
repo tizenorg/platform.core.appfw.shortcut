@@ -85,7 +85,7 @@ Then, the information will be shown and used in home screen when a user selects 
 ...
     <shortcut-list>
         <shortcut appid="com.samsung.myapp" extra_key="key_string" extra_data="data_string_for_key">
-           <icon>/opt/share/icons/default/small/com.samsung.myapp-shortcut.png</icon>
+           <icon>com.samsung.myapp-shortcut.png</icon>
            <label>Default name</label>
            <label xml:lang="en-us">Name en</label>
            <label xml:lang="nl-nl">Name nl</label>
@@ -109,7 +109,7 @@ Then, the information will be shown and used in home screen when a user selects 
         ...
         <shortcut appid="com.samsung.myapp" extra_key="key_string" extra_data="data_string_for_key">
            <label>Default name</label>
-           <icon>/opt/share/icons/default/small/com.samsung.myapp2.png</icon>
+           <icon>com.samsung.myapp2.png</icon>
         </shortcut>
     </shortcut-list>
 ...

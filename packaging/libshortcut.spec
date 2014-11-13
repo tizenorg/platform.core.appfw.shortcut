@@ -19,6 +19,7 @@ BuildRequires: pkgconfig(com-core)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(capi-base-common)
+BuildRequires: pkgconfig(aul)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.

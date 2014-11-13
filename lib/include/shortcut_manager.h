@@ -48,7 +48,7 @@ typedef int (*result_cb_t)(int ret, void *data);
 
 /**
  * @brief Enumeration for shortcut types.
- * @details Basically, three types of shortcuts are defined.
+ * @details Basically, two types of shortcuts are defined.
  *          Every homescreen developer should support these types of shortcuts.
  *          Or return a proper errno to figure out why the application failed to add a shortcut.
  *          #LAUNCH_BY_APP is used for adding a package itself as a shortcut.
@@ -113,7 +113,7 @@ enum shortcut_error_e {
  * @retval #SHORTCUT_ERROR_IO_ERROR I/O error
  * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Permission denied
  * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Not supported
- * @retval #SHORTCUT_ERROR_BUSY Device or resource busy
+ * @retval #SHORTCUT_ERROR_RESOURCE_BUSY Device or resource busy
  * @retval #SHORTCUT_ERROR_NO_SPACE No space
  * @retval #SHORTCUT_ERROR_EXIST Already exist
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
@@ -129,7 +129,7 @@ enum shortcut_error_e {
  * @code
  *
  * #include <stdio.h>
- * #include <shortcut.h>
+ * #include <shortcut_manager.h>
  *
  * static int result_cb(int ret, int pid, void *data)
  * {
@@ -142,9 +142,18 @@ enum shortcut_error_e {
  *
  * static int app_create(void *data)
  * {
+ *	char* data_path = app_get_data_path();
+ *	int path_len = strlen(data_path)+10;
+ *	char * path = malloc(path_len);
+ *	memset(path, 0, path_len);
+ *	strncat(path, data_path, path_len);
+ *	strncat(path, "Friend.jpg", path_len); 
+ *
  * 	shortcut_add_to_home("With friends",
  * 					LAUNCH_BY_URI, "gallery:0000-0000",
- * 					"/opt/media/Pictures/Friends.jpg", 0, result_cb, NULL);
+ * 					path, 0, result_cb, NULL);
+ *	free(path);
+ *
  * 	return 0;
  * }
  *

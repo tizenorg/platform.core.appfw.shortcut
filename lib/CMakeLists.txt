@@ -19,6 +19,7 @@ pkg_check_modules(svc_pkgs REQUIRED
 	com-core
 	vconf
 	capi-base-common
+	aul
 )
 
 FOREACH(flag ${svc_pkgs_CFLAGS})
