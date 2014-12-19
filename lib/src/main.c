@@ -671,6 +671,9 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
 		if (s_info.client_fd < 0) {
+			if (appid) {
+				free(appid);
+			}
 			if (shortcut_is_master_ready() == 1) {
 				return SHORTCUT_ERROR_PERMISSION_DENIED;
 			}
@@ -682,6 +685,9 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 
 	item = malloc(sizeof(*item));
 	if (!item) {
+		if (appid) {
+			free(appid);
+		}
 		ErrPrint("Heap: %s\n", strerror(errno));
 		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
@@ -705,14 +711,21 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, uri, icon, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
-		free(item);
+		if (appid) {
+			free(appid);
+		}
+		if (item) {
+			free(item);
+		}
 		return SHORTCUT_ERROR_FAULT;
 	}
 
 	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	packet_destroy(packet);
 	if (ret < 0) {
-		packet_destroy(packet);
-		free(item);
+		if (item) {
+			free(item);
+		}
 		com_core_packet_client_fini(s_info.client_fd);
 		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return SHORTCUT_ERROR_COMM;
