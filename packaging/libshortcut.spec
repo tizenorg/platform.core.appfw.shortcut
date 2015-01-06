@@ -20,6 +20,8 @@ BuildRequires: pkgconfig(com-core)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(libtzplatform-config)
+BuildRequires: pkgconfig(capi-base-common)
+BuildRequires: pkgconfig(aul)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.
@@ -77,6 +79,7 @@ touch %{buildroot}%{TZ_SYS_DB}/.shortcut_service.db-journal
 %defattr(-,root,root,-)
 %{_includedir}/shortcut/shortcut_PG.h
 %{_includedir}/shortcut/shortcut.h
+%{_includedir}/shortcut/shortcut_manager.h
 %{_libdir}/pkgconfig/shortcut.pc
 
 # End of a file
