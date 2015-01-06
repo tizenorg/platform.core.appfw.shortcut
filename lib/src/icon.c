@@ -215,13 +215,13 @@ static inline int shortcut_icon_desc_save(struct shortcut_desc *handle, const ch
 	FILE *fp;
 
 	if (!handle) {
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	fp = fopen(filename, "w+t");
 	if (!fp) {
 		ErrPrint("Error: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_IO;
+		return SHORTCUT_ERROR_IO_ERROR;
 	}
 
 	DbgPrint("Close and flush\n");
@@ -265,7 +265,7 @@ static inline int shortcut_icon_desc_save(struct shortcut_desc *handle, const ch
 	if (fclose(fp) != 0) {
 		ErrPrint("fclose: %s\n", strerror(errno));
 	}
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -295,7 +295,7 @@ static inline int update_block(struct block *block, const char *data, const char
 		_data = strdup(data);
 		if (!_data) {
 			ErrPrint("Heap: %s\n", strerror(errno));
-			return SHORTCUT_ERROR_MEMORY;
+			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 	}
 
@@ -303,7 +303,8 @@ static inline int update_block(struct block *block, const char *data, const char
 		_option = strdup(option);
 		if (!_option) {
 			ErrPrint("Heap: %s\n", strerror(errno));
-			return SHORTCUT_ERROR_MEMORY;
+			free(_data);
+			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 	}
 
@@ -328,7 +329,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 	struct block *block;
 
 	if (!handle || !type) {
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!part) {
@@ -342,7 +343,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 	if (target_id) {
 		if (strcmp(type, SHORTCUT_ICON_TYPE_SCRIPT)) {
 			ErrPrint("target id only can be used for script type\n");
-			return SHORTCUT_ERROR_INVALID;
+			return SHORTCUT_ERROR_INVALID_PARAMETER;
 		}
 	}
 
@@ -351,14 +352,14 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 		block = calloc(1, sizeof(*block));
 		if (!block) {
 			ErrPrint("Heap: %s\n", strerror(errno));
-			return SHORTCUT_ERROR_MEMORY;
+			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 
 		block->type = strdup(type);
 		if (!block->type) {
 			ErrPrint("Heap: %s\n", strerror(errno));
 			free(block);
-			return SHORTCUT_ERROR_MEMORY;
+			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 
 		block->part = strdup(part);
@@ -366,7 +367,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 			ErrPrint("Heap: %s\n", strerror(errno));
 			free(block->type);
 			free(block);
-			return SHORTCUT_ERROR_MEMORY;
+			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 
 		block->data = strdup(data);
@@ -375,7 +376,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 			free(block->type);
 			free(block->part);
 			free(block);
-			return SHORTCUT_ERROR_MEMORY;
+			return SHORTCUT_ERROR_OUT_OF_MEMORY;
 		}
 
 		if (option) {
@@ -386,7 +387,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 				free(block->type);
 				free(block->part);
 				free(block);
-				return SHORTCUT_ERROR_MEMORY;
+				return SHORTCUT_ERROR_OUT_OF_MEMORY;
 			}
 		}
 
@@ -399,7 +400,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 				free(block->type);
 				free(block->part);
 				free(block);
-				return SHORTCUT_ERROR_MEMORY;
+				return SHORTCUT_ERROR_OUT_OF_MEMORY;
 			}
 		}
 
@@ -413,7 +414,7 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 				free(block->type);
 				free(block->part);
 				free(block);
-				return SHORTCUT_ERROR_MEMORY;
+				return SHORTCUT_ERROR_OUT_OF_MEMORY;
 			}
 		}
 
@@ -422,17 +423,17 @@ static inline int shortcut_icon_desc_add_block(struct shortcut_desc *handle, con
 	} else {
 		if (strcmp(block->type, type)) {
 			ErrPrint("type is not valid (%s, %s)\n", block->type, type);
-			return SHORTCUT_ERROR_INVALID;
+			return SHORTCUT_ERROR_INVALID_PARAMETER;
 		}
 
 		if ((block->target_id && !target_id) || (!block->target_id && target_id)) {
 			ErrPrint("type is not valid (%s, %s)\n", block->type, type);
-			return SHORTCUT_ERROR_INVALID;
+			return SHORTCUT_ERROR_INVALID_PARAMETER;
 		}
 
 		if (block->target_id && target_id && strcmp(block->target_id, target_id)) {
 			ErrPrint("type is not valid (%s, %s)\n", block->type, type);
-			return SHORTCUT_ERROR_INVALID;
+			return SHORTCUT_ERROR_INVALID_PARAMETER;
 		}
 
 		update_block(block, data, option);
@@ -492,7 +493,7 @@ static inline int make_connection(void)
 		struct pending_item *pend;
 
 		if (s_info.init_cb) {
-			s_info.init_cb(SHORTCUT_SUCCESS, s_info.cbdata);
+			s_info.init_cb(SHORTCUT_ERROR_NONE, s_info.cbdata);
 		}
 
 		dlist_foreach_safe(s_info.pending_list, l, n, pend) {
@@ -511,7 +512,7 @@ static inline int make_connection(void)
 			free(pend);
 		}
 
-		ret = SHORTCUT_SUCCESS;
+		ret = SHORTCUT_ERROR_NONE;
 	}
 
 	return ret;
@@ -527,7 +528,7 @@ static void master_started_cb(keynode_t *node, void *user_data)
 		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
 	}
 
-	if (state == 1 && make_connection() == SHORTCUT_SUCCESS) {
+	if (state == 1 && (make_connection() == SHORTCUT_ERROR_NONE)) {
 		int ret;
 		ret = vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
 		DbgPrint("Ignore VCONF [%d]\n", ret);
@@ -541,7 +542,7 @@ EAPI int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void
 	int ret;
 
 	if (s_info.fd >= 0) {
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (s_info.initialized) {
@@ -560,7 +561,7 @@ EAPI int shortcut_icon_service_init(int (*init_cb)(int status, void *data), void
 	}
 
 	master_started_cb(NULL, NULL);
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -577,7 +578,7 @@ EAPI int shortcut_icon_service_fini(void)
 	}
 
 	if (s_info.fd < 0) {
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	com_core_packet_client_fini(s_info.fd);
@@ -594,7 +595,7 @@ EAPI int shortcut_icon_service_fini(void)
 		free(pend->item);
 		free(pend);
 	}
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -626,11 +627,11 @@ EAPI int shortcut_icon_request_set_data(struct shortcut_icon *handle, void *data
 {
 	if (!handle || handle->state != CREATED) {
 		ErrPrint("Handle is not valid\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	handle->data = data;
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -651,7 +652,7 @@ EAPI int shortcut_icon_request_set_info(struct shortcut_icon *handle, const char
 {
 	if (!handle || handle->state != CREATED) {
 		ErrPrint("Handle is not valid\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	return shortcut_icon_desc_add_block(handle->desc, id, type, part, data, option, subid);
@@ -663,11 +664,11 @@ EAPI int shortcut_icon_request_destroy(struct shortcut_icon *handle)
 {
 	if (!handle || handle->state != CREATED) {
 		ErrPrint("Handle is not valid\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	(void)shortcut_icon_request_unref(handle);
-	return SHORTCUT_SUCCESS;
+	return SHORTCUT_ERROR_NONE;
 }
 
 
@@ -682,7 +683,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 
 	if (!handle || handle->state != CREATED) {
 		ErrPrint("Handle is not valid\n");
-		return SHORTCUT_ERROR_INVALID;
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!layout) {
@@ -697,7 +698,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 	filename = malloc(len);
 	if (!filename) {
 		ErrPrint("Heap: %s\n", strerror(errno));
-		return SHORTCUT_ERROR_MEMORY;
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
 
 #if defined(_USE_ECORE_TIME_GET)
@@ -751,7 +752,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		if (unlink(filename) < 0) {
 			ErrPrint("Unlink: %s\n", strerror(errno));
 		}
-		ret = SHORTCUT_ERROR_MEMORY;
+		ret = SHORTCUT_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
@@ -795,7 +796,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 				ErrPrint("Unlink: %s\n", strerror(errno));
 			}
 			(void)shortcut_icon_request_unref(handle);
-			ret = SHORTCUT_ERROR_MEMORY;
+			ret = SHORTCUT_ERROR_OUT_OF_MEMORY;
 			goto out;
 		}
 
@@ -805,7 +806,7 @@ EAPI int shortcut_icon_request_send(struct shortcut_icon *handle, int size_type,
 		s_info.pending_list = dlist_append(s_info.pending_list, pend);
 		DbgPrint("Request is pended\n");
 
-		ret = SHORTCUT_SUCCESS;
+		ret = SHORTCUT_ERROR_NONE;
 	}
 
 out:
