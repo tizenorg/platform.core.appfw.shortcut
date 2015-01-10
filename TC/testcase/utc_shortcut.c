@@ -20,9 +20,9 @@
 
 #include <shortcut.h>
 
-#define MUSIC_APP "com.samsung.music-player"
+#define MUSIC_APP "org.tizen.music-player"
 #define MUSIC_DYNAMICBOX MUSIC_APP ".dynamicbox"
-#define MUSIC_EASYBOX "com.samsung.music-player.easymode.dynamicbox"
+#define MUSIC_EASYBOX "org.tizen.music-player.easymode.dynamicbox"
 
 enum {
 	POSITIVE_TC_IDX = 0x01,
@@ -259,7 +259,7 @@ static void utc_shortcut_icon_request_set_info_p(void)
 static void utc_shortcut_icon_request_send_n(void)
 {
 	int ret;
-	
+
 	ret = shortcut_icon_request_send(NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, NULL, NULL, NULL);
 	dts_check_eq("shortcut_icon_request_send", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "success");
 }

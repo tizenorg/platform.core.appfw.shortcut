@@ -64,7 +64,7 @@ extern "C" {
  *     if (!handle) {
  *         ...
  *     }
- * 
+ *
  *     // Send the request to the shortcut service
  *     ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, "icon, "/usr/share/.../icon.png", NULL, NULL);
  *     if (ret < 0) {
@@ -76,7 +76,7 @@ extern "C" {
  *        ...
  *     }
  *
- *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/com.samsung.cluster-home/data/out.png", result_cb, NULL);
+ *     ret = shortcut_icon_request_send(handle, LB_SIZE_TYPE_1x1, NULL, NULL, "/opt/usr/apps/org.tizen.cluster-home/data/out.png", result_cb, NULL);
  *     if (ret < 0) {
  *        ...
  *     }

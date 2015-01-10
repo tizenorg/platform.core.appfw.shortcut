@@ -21,9 +21,9 @@
 #include <dynamicbox-service.h>
 #include <dynamicbox-errno.h>
 
-#define MUSIC_APP "com.samsung.music-player"
+#define MUSIC_APP "org.tizen.music-player"
 #define MUSIC_DYNAMICBOX MUSIC_APP ".dynamicbox"
-#define MUSIC_EASYBOX "com.samsung.music-player.easymode.dynamicbox"
+#define MUSIC_EASYBOX "org.tizen.music-player.easymode.dynamicbox"
 
 enum {
 	POSITIVE_TC_IDX = 0x01,
@@ -223,7 +223,7 @@ static void utc_dynamicbox_service_mainappid_p(void)
 {
 	const char *appid;
 	appid = dynamicbox_service_mainappid(MUSIC_DYNAMICBOX);
-	dts_check_str_eq("dynamicbox_service_mainappid", appid, MUSIC_APP, "\"com.samsung.music-player\" should be returned\n");
+	dts_check_str_eq("dynamicbox_service_mainappid", appid, MUSIC_APP, "\"org.tizen.music-player\" should be returned\n");
 }
 
 static void utc_dynamicbox_service_get_pkglist_by_pkgid_n(void)
@@ -265,7 +265,7 @@ static void utc_dynamicbox_service_is_primary_p(void)
 {
 	int ret;
 	ret = dynamicbox_service_is_primary(MUSIC_DYNAMICBOX);
-	dts_check_str_eq("dynamicbox_service_is_primary", ret, 1, "\"com.samsung.music-player\" is primary(1)\n");
+	dts_check_str_eq("dynamicbox_service_is_primary", ret, 1, "\"org.tizen.music-player\" is primary(1)\n");
 }
 
 static void utc_dynamicbox_service_provider_name_n(void)
@@ -309,7 +309,7 @@ static void utc_dynamicbox_service_appid_p(void)
 {
 	char *appid;
 	appid = dynamicbox_service_appid(MUSIC_DYNAMICBOX);
-	dts_check_str_eq("dynamicbox_service_appid", appid, MUSIC_APP, "appid is com.samsung.music-player");
+	dts_check_str_eq("dynamicbox_service_appid", appid, MUSIC_APP, "appid is org.tizen.music-player");
 }
 
 static void utc_dynamicbox_service_i18n_name_n(void)

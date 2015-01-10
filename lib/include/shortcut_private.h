@@ -116,7 +116,7 @@ extern FILE *__file_log_fp;
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_remove_shortcut("com.samsung.gallery.dynamicbox", "With friends",
+5 * 	add_to_home_remove_shortcut("org.tizen.gallery.dynamicbox", "With friends",
  * 					"gallery:0000-0000",
  * 					result_cb, NULL);
  * 	return 0;
@@ -188,7 +188,7 @@ extern int add_to_home_remove_shortcut(const char *appid, const char *name, cons
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_remove_dynamicbox("com.samsung.gallery.dynamicbox", "With friends", result_cb, NULL);
+ * 	add_to_home_remove_dynamicbox("org.tizen.gallery.dynamicbox", "With friends", result_cb, NULL);
  * 	return 0;
  * }
  *

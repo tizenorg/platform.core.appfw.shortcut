@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns="http://tizen.org/ns/packages" package="com.samsung.myapp" version="0.3.5" install-location="auto">
+<manifest xmlns="http://tizen.org/ns/packages" package="org.tizen.myapp" version="0.3.5" install-location="auto">
 <shortcut-list test="a">
-	<shortcut appid="com.samsung.myapp" extra_key="key" extra_data="SERVICE INFORMATION 1">
-		<icon>/opt/usr/apps/com.samsung.myapp/res/icon/myapp_shortcut01.png</icon>
+	<shortcut appid="org.tizen.myapp" extra_key="key" extra_data="SERVICE INFORMATION 1">
+		<icon>/opt/usr/apps/org.tizen.myapp/res/icon/myapp_shortcut01.png</icon>
 		<label>Default Name</label>
 		<label xml:lang="en-us">Name en</label>
 		<label xml:lang="nl-nl">Name nl</label>
@@ -20,8 +20,8 @@
 		<label xml:lang="fr-fr">Name fr</label>
 		<label xml:lang="kor-kr">Name kr</label>
 	</shortcut>
-	<shortcut appid="com.samsung.myapp-gadget" extra_key="key" extra_data="SERVICE INFORMATION 2">
-		<icon>/opt/usr/apps/com.samsung.myapp/res/icon/gadget_shortcut01.png</icon>
+	<shortcut appid="org.tizen.myapp-gadget" extra_key="key" extra_data="SERVICE INFORMATION 2">
+		<icon>/opt/usr/apps/org.tizen.myapp/res/icon/gadget_shortcut01.png</icon>
 		<label>Default Name 02</label>
 		<label xml:lang="en-us">Name en</label>
 		<label xml:lang="nl-nl">Name nl</label>
@@ -39,8 +39,8 @@
 		<label xml:lang="fr-fr">Name fr</label>
 		<label xml:lang="kor-kr">Name kr</label>
 	</shortcut>
-	<shortcut appid="com.samsung.myapp" extra_key="key" extra_data="SERVICE INFORMATION 3">
-		<icon>/opt/usr/apps/com.samsung.myapp/res/icon/mayapp_shortcut02.png</icon>
+	<shortcut appid="org.tizen.myapp" extra_key="key" extra_data="SERVICE INFORMATION 3">
+		<icon>/opt/usr/apps/org.tizen.myapp/res/icon/mayapp_shortcut02.png</icon>
 		<label>Default Name 03</label>
 		<label xml:lang="en-us">Name en</label>
 		<label xml:lang="nl-nl">Name nl</label>

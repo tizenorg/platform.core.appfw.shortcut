@@ -23,7 +23,7 @@
  * @brief To enhance the Add to home feature. Two types of API sets are supported.
  *   - One for the homescreen developers.
  *   - The other for the application developers who should implement the Add to home feature.
- * @ingroup CAPI_APPLICATION_FRAMEWORK 
+ * @ingroup CAPI_APPLICATION_FRAMEWORK
  * @section SHORTCUT_MODULE_HEADER Required Header
  *   \#include <shortcut.h>
  * @section SHORTCUT_MODULE_OVERVIEW Overview
@@ -35,8 +35,8 @@ If home screen implements the shortcut service using the library, the applicatio
 <H1>2. How to add a new shortcut to the home screen</H1>
 <H2>2.1 Add to home (From the app to home)</H2>
 
-The following are two separate APIs to support the "add to home" feature. 
- 
+The following are two separate APIs to support the "add to home" feature.
+
 \code
 typedef int (*result_cb_t)(int ret, void *data)
 
@@ -81,11 +81,11 @@ Then, the information will be shown and used in home screen when a user selects 
 <caption>Syntax of the shortcut manifest file</caption>
 <TR><TD>
 \code
-<manifest xmlns="http://tizen.org/ns/packages" package="com.samsung.APP_PKGNAME">
+<manifest xmlns="http://tizen.org/ns/packages" package="org.tizen.APP_PKGNAME">
 ...
     <shortcut-list>
-        <shortcut appid="com.samsung.myapp" extra_key="key_string" extra_data="data_string_for_key">
-           <icon>com.samsung.myapp-shortcut.png</icon>
+        <shortcut appid="org.tizen.myapp" extra_key="key_string" extra_data="data_string_for_key">
+           <icon>org.tizen.myapp-shortcut.png</icon>
            <label>Default name</label>
            <label xml:lang="en-us">Name en</label>
            <label xml:lang="nl-nl">Name nl</label>
@@ -103,13 +103,13 @@ Then, the information will be shown and used in home screen when a user selects 
            <label xml:lang="fr-fr">Name fr</label>
            <label xml:lang="ko-kr">Name kr</label>
         </shortcut>
-        <shortcut appid="com.samsung.myapp" extra_key="key_string" extra_data="data_string_for_key">
+        <shortcut appid="org.tizen.myapp" extra_key="key_string" extra_data="data_string_for_key">
            <label>Default name</label>
         </shortcut>
         ...
-        <shortcut appid="com.samsung.myapp" extra_key="key_string" extra_data="data_string_for_key">
+        <shortcut appid="org.tizen.myapp" extra_key="key_string" extra_data="data_string_for_key">
            <label>Default name</label>
-           <icon>com.samsung.myapp2.png</icon>
+           <icon>org.tizen.myapp2.png</icon>
         </shortcut>
     </shortcut-list>
 ...

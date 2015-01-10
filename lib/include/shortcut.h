@@ -51,7 +51,7 @@ extern "C" {
  *                            otherwise a shourtcut should exist only once
  * @param[in] data The callback data
  * @return The result of handling a shortcut creation request\n
- *             This returns @c 0 if the add_to_home request is handled successfully, 
+ *             This returns @c 0 if the add_to_home request is handled successfully,
  *             otherwise it returns a proper errno.
  * @see shortcut_set_request_cb()
  */
@@ -60,7 +60,7 @@ typedef int (*request_cb_t)(const char *appid, const char *name, int type, const
 /**
  * @brief Called to receive the result of add_to_home_shortcut().
  * @since_tizen 2.3
- * @param[in] ret The result value, it could be @c 0 if it succeeds to add a shortcut, 
+ * @param[in] ret The result value, it could be @c 0 if it succeeds to add a shortcut,
  *                otherwise it returns an errno
  * @param[in] pid The process ID of who handle this add_to_home request
  * @param[in] data The callback data
@@ -292,7 +292,7 @@ extern int shortcut_set_request_cb(request_cb_t request_cb, void *data);
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_shortcut("com.samsung.gallery", "With friends",
+ * 	add_to_home_shortcut("org.tizen.gallery", "With friends",
  * 					LAUNCH_BY_URI, "gallery:0000-0000",
  * 					"/opt/media/Pictures/Friends.jpg", 0, result_cb, NULL);
  * 	return 0;
@@ -415,7 +415,7 @@ extern int shortcut_get_list(const char *appid, int (*cb)(const char *appid, con
  *
  * static int app_create(void *data)
  * {
- * 	add_to_home_dynamicbox("com.samsung.gallery.dynamicbox", "With friends",
+ * 	add_to_home_dynamicbox("org.tizen.gallery.dynamicbox", "With friends",
  * 					LAUNCH_BY_URI, "gallery:0000-0000",
  * 					"/opt/media/Pictures/Friends.jpg", -1.0f, 0, result_cb, NULL);
  * 	return 0;
