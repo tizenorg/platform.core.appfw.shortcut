@@ -92,18 +92,18 @@ enum shortcut_internal_type {
 
 	DYNAMICBOX_TYPE_DEFAULT	  = 0x10000000,	/**< Type mask for the default dynamicbox */
 	DYNAMICBOX_TYPE_EASY_DEFAULT = 0x30000000,	/**< Type mask for the easy mode dynamicbox */
-	DYNAMICBOX_TYPE_1x1	  = 0x10010000,	/**< 1x1 */
-	DYNAMICBOX_TYPE_2x1	  = 0x10020000,	/**< 2x1 */
-	DYNAMICBOX_TYPE_2x2	  = 0x10040000,	/**< 2x2 */
-	DYNAMICBOX_TYPE_4x1	  = 0x10080000,	/**< 4x1 */
-	DYNAMICBOX_TYPE_4x2	  = 0x10100000,	/**< 4x2 */
-	DYNAMICBOX_TYPE_4x3  	  = 0x10200000,	/**< 4x3 */
-	DYNAMICBOX_TYPE_4x4	  = 0x10400000,	/**< 4x4 */
-	DYNAMICBOX_TYPE_4x5	  = 0x11000000,	/**< 4x5 */
-	DYNAMICBOX_TYPE_4x6	  = 0x12000000, /**< 4x6 */
-	DYNAMICBOX_TYPE_EASY_1x1	  = 0x30010000,	/**< Easy mode 1x1 */
-	DYNAMICBOX_TYPE_EASY_3x1	  = 0x30020000,	/**< Easy mode 3x2 */
-	DYNAMICBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< Easy mode 3x3 */
+	WIDGET_SIZE_1x1	  = 0x10010000,	/**< 1x1 */
+	WIDGET_SIZE_2x1	  = 0x10020000,	/**< 2x1 */
+	WIDGET_SIZE_2x2	  = 0x10040000,	/**< 2x2 */
+	WIDGET_SIZE_4x1	  = 0x10080000,	/**< 4x1 */
+	WIDGET_SIZE_4x2	  = 0x10100000,	/**< 4x2 */
+	WIDGET_SIZE_4x3  	  = 0x10200000,	/**< 4x3 */
+	WIDGET_SIZE_4x4	  = 0x10400000,	/**< 4x4 */
+	WIDGET_SIZE_4x5	  = 0x11000000,	/**< 4x5 */
+	WIDGET_SIZE_4x6	  = 0x12000000, /**< 4x6 */
+	WIDGET_SIZE_EASY_1x1	  = 0x30010000,	/**< Easy mode 1x1 */
+	WIDGET_SIZE_EASY_3x1	  = 0x30020000,	/**< Easy mode 3x2 */
+	WIDGET_SIZE_EASY_3x3	  = 0x30040000,	/**< Easy mode 3x3 */
 	DYNAMICBOX_TYPE_UNKNOWN	  = 0x1FFF0000,	/**< Error */
 };
 
