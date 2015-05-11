@@ -1,8 +1,0 @@
-<manifest>
- <request>
-    <domain name="_"/>
- </request>
- <assign>
-    <filesystem path="TZ_SYS_DB/.shortcut_service.db*" label="User" />
- </assign>
-</manifest>
