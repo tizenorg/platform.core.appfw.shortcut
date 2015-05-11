@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns="http://tizen.org/ns/packages" package="org.tizen.myapp" version="0.3.5" install-location="auto">
+<shortcut-list test="a">
+	<shortcut appid="org.tizen.myapp" extra_key="key" extra_data="SERVICE INFORMATION 1">
+		<icon>/opt/usr/apps/org.tizen.myapp/res/icon/myapp_shortcut01.png</icon>
+		<label>Default Name</label>
+		<label xml:lang="en-us">Name en</label>
+		<label xml:lang="nl-nl">Name nl</label>
+		<label xml:lang="de-de">Name de</label>
+		<label xml:lang="zh-hk">Name hk</label>
+		<label xml:lang="zh-cn">Name cn</label>
+		<label xml:lang="ru-ru">Name ru</label>
+		<label xml:lang="zh-tw">Name tw</label>
+		<label xml:lang="ja-jp">Name jp</label>
+		<label xml:lang="es-es">Name es</label>
+		<label xml:lang="el-gr">Name gr</label>
+		<label xml:lang="it-it">Name it</label>
+		<label xml:lang="tr-tr">Name tr</label>
+		<label xml:lang="pt-pt">Name pt</label>
+		<label xml:lang="fr-fr">Name fr</label>
+		<label xml:lang="kor-kr">Name kr</label>
+	</shortcut>
+	<shortcut appid="org.tizen.myapp-gadget" extra_key="key" extra_data="SERVICE INFORMATION 2">
+		<icon>/opt/usr/apps/org.tizen.myapp/res/icon/gadget_shortcut01.png</icon>
+		<label>Default Name 02</label>
+		<label xml:lang="en-us">Name en</label>
+		<label xml:lang="nl-nl">Name nl</label>
+		<label xml:lang="de-de">Name de</label>
+		<label xml:lang="zh-hk">Name hk</label>
+		<label xml:lang="zh-cn">Name cn</label>
+		<label xml:lang="ru-ru">Name ru</label>
+		<label xml:lang="zh-tw">Name tw</label>
+		<label xml:lang="ja-jp">Name jp</label>
+		<label xml:lang="es-es">Name es</label>
+		<label xml:lang="el-gr">Name gr</label>
+		<label xml:lang="it-it">Name it</label>
+		<label xml:lang="tr-tr">Name tr</label>
+		<label xml:lang="pt-pt">Name pt</label>
+		<label xml:lang="fr-fr">Name fr</label>
+		<label xml:lang="kor-kr">Name kr</label>
+	</shortcut>
+	<shortcut appid="org.tizen.myapp" extra_key="key" extra_data="SERVICE INFORMATION 3">
+		<icon>/opt/usr/apps/org.tizen.myapp/res/icon/mayapp_shortcut02.png</icon>
+		<label>Default Name 03</label>
+		<label xml:lang="en-us">Name en</label>
+		<label xml:lang="nl-nl">Name nl</label>
+		<label xml:lang="de-de">Name de</label>
+		<label xml:lang="zh-hk">Name hk</label>
+		<label xml:lang="zh-cn">Name cn</label>
+		<label xml:lang="ru-ru">Name ru</label>
+		<label xml:lang="zh-tw">Name tw</label>
+		<label xml:lang="ja-jp">Name jp</label>
+		<label xml:lang="es-es">Name es</label>
+		<label xml:lang="el-gr">Name gr</label>
+		<label xml:lang="it-it">Name it</label>
+		<label xml:lang="tr-tr">Name tr</label>
+		<label xml:lang="pt-pt">Name pt</label>
+		<label xml:lang="fr-fr">Name fr</label>
+		<label xml:lang="kor-kr">Name kr</label>
+	</shortcut>
+</shortcut-list>
+</manifest>
