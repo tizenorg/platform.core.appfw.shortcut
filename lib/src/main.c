@@ -41,6 +41,9 @@
 
 #define SHORTCUT_PKGNAME_LEN 512
 
+#define SHORTCUT_IS_WIDGET_SIZE(size)           (!!((size) & WIDGET_SIZE_DEFAULT))
+#define SHORTCUT_IS_EASY_MODE_WIDGET_SIZE(size) (!!((size) & WIDGET_SIZE_EASY_DEFAULT))
+
 int errno;
 
 static struct info {
@@ -102,7 +105,7 @@ static struct packet *remove_shortcut_handler(pid_t pid, int handle, const struc
 
 
 
-static struct packet *remove_dynamicbox_handler(pid_t pid, int handle, const struct packet *packet)
+static struct packet *remove_shortcut_widget_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *appid;
 	const char *name;
@@ -165,7 +168,7 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 
 
 
-static struct packet *add_dynamicbox_handler(pid_t pid, int handle, const struct packet *packet)
+static struct packet *add_shortcut_widget_handler(pid_t pid, int handle, const struct packet *packet)
 {
 	const char *appid;
 	const char *name;
@@ -283,16 +286,16 @@ static inline int make_connection(void)
 			.handler = add_shortcut_handler,
 		},
 		{
-			.cmd = "add_dynamicbox",
-			.handler = add_dynamicbox_handler,
+			.cmd = "add_shortcut_widget",
+			.handler = add_shortcut_widget_handler,
 		},
 		{
 			.cmd = "rm_shortcut",
 			.handler = remove_shortcut_handler,
 		},
 		{
-			.cmd = "rm_dynamicbox",
-			.handler = remove_dynamicbox_handler,
+			.cmd = "rm_shortcut_widget",
+			.handler = remove_shortcut_widget_handler,
 		},
 		{
 			.cmd = NULL,
@@ -382,7 +385,7 @@ static char *_shortcut_get_pkgname_by_pid(void)
 
 
 
-EAPI int shortcut_set_request_cb(request_cb_t request_cb, void *data)
+EAPI int shortcut_set_request_cb(shortcut_request_cb request_cb, void *data)
 {
 	if (request_cb == NULL) {
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
@@ -774,7 +777,75 @@ EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, c
 	item->result_cb = NULL;
 	item->data = data;
 
-	packet = packet_create("add_dynamicbox", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
+	packet = packet_create("add_shortcut_widget", "ississdi", getpid(), appid, name, type, content, icon, period, allow_duplicate);
+	if (!packet) {
+		ErrPrint("Failed to build a packet\n");
+		free(item);
+		return SHORTCUT_ERROR_FAULT;
+	}
+
+	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
+	if (ret < 0) {
+		packet_destroy(packet);
+		free(item);
+		com_core_packet_client_fini(s_info.client_fd);
+		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
+		return SHORTCUT_ERROR_COMM;
+	}
+
+	return SHORTCUT_ERROR_NONE;
+}
+
+
+EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e size, const char *uri, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
+{
+	struct packet *packet;
+	struct result_cb_item *item;
+	char *appid = NULL;
+	int ret;
+
+	if (name == NULL) {
+		ErrPrint("AppID is null\n");
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	}
+
+	if (!SHORTCUT_IS_WIDGET_SIZE(size)) {
+		ErrPrint("Invalid type used for adding a widget\n");
+		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	}
+
+	appid = _shortcut_get_pkgname_by_pid();
+
+	if (!s_info.initialized) {
+		s_info.initialized = 1;
+		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
+	}
+
+	if (s_info.client_fd < 0) {
+		static struct method service_table[] = {
+			{
+				.cmd = NULL,
+				.handler = NULL,
+			},
+		};
+
+		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
+		if (s_info.client_fd < 0) {
+			return SHORTCUT_ERROR_COMM;
+		}
+	}
+
+	item = malloc(sizeof(*item));
+	if (!item) {
+		ErrPrint("Heap: %s\n", strerror(errno));
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	item->result_internal_cb = NULL;
+	item->result_cb = result_cb;
+	item->data = data;
+
+	packet = packet_create("add_shortcut_widget", "ississdi", getpid(), appid, name, size, uri, icon, period, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
 		free(item);
@@ -924,7 +995,7 @@ static inline char *cur_locale(void)
 /*!
  * \note READ ONLY DB
  */
-EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *data), void *data)
+EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, void *data)
 {
 	sqlite3_stmt *stmt;
 	const char *query;
@@ -939,7 +1010,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	int cnt;
 	char *language;
 
-	if (cb == NULL) {
+	if (list_cb == NULL) {
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
@@ -958,7 +1029,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		return SHORTCUT_ERROR_FAULT;
 	}
 
-	if (appid) {
+	if (package_name) {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service WHERE appid = ?";
 		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
@@ -967,7 +1038,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 			return SHORTCUT_ERROR_IO_ERROR;
 		}
 
-		ret = sqlite3_bind_text(stmt, 1, appid, -1, SQLITE_TRANSIENT);
+		ret = sqlite3_bind_text(stmt, 1, package_name, -1, SQLITE_TRANSIENT);
 		if (ret != SQLITE_OK) {
 			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
 			sqlite3_finalize(stmt);
@@ -988,8 +1059,8 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 	while (SQLITE_ROW == sqlite3_step(stmt)) {
 		id = sqlite3_column_int(stmt, 0);
 
-		appid = (const char *)sqlite3_column_text(stmt, 1);
-		if (!appid) {
+		package_name = (const char *)sqlite3_column_text(stmt, 1);
+		if (!package_name) {
 			LOGE("Failed to get package name\n");
 			continue;
 		}
@@ -1027,7 +1098,7 @@ EAPI int shortcut_get_list(const char *appid, int (*cb)(const char *appid, const
 		}
 
 		cnt++;
-		if (cb(appid, (i18n_icon != NULL ? i18n_icon : (char *)icon), (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
+		if (list_cb(package_name, (i18n_icon != NULL ? i18n_icon : (char *)icon), (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
 			free(i18n_name);
 			break;
 		}

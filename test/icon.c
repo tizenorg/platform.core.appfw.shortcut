@@ -51,14 +51,14 @@ static Eina_Bool test_main(void *data)
 	snprintf(filename, sizeof(filename), "/opt/usr/share/live_magazine/always/out%d.png", idx);
 
 	switch (idx % 7) {
-	case 0: type = WIDGET_SIZE_1x1; break;
-	case 1: type = WIDGET_SIZE_2x1; break;
-	case 2: type = WIDGET_SIZE_2x2; break;
-	case 3: type = WIDGET_SIZE_4x1; break;
-	case 4: type = WIDGET_SIZE_4x2; break;
-	case 5: type = WIDGET_SIZE_4x3; break;
-	case 6: type = WIDGET_SIZE_4x4; break;
-	default: type = WIDGET_SIZE_1x1; break;
+	case 0: type = DYNAMICBOX_TYPE_1x1; break;
+	case 1: type = DYNAMICBOX_TYPE_2x1; break;
+	case 2: type = DYNAMICBOX_TYPE_2x2; break;
+	case 3: type = DYNAMICBOX_TYPE_4x1; break;
+	case 4: type = DYNAMICBOX_TYPE_4x2; break;
+	case 5: type = DYNAMICBOX_TYPE_4x3; break;
+	case 6: type = DYNAMICBOX_TYPE_4x4; break;
+	default: type = DYNAMICBOX_TYPE_1x1; break;
 	}
 
 	ret = shortcut_icon_request_send(handle, type, NULL, NULL, filename, result_cb, NULL);

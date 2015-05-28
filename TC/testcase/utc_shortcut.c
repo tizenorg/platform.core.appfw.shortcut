@@ -133,7 +133,7 @@ static void utc_shortcut_get_list_p(void)
 static void utc_add_to_home_dynamicbox_n(void)
 {
 	int ret;
-	ret = add_to_home_dynamicbox("fail", NULL, WIDGET_SIZE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)1);
+	ret = add_to_home_dynamicbox("fail", NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)1);
 	if (ret != SHORTCUT_ERROR_NONE) {
 		dts_check_eq("add_to_home_dynamicbox", ret, SHORTCUT_ERROR_NONE, "success");
 	}
@@ -142,7 +142,7 @@ static void utc_add_to_home_dynamicbox_n(void)
 static void utc_add_to_home_dynamicbox_p(void)
 {
 	int ret;
-	ret = add_to_home_dynamicbox("success", NULL, WIDGET_SIZE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)2);
+	ret = add_to_home_dynamicbox("success", NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, -1.0f, 1, response_cb, (void *)2);
 	if (ret != SHORTCUT_ERROR_NONE) {
 		dts_check_eq("add_to_home_dynamicbox", ret, SHORTCUT_ERROR_NONE, "success");
 	}
@@ -260,7 +260,7 @@ static void utc_shortcut_icon_request_send_n(void)
 {
 	int ret;
 
-	ret = shortcut_icon_request_send(NULL, WIDGET_SIZE_1x1, NULL, NULL, NULL, NULL, NULL);
+	ret = shortcut_icon_request_send(NULL, DYNAMICBOX_TYPE_1x1, NULL, NULL, NULL, NULL, NULL);
 	dts_check_eq("shortcut_icon_request_send", ret, SHORTCUT_ERROR_INVALID_PARAMETER, "success");
 }
 
@@ -278,7 +278,7 @@ static void utc_shortcut_icon_request_send_p(void)
 		return;
 	}
 
-	ret = shortcut_icon_request_send(s_info.handle, WIDGET_SIZE_1x1, NULL, NULL, "/tmp/icon.png", result_cb, NULL);
+	ret = shortcut_icon_request_send(s_info.handle, DYNAMICBOX_TYPE_1x1, NULL, NULL, "/tmp/icon.png", result_cb, NULL);
 	dts_check_eq("shortcut_icon_request_send", ret, 0, "success");
 }
 
