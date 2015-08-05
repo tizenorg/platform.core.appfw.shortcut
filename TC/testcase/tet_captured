@@ -1,6 +1,0 @@
-cc -o utc_livebox_service utc_livebox_service.c -I. `pkg-config --cflags livebox-service glib-2.0` -I/var/tmp/dts_fw/TC/TETware/tetware-target/inc/tet3 -Wall `pkg-config --libs livebox-service glib-2.0`
-utc_livebox_service.c:18:21: fatal error: tet_api.h: No such file or directory
- #include <tet_api.h>
-                     ^
-compilation terminated.
-make: *** [utc_livebox_service] Error 1
