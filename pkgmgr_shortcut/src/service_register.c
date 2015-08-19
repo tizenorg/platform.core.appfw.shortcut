@@ -69,7 +69,7 @@ static struct {
 	const char *dbfile;
 	sqlite3 *handle;
 } s_info = {
-	.dbfile = "/opt/dbspace/.shortcut_service.db",
+	.dbfile = "/usr/dbspace/.shortcut_service.db",
 	.handle = NULL,
 };
 

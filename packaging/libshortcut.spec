@@ -53,9 +53,9 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
-mkdir -p %{buildroot}/opt/dbspace
-touch %{buildroot}/opt/dbspace/.shortcut_service.db
-touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
+mkdir -p %{buildroot}/usr/dbspace
+touch %{buildroot}/usr/dbspace/.shortcut_service.db
+touch %{buildroot}/usr/dbspace/.shortcut_service.db-journal
 
 %post -n %{name} -p /sbin/ldconfig
 %postun -n %{name} -p /sbin/ldconfig
@@ -66,8 +66,8 @@ touch %{buildroot}/opt/dbspace/.shortcut_service.db-journal
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
 %{_datarootdir}/license/*
-%attr(640,root,app) /opt/dbspace/.shortcut_service.db
-%attr(640,root,app) /opt/dbspace/.shortcut_service.db-journal
+%attr(640,root,app) /usr/dbspace/.shortcut_service.db
+%attr(640,root,app) /usr/dbspace/.shortcut_service.db-journal
 
 %files devel
 %manifest %{name}.manifest

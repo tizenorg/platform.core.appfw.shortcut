@@ -63,7 +63,7 @@ static struct info {
 	.server_fd = -1,
 	.client_fd = -1,
 	.socket_file = "/tmp/.shortcut.service",
-	.dbfile = "/opt/dbspace/.shortcut_service.db",
+	.dbfile = "/usr/dbspace/.shortcut_service.db",
 	.handle = NULL,
 	.initialized = 0,
 	.db_opened = 0,
