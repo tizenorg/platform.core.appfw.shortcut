@@ -66,8 +66,8 @@ touch %{buildroot}/usr/dbspace/.shortcut_service.db-journal
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
 %{_datarootdir}/license/*
-%attr(640,root,app) /usr/dbspace/.shortcut_service.db
-%attr(640,root,app) /usr/dbspace/.shortcut_service.db-journal
+%attr(644,root,app) /usr/dbspace/.shortcut_service.db
+%attr(644,root,app) /usr/dbspace/.shortcut_service.db-journal
 
 %files devel
 %manifest %{name}.manifest
