@@ -872,7 +872,7 @@ static inline int open_db(void)
 
 	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
 	if (ret != SQLITE_OK) {
-		DbgPrint("Failed to open a %s\n", s_info.dbfile);
+		DbgPrint("Failed to open a %s. error [%d]\n", s_info.dbfile, ret);
 		return SHORTCUT_ERROR_IO_ERROR;
 	}
 

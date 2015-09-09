@@ -54,10 +54,41 @@ make %{?jobs:-j%jobs}
 rm -rf %{buildroot}
 %make_install
 mkdir -p %{buildroot}/usr/dbspace
-touch %{buildroot}/usr/dbspace/.shortcut_service.db
-touch %{buildroot}/usr/dbspace/.shortcut_service.db-journal
 
-%post -n %{name} -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+
+if [ ! -d /usr/dbspace ]
+then
+	mkdir /usr/dbspace
+fi
+
+if [ ! -f /usr/dbspace/.shortcut_service.db ]
+then
+	sqlite3 /usr/dbspace/.shortcut_service.db 'PRAGMA journal_mode = PERSIST;
+		CREATE TABLE shortcut_service (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		pkgid TEXT,
+		appid TEXT,
+		icon TEXT,
+		name TEXT,
+		extra_key TEXT,
+		extra_data TEXT);
+
+		CREATE TABLE shortcut_name (
+		id INTEGER,
+		pkgid TEXT,
+		lang TEXT,
+		name TEXT,
+		icon TEXT);
+	'
+fi
+
+chown :5000 /usr/dbspace/.shortcut_service.db
+chown :5000 /usr/dbspace/.shortcut_service.db-journal
+chmod 644 /usr/dbspace/.shortcut_service.db
+chmod 644 /usr/dbspace/.shortcut_service.db-journal
+
 %postun -n %{name} -p /sbin/ldconfig
 
 %files -n libshortcut
@@ -66,8 +97,6 @@ touch %{buildroot}/usr/dbspace/.shortcut_service.db-journal
 %{_libdir}/*.so*
 %{_prefix}/etc/package-manager/parserlib/*
 %{_datarootdir}/license/*
-%attr(644,root,app) /usr/dbspace/.shortcut_service.db
-%attr(644,root,app) /usr/dbspace/.shortcut_service.db-journal
 
 %files devel
 %manifest %{name}.manifest
