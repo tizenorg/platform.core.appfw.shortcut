@@ -20,6 +20,7 @@ BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(capi-base-common)
 BuildRequires: pkgconfig(aul)
+BuildRequires: pkgconfig(libtzplatform-config)
 
 %description
 [Shortcut] AddToHome feature supporting library for menu/home screen developers.
@@ -47,11 +48,13 @@ export CFLAGS="${CFLAGS} -DTIZEN_ENGINEER_MODE"
 export CXXFLAGS="${CXXFLAGS} -DTIZEN_ENGINEER_MODE"
 export FFLAGS="${FFLAGS} -DTIZEN_ENGINEER_MODE"
 %endif
-%cmake .
+
+%cmake . -DSYSCONFDIR=%{_sysconfdir}
 make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
+
 %make_install
 mkdir -p %{buildroot}/usr/dbspace
 
@@ -84,10 +87,8 @@ then
 	'
 fi
 
-chown :5000 /usr/dbspace/.shortcut_service.db
-chown :5000 /usr/dbspace/.shortcut_service.db-journal
-chmod 644 /usr/dbspace/.shortcut_service.db
-chmod 644 /usr/dbspace/.shortcut_service.db-journal
+chmod 664 /usr/dbspace/.shortcut_service.db
+chmod 664 /usr/dbspace/.shortcut_service.db-journal
 
 %postun -n %{name} -p /sbin/ldconfig
 
@@ -95,7 +96,7 @@ chmod 644 /usr/dbspace/.shortcut_service.db-journal
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
-%{_prefix}/etc/package-manager/parserlib/*
+%{_sysconfdir}/package-manager/parserlib/*
 %{_datarootdir}/license/*
 
 %files devel
