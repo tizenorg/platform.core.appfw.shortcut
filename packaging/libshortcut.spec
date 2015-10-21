@@ -89,6 +89,8 @@ fi
 
 chmod 664 /usr/dbspace/.shortcut_service.db
 chmod 664 /usr/dbspace/.shortcut_service.db-journal
+chsmack -a User::Home /usr/dbspace/.shortcut_service.db
+chsmack -a User::Home /usr/dbspace/.shortcut_service.db-journal
 
 %postun -n %{name} -p /sbin/ldconfig
 
