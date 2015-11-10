@@ -16,7 +16,7 @@
 # *
 #*/
 
-DBFILE="/usr/dbspace/.shortcut_service.db"
+DBFILE="/opt/dbspace/.shortcut_service.db"
 
 APPID=(
 "org.tizen.facebook"

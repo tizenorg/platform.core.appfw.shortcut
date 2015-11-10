@@ -174,7 +174,7 @@ typedef int (*result_cb_t)(int ret, void *data);
 extern int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data);
 
 /**
- * @brief Adds a shortcut widget to home, asynchronously.
+ * @brief Adds a widget to home, asynchronously.
  * @remarks If a homescreen does not support this feature, you will get a proper error code.\n
  * Application must check the return value of this function.\n
  * Application must check the return status from the callback function.\n
@@ -184,23 +184,23 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  * @privlevel public
  * @privilege %http://tizen.org/privilege/shortcut
  *
- * @param[in] name The name of the created shortcut widget
+ * @param[in] name The name of the created widget. Will be shown when the widget is not prepared.
  * @param[in] size_type The size of widget
- * @param[in] uri URI of the resource what to be executed
- * @param[in] icon The absolute path of an icon file
+ * @param[in] widget_id Widget id
+ * @param[in] icon The absolute path of an icon file. Will be shown when the widget is not prepared.
  * @param[in] period The Update period in seconds
- * @param[in] allow_duplicate @c 1 if it accepts the duplicated shortcut, otherwise @c 0
+ * @param[in] allow_duplicate @c 1 if it accepts the duplicated widget, otherwise @c 0
  * @param[in] result_cb The address of the callback function that is called when the result comes back from the viewer
  * @param[in] data The callback data that is used in the callback function
  *
  * @return #SHORTCUT_ERROR_NONE on success, other value on failure
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameter or invalid argument value
  * @retval #SHORTCUT_ERROR_COMM Connection is not established or there is a problem in the communication
  * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle a new request
  * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB  Check your resource files
- * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a shortcut
- * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Shortcut is not supported
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a widget
+ * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Widget is not supported
  *
  * @pre You have to prepare the callback function.
  *
@@ -218,7 +218,7 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  * static int result_cb(int ret, int pid, void *data)
  * {
  * 	if (ret < 0)
- * 		dlog_print("Failed to add a shortcut: %s\n", perror(ret));
+ * 		dlog_print("Failed to add a widget: %s\n", perror(ret));
  *
  *	dlog_print("Processed by the %d\n", pid);
  * 	return 0;
@@ -226,15 +226,15 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  *
  * static int app_create(void *data)
  * {
- * 	shortcut_add_to_home_widget("With friends",
- * 					WIDGET_SIZE_1x1, "gallery:0000-0000",
- * 					"/opt/media/Pictures/Friends.jpg", -1.0f, 0, result_cb, NULL);
+ * 	shortcut_add_to_home_widget("alter_name",
+ * 					WIDGET_SIZE_1x1, "org.tizen.testwidget",
+ * 					"/opt/media/Pictures/alter_icon.png", -1.0f, 0, result_cb, NULL);
  * 	return 0;
  * }
  *
  * @endcode
  */
-extern int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e size, const char *uri, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
+extern int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e size, const char *widget_id, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data);
 
 
 /**
