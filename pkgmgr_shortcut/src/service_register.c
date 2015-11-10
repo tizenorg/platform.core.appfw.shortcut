@@ -69,7 +69,7 @@ static struct {
 	const char *dbfile;
 	sqlite3 *handle;
 } s_info = {
-	.dbfile = "/usr/dbspace/.shortcut_service.db",
+	.dbfile = DB_PATH,
 	.handle = NULL,
 };
 
@@ -744,7 +744,7 @@ static int db_init(void)
 	}
 
 	if (lstat(s_info.dbfile, &stat) < 0) {
-		ErrPrint("%s\n", strerror(errno));
+		ErrPrint("%d\n", errno);
 		db_util_close(s_info.handle);
 		s_info.handle = NULL;
 		return -EIO;
@@ -815,7 +815,7 @@ static inline struct i18n_name *create_i18n_name(xmlChar *lang, xmlChar *name, x
 
 	i18n = malloc(sizeof(*i18n));
 	if (!i18n) {
-		ErrPrint("Heap: %s\n", strerror(errno));
+		ErrPrint("Heap: %d\n", errno);
 		return NULL;
 	}
 

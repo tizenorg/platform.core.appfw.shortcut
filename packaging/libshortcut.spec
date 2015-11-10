@@ -1,6 +1,6 @@
 Name: libshortcut
 Summary: Shortcut add feature supporting library
-Version: 0.6.14
+Version: 0.6.16
 Release: 0
 Group: Applications/Core Applications
 License: Apache-2.0
@@ -49,26 +49,26 @@ export CXXFLAGS="${CXXFLAGS} -DTIZEN_ENGINEER_MODE"
 export FFLAGS="${FFLAGS} -DTIZEN_ENGINEER_MODE"
 %endif
 
-%cmake . -DSYSCONFDIR=%{_sysconfdir}
+%cmake . -DSYSCONFDIR=%{_sysconfdir} -DDB_PATH=%{TZ_SYS_DB}/.shortcut_service.db
 make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
 
 %make_install
-mkdir -p %{buildroot}/usr/dbspace
+mkdir -p %{buildroot}%{TZ_SYS_DB}
 
 %post
 /sbin/ldconfig
 
-if [ ! -d /usr/dbspace ]
+if [ ! -d %{TZ_SYS_DB} ]
 then
-	mkdir /usr/dbspace
+	mkdir %{TZ_SYS_DB}
 fi
 
-if [ ! -f /usr/dbspace/.shortcut_service.db ]
+if [ ! -f %{TZ_SYS_DB}/.shortcut_service.db ]
 then
-	sqlite3 /usr/dbspace/.shortcut_service.db 'PRAGMA journal_mode = PERSIST;
+	sqlite3 %{TZ_SYS_DB}/.shortcut_service.db 'PRAGMA journal_mode = PERSIST;
 		CREATE TABLE shortcut_service (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		pkgid TEXT,
@@ -87,10 +87,10 @@ then
 	'
 fi
 
-chmod 664 /usr/dbspace/.shortcut_service.db
-chmod 664 /usr/dbspace/.shortcut_service.db-journal
-chsmack -a User::Home /usr/dbspace/.shortcut_service.db
-chsmack -a User::Home /usr/dbspace/.shortcut_service.db-journal
+chmod 664 %{TZ_SYS_DB}/.shortcut_service.db
+chmod 664 %{TZ_SYS_DB}/.shortcut_service.db-journal
+chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db
+chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db-journal
 
 %postun -n %{name} -p /sbin/ldconfig
 
