@@ -252,7 +252,7 @@ extern int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e 
 typedef int (*shortcut_list_cb)(const char *package_name, const char *icon, const char *name, const char *extra_key, const char *extra_data, void *user_data);
 
 /**
- * @brief Gets the installed shortcut view list, synchronously.
+ * @brief Gets the preset list of shortcut template from the installed package, synchronously.
  * @remarks If a homescreen does not support this feature, you will get a proper error code.\n
  * Application must check the return value of this function.\n
  * Application must check the return status from the callback function.\n

@@ -359,7 +359,7 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 	if (ret != SHORTCUT_ERROR_NONE) {
 		DbgPrint("Packet reply [%d]\n", ret);
 		if (ret == SHORTCUT_ERROR_PERMISSION_DENIED)
-			ret =SHORTCUT_ERROR_NONE;
+			ret = SHORTCUT_ERROR_NONE;
 	}
 
 	if (item->result_internal_cb) {
@@ -422,8 +422,7 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 			}
 			if (shortcut_is_master_ready() == 1) {
 				return SHORTCUT_ERROR_PERMISSION_DENIED;
-			}
-			else {
+			} else {
 				return SHORTCUT_ERROR_COMM;
 			}
 		}
