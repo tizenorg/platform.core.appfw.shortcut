@@ -1088,8 +1088,7 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 
 		if (!xmlHasProp(node, (xmlChar *)"extra_data")
 				|| !xmlHasProp(node, (xmlChar *)"extra_key")
-				|| !xmlHasProp(node, (xmlChar *)"appid"))
-		{
+				|| !xmlHasProp(node, (xmlChar *)"appid")) {
 			DbgPrint("Invalid element %s\n", node->name);
 			continue;
 		}
