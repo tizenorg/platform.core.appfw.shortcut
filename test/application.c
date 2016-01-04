@@ -21,7 +21,7 @@
 static int result_cb(int ret, int pid, void *data)
 {
 	printf("Client: Return %d (%d)\n", ret, pid);
-	//elm_exit();
+	/* elm_exit(); */
 	return 0;
 }
 
@@ -43,9 +43,8 @@ int elm_main(int argc, char *argv[])
 	Ecore_Timer *timer;
 
 	timer = ecore_timer_add(3.0f, shortcut_add_cb, NULL);
-	if (!timer) {
+	if (!timer)
 		printf("Failed to add a timer\n");
-	}
 
 	elm_run();
 	elm_shutdown();

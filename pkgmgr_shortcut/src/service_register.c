@@ -149,9 +149,8 @@ static void db_create_version(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		ErrPrint("No changes to DB\n");
-	}
 }
 
 static int set_version(int version)
@@ -227,15 +226,14 @@ static int get_version(void)
 	int ret;
 
 	ret = sqlite3_prepare_v2(s_info.handle, dml, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
+	if (ret != SQLITE_OK)
 		return -ENOSYS;
-	}
 
-	if (sqlite3_step(stmt) != SQLITE_ROW) {
+
+	if (sqlite3_step(stmt) != SQLITE_ROW)
 		ret = -ENOENT;
-	} else {
+	else
 		ret = sqlite3_column_int(stmt, 0);
-	}
 
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -261,9 +259,8 @@ static void db_create_table(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		ErrPrint("No changes to DB\n");
-	}
 
 	ddl = "CREATE TABLE shortcut_name (id INTEGER, pkgid TEXT, lang TEXT, name TEXT, icon TEXT)";
 	if (sqlite3_exec(s_info.handle, ddl, NULL, NULL, &err) != SQLITE_OK) {
@@ -271,9 +268,8 @@ static void db_create_table(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		ErrPrint("No changes to DB\n");
-	}
 
 	db_create_version();
 }
@@ -288,9 +284,8 @@ static void alter_shortcut_icon(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		ErrPrint("No changes to DB\n");
-	}
 }
 
 static void alter_shortcut_name(void)
@@ -303,9 +298,8 @@ static void alter_shortcut_name(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		ErrPrint("No changes to DB\n");
-	}
 }
 
 static void alter_shortcut_service(void)
@@ -318,9 +312,8 @@ static void alter_shortcut_service(void)
 		return;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		ErrPrint("No changes to DB\n");
-	}
 }
 
 static int db_remove_by_pkgid(const char *pkgid)
@@ -351,9 +344,8 @@ static int db_remove_by_pkgid(const char *pkgid)
 		ret = -EIO;
 		ErrPrint("Failed to execute the DML for %s\n", pkgid);
 	} else {
-		if (sqlite3_changes(s_info.handle) == 0) {
+		if (sqlite3_changes(s_info.handle) == 0)
 			DbgPrint("No changed\n");
-		}
 	}
 
 out:
@@ -374,25 +366,24 @@ static void do_upgrade_db_schema(void)
 		db_create_version();
 		/* Need to create version table */
 	case -ENOENT:
-		if (set_version(1) < 0) {
+		if (set_version(1) < 0)
 			ErrPrint("Failed to set version\n");
-		}
+
 		/* Need to set version */
 		alter_shortcut_name();
 		alter_shortcut_service();
 	case 1:
 		alter_shortcut_icon();
-		if (update_version(2) < 0) {
+		if (update_version(2) < 0)
 			ErrPrint("Failed to update version\n");
-		}
+
 	case 2:
 		break;
 	default:
 		/* Need to update version */
 		DbgPrint("Old version: %d\n", version);
-		if (update_version(2) < 0) {
+		if (update_version(2) < 0)
 			ErrPrint("Failed to update version\n");
-		}
 
 		alter_shortcut_name();
 		alter_shortcut_service();
@@ -446,9 +437,9 @@ static int db_remove_record(const char *pkgid, const char *appid, const char *ke
 		ErrPrint("Failed to execute the DML for %s - %s(%s)\n", appid, key, data);
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		DbgPrint("No changes\n");
-	}
+
 
 out:
 	sqlite3_reset(stmt);
@@ -486,9 +477,8 @@ static int db_remove_name_by_pkgid(const char *pkgid)
 		goto out;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		DbgPrint("No chnages\n");
-	}
 
 out:
 	sqlite3_reset(stmt);
@@ -527,9 +517,8 @@ static int db_remove_name(int id)
 		goto out;
 	}
 
-	if (sqlite3_changes(s_info.handle) == 0) {
+	if (sqlite3_changes(s_info.handle) == 0)
 		DbgPrint("No changes\n");
-	}
 
 out:
 	sqlite3_reset(stmt);
@@ -757,18 +746,16 @@ static int db_init(void)
 		return -EINVAL;
 	}
 
-	if (!stat.st_size) {
+	if (!stat.st_size)
 		db_create_table();
-	}
 
 	return 0;
 }
 
 static int db_fini(void)
 {
-	if (!s_info.handle) {
+	if (!s_info.handle)
 		return 0;
-	}
 
 	db_util_close(s_info.handle);
 	s_info.handle = NULL;
@@ -780,7 +767,7 @@ static int do_uninstall(const char *appid)
 {
 	int ret;
 
-	ret = db_remove_by_pkgid(appid); 
+	ret = db_remove_by_pkgid(appid);
 	if (ret < 0) {
 		ErrPrint("Failed to remove a record: %s\n", appid);
 		return ret;
@@ -801,9 +788,8 @@ static inline struct i18n_name *find_i18n_name(struct dlist *i18n_list, xmlChar 
 	struct i18n_name *i18n;
 
 	dlist_foreach(i18n_list, l, i18n) {
-		if (!xmlStrcasecmp(i18n->lang, lang)) {
+		if (!xmlStrcasecmp(i18n->lang, lang))
 			return i18n;
-		}
 	}
 
 	return NULL;
@@ -858,9 +844,8 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 	}
 
 	for (root = root->children; root; root = root->next) {
-		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
 			break;
-		}
 	}
 
 	if (!root) {
@@ -872,13 +857,11 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 
 	root = root->children; /* Jump to children node */
 	for (node = root; node; node = node->next) {
-		if (node->type == XML_ELEMENT_NODE) {
+		if (node->type == XML_ELEMENT_NODE)
 			DbgPrint("Element %s\n", node->name);
-		}
 
-		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut")) {
+		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut"))
 			continue;
-		}
 
 		if (!xmlHasProp(node, (xmlChar *)"extra_key") || !xmlHasProp(node, (xmlChar *)"extra_data")) {
 			DbgPrint("Invalid element %s\n", node->name);
@@ -997,9 +980,9 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 			} else {
 				dlist_foreach_safe(i18n_list, l, n, i18n) {
 					i18n_list = dlist_remove(i18n_list, l);
-					if (db_insert_name(id, appid, (char *)i18n->lang, (char *)i18n->name, (char *)i18n->icon) < 0) {
+					if (db_insert_name(id, appid, (char *)i18n->lang, (char *)i18n->name, (char *)i18n->icon) < 0)
 						ErrPrint("Failed to add i18n name: %s(%s)\n", i18n->name, i18n->lang);
-					}
+
 					destroy_i18n_name(i18n);
 				}
 				commit_transaction();
@@ -1019,9 +1002,8 @@ static int do_install(xmlDocPtr docPtr, const char *appid)
 int PKGMGR_PARSER_PLUGIN_PRE_UNINSTALL(const char *appid)
 {
 	if (!s_info.handle) {
-		if (db_init() < 0) {
+		if (db_init() < 0)
 			return -EIO;
-		}
 	}
 
 	do_upgrade_db_schema();
@@ -1065,9 +1047,8 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 	}
 
 	for (root = root->children; root; root = root->next) {
-		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list")) {
+		if (!xmlStrcasecmp(root->name, (const xmlChar *)"shortcut-list"))
 			break;
-		}
 	}
 
 	if (!root) {
@@ -1078,13 +1059,11 @@ int PKGMGR_PARSER_PLUGIN_UNINSTALL(xmlDocPtr docPtr, const char *_appid)
 	DbgPrint("AppID: %s\n", _appid);
 	root = root->children;
 	for (node = root; node; node = node->next) {
-		if (node->type == XML_ELEMENT_NODE) {
+		if (node->type == XML_ELEMENT_NODE)
 			DbgPrint("Element %s\n", node->name);
-		}
 
-		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut")) {
+		if (xmlStrcasecmp(node->name, (const xmlChar *)"shortcut"))
 			continue;
-		}
 
 		if (!xmlHasProp(node, (xmlChar *)"extra_data")
 				|| !xmlHasProp(node, (xmlChar *)"extra_key")
@@ -1149,19 +1128,18 @@ int PKGMGR_PARSER_PLUGIN_PRE_INSTALL(const char *appid)
 	int ret;
 
 	if (!s_info.handle) {
-		if (db_init() < 0) {
+		if (db_init() < 0)
 			return -EIO;
-		}
 	}
 
 	do_upgrade_db_schema();
 
 	begin_transaction();
 	ret = do_uninstall(appid);
-	if (ret < 0) {
+	if (ret < 0)
 		ErrPrint("Failed to remove record: %s\n", appid);
 		/* Keep going */
-	}
+
 	commit_transaction();
 	return  0;
 }
@@ -1182,19 +1160,18 @@ int PKGMGR_PARSER_PLUGIN_PRE_UPGRADE(const char *appid)
 	int ret;
 
 	if (!s_info.handle) {
-		if (db_init() < 0) {
+		if (db_init() < 0)
 			return -EIO;
-		}
 	}
 
 	do_upgrade_db_schema();
 
 	begin_transaction();
 	ret = do_uninstall(appid);
-	if (ret < 0) {
+	if (ret < 0)
 		ErrPrint("Failed to remove a record: %s\n", appid);
 		/* Keep going */
-	}
+
 	commit_transaction();
 	return 0;
 }
