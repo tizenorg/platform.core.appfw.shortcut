@@ -83,9 +83,8 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	int ret = SHORTCUT_ERROR_NONE;
 	int sender_pid;
 
-	if (!packet) {
+	if (!packet)
 		return NULL;
-	}
 
 	if (packet_get(packet, "ississi", &sender_pid, &appid, &name, &type, &content, &icon, &allow_duplicate) != 7) {
 		ErrPrint("Invalid packet\n");
@@ -94,15 +93,13 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 
 	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s] allow_duplicate[%d]\n", appid, name, type, content, icon, allow_duplicate);
 
-	if (s_info.server_cb.request_cb) {
+	if (s_info.server_cb.request_cb)
 		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, -1.0f, allow_duplicate, s_info.server_cb.data);
-	} else {
+	else
 		ret = SHORTCUT_ERROR_NOT_SUPPORTED;
-	}
 
-	if (ret != SHORTCUT_ERROR_NONE) {
+	if (ret != SHORTCUT_ERROR_NONE)
 		ErrPrint("ret [%d]\n", ret);
-	}
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -121,9 +118,8 @@ static struct packet *add_shortcut_widget_handler(pid_t pid, int handle, const s
 	int ret = SHORTCUT_ERROR_NONE;
 	int sender_pid;
 
-	if (!packet) {
+	if (!packet)
 		return NULL;
-	}
 
 	if (packet_get(packet, "ississdi", &sender_pid, &widget_id, &name, &type, &content, &icon, &period, &allow_duplicate) != 8) {
 		ErrPrint("Invalid packet\n");
@@ -132,15 +128,13 @@ static struct packet *add_shortcut_widget_handler(pid_t pid, int handle, const s
 
 	DbgPrint("widget_id[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf], allow_duplicate[%d]\n", widget_id, name, type, content, icon, period, allow_duplicate);
 
-	if (s_info.server_cb.request_cb) {
+	if (s_info.server_cb.request_cb)
 		ret = s_info.server_cb.request_cb(widget_id, name, type, content, icon, sender_pid, period, allow_duplicate, s_info.server_cb.data);
-	} else {
+	else
 		ret = 0;
-	}
 
-	if (ret != SHORTCUT_ERROR_NONE) {
+	if (ret != SHORTCUT_ERROR_NONE)
 		ErrPrint("ret [%d]\n", ret);
-	}
 
 	return packet_create_reply(packet, "i", ret);
 }
@@ -164,13 +158,11 @@ static void master_started_cb(keynode_t *node, void *user_data)
 {
 	int state = 0;
 
-	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0) {
+	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0)
 		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
-	}
 
-	if (state == 1 && make_connection() == SHORTCUT_ERROR_NONE) {
+	if (state == 1 && make_connection() == SHORTCUT_ERROR_NONE)
 		(void)vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
-	}
 }
 
 static gboolean timeout_cb(void *data)
@@ -178,11 +170,10 @@ static gboolean timeout_cb(void *data)
 	int ret;
 
 	ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
-	if (ret < 0) {
+	if (ret < 0)
 		ErrPrint("Failed to add vconf for service state [%d]\n", ret);
-	} else {
+	else
 		DbgPrint("vconf is registered\n");
-	}
 
 	master_started_cb(NULL, NULL);
 
@@ -203,9 +194,8 @@ static int disconnected_cb(int handle, void *data)
 		if (!s_info.timer_id) {
 			s_info.server_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 			s_info.timer_id = g_timeout_add(1000, timeout_cb, NULL);
-			if (!s_info.timer_id) {
+			if (!s_info.timer_id)
 				ErrPrint("Unable to add timer\n");
-			}
 		}
 		return 0;
 	}
@@ -278,16 +268,14 @@ static char *_shortcut_get_pkgname_by_pid(void)
 		snprintf(buf, sizeof(buf), "/proc/%d/cmdline", pid);
 
 		fd = open(buf, O_RDONLY);
-		if (fd < 0) {
+		if (fd < 0)
 			return NULL;
-		}
 
 		ret = read(fd, pkgname, sizeof(pkgname) - 1);
 		close(fd);
 
-		if (ret <= 0) {
+		if (ret <= 0)
 			return NULL;
-		}
 
 		pkgname[ret] = '\0';
 		/*!
@@ -296,9 +284,8 @@ static char *_shortcut_get_pkgname_by_pid(void)
 		 * if the system is not going wrong.
 		 */
 	} else {
-		if (strlen(pkgname) <= 0) {
+		if (strlen(pkgname) <= 0)
 			return NULL;
-		}
 	}
 
 	dup_pkgname = strdup(pkgname);
@@ -312,9 +299,8 @@ static char *_shortcut_get_pkgname_by_pid(void)
 
 EAPI int shortcut_set_request_cb(shortcut_request_cb request_cb, void *data)
 {
-	if (request_cb == NULL) {
+	if (request_cb == NULL)
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
-	}
 
 	s_info.server_cb.request_cb = request_cb;
 	s_info.server_cb.data = data;
@@ -362,13 +348,13 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 			ret = SHORTCUT_ERROR_NONE;
 	}
 
-	if (item->result_internal_cb) {
+	if (item->result_internal_cb)
 		ret = item->result_internal_cb(ret, pid, item->data);
-	} else if (item->result_cb) {
+	else if (item->result_cb)
 		ret = item->result_cb(ret, item->data);
-	} else {
+	else
 		ret = SHORTCUT_ERROR_NONE;
-	}
+
 	free(item);
 	return ret;
 }
@@ -417,22 +403,21 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 
 		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
 		if (s_info.client_fd < 0) {
-			if (appid) {
+			if (appid)
 				free(appid);
-			}
-			if (shortcut_is_master_ready() == 1) {
+
+			if (shortcut_is_master_ready() == 1)
 				return SHORTCUT_ERROR_PERMISSION_DENIED;
-			} else {
+			else
 				return SHORTCUT_ERROR_COMM;
-			}
 		}
 	}
 
 	item = malloc(sizeof(*item));
 	if (!item) {
-		if (appid) {
+		if (appid)
 			free(appid);
-		}
+
 		ErrPrint("Heap: %d\n", errno);
 		return SHORTCUT_ERROR_OUT_OF_MEMORY;
 	}
@@ -441,36 +426,34 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 	item->result_internal_cb = NULL;
 	item->data = data;
 
-	if (!name) {
+	if (!name)
 		name = "";
-	}
 
-	if (!uri) {
+	if (!uri)
 		uri = "";
-	}
 
-	if (!icon) {
+	if (!icon)
 		icon = "";
-	}
+
 
 	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, uri, icon, allow_duplicate);
 	if (!packet) {
 		ErrPrint("Failed to build a packet\n");
-		if (appid) {
+		if (appid)
 			free(appid);
-		}
-		if (item) {
+
+		if (item)
 			free(item);
-		}
+
 		return SHORTCUT_ERROR_FAULT;
 	}
 
 	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
 	packet_destroy(packet);
 	if (ret < 0) {
-		if (item) {
+		if (item)
 			free(item);
-		}
+
 		com_core_packet_client_fini(s_info.client_fd);
 		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
 		return SHORTCUT_ERROR_COMM;
@@ -630,9 +613,9 @@ static inline int get_i18n_name(const char *lang, int id, char **name, char **ic
 			if (!*icon) {
 				ErrPrint("strdup: %d\n", errno);
 				ret = -ENOMEM;
-				if (name && *name) {
+				if (name && *name)
 					free(*name);
-				}
+
 				goto out;
 			}
 		} else {
@@ -661,17 +644,15 @@ static inline char *cur_locale(void)
 				break;
 			}
 
-			if (*ptr == '_') {
+			if (*ptr == '_')
 				*ptr = '-';
-			}
 
 			ptr++;
 		}
 	} else {
 		language = strdup("en-us");
-		if (!language) {
+		if (!language)
 			ErrPrint("Heap: %d\n", errno);
-		}
 	}
 
 	return language;
@@ -692,13 +673,11 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 	int cnt;
 	char *language;
 
-	if (list_cb == NULL) {
+	if (list_cb == NULL)
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
-	}
 
-	if (!s_info.db_opened) {
+	if (!s_info.db_opened)
 		s_info.db_opened = (open_db() == 0);
-	}
 
 	if (!s_info.db_opened) {
 		ErrPrint("Failed to open a DB\n");
@@ -775,9 +754,10 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 		 * \todo
 		 * Implement the "GET LOCALE" code
 		 */
-		if (get_i18n_name(language, id, &i18n_name, &i18n_icon) < 0) {
+		/* if (get_i18n_name(language, id, &i18n_name, &i18n_icon) < 0) { */
 			/* Okay, we can't manage this. just use the fallback string */
-		}
+		/* } */
+		get_i18n_name(language, id, &i18n_name, &i18n_icon);
 
 		cnt++;
 		if (list_cb(package_name, (i18n_icon != NULL ? i18n_icon : (char *)icon), (i18n_name != NULL ? i18n_name : (char *)name), (char *)extra_key, (char *)extra_data, data) < 0) {
