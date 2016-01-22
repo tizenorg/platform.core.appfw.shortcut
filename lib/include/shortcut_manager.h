@@ -19,6 +19,7 @@
 #define __SHORTCUT_MANAGER_H__
 
 #include <tizen.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,6 +67,9 @@ enum shortcut_error_e {
 	SHORTCUT_ERROR_FAULT = TIZEN_ERROR_SHORTCUT | 0x0004,		/**< Failed to add a shortcut. Unrecoverable error */
 	SHORTCUT_ERROR_COMM = TIZEN_ERROR_SHORTCUT | 0x0040		/**< Connection is not established. or there is a problem in the communication */
 };
+
+#define SHORTCUT_ERROR (shortcut_error_quark ())
+GQuark shortcut_error_quark(void);
 
 /**
  * @brief Enumeration for sizes of shortcut widget.
