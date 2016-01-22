@@ -15,7 +15,6 @@ BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(sqlite3)
-BuildRequires: pkgconfig(com-core)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(capi-base-common)
@@ -107,6 +106,7 @@ chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db-journal
 %{_includedir}/shortcut/shortcut.h
 %{_includedir}/shortcut/shortcut_private.h
 %{_includedir}/shortcut/shortcut_manager.h
+%{_includedir}/shortcut/shortcut_db.h
 %{_libdir}/pkgconfig/shortcut.pc
 
 # End of a file

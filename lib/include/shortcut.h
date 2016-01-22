@@ -20,6 +20,7 @@
 
 #include <tizen.h>
 #include <shortcut_manager.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,6 +85,9 @@ enum shortcut_internal_type {
 	DYNAMICBOX_TYPE_EASY_3x3	  = 0x30040000,	/**< Easy mode 3x3 */
 	DYNAMICBOX_TYPE_UNKNOWN	  = 0x1FFF0000,	/**< Error */
 };
+
+#define SHORTCUT_ERROR (shortcut_error_quark ())
+GQuark shortcut_error_quark(void);
 
 
 /**
