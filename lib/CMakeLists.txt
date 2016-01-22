@@ -20,6 +20,7 @@ pkg_check_modules(svc_pkgs REQUIRED
 	vconf
 	capi-base-common
 	aul
+	openssl
 )
 
 FOREACH(flag ${svc_pkgs_CFLAGS})
