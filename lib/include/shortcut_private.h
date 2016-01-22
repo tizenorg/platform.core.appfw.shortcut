@@ -29,9 +29,6 @@ extern FILE *__file_log_fp;
 #define EAPI __attribute__((visibility("default")))
 #endif
 
-#if !defined(VCONFKEY_MASTER_STARTED)
-#define VCONFKEY_MASTER_STARTED	"memory/data-provider-master/started"
-#endif
 
 #define DEFAULT_ICON_LAYOUT ""
 #define DEFAULT_ICON_GROUP ""

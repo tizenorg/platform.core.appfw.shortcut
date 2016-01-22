@@ -16,7 +16,6 @@ pkg_check_modules(svc_pkgs REQUIRED
 	libxml-2.0
 	glib-2.0
 	db-util
-	com-core
 	vconf
 	capi-base-common
 	aul
@@ -36,6 +35,7 @@ ADD_DEFINITIONS("-DDB_PATH=\"${DB_PATH}\"")
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED 
 	src/shortcut_manager.c
+	src/shortcut_db.c
 )
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${svc_pkgs_LDFLAGS})
@@ -46,6 +46,7 @@ SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${PROJECT_NAME}
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/lib/include/shortcut.h DESTINATION include/${PROJECT_NAME})
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/lib/include/shortcut_private.h DESTINATION include/${PROJECT_NAME})
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/lib/include/shortcut_db.h DESTINATION include/${PROJECT_NAME})
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/lib/include/shortcut_manager.h DESTINATION include/${PROJECT_NAME})
 INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/${PROJECT_NAME}.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
 INSTALL(FILES ${CMAKE_SOURCE_DIR}/lib/LICENSE DESTINATION /usr/share/license RENAME "lib${PROJECT_NAME}")
