@@ -16,10 +16,10 @@ pkg_check_modules(svc_pkgs REQUIRED
 	libxml-2.0
 	glib-2.0
 	db-util
-	com-core
 	vconf
 	capi-base-common
 	aul
+	openssl
 )
 
 FOREACH(flag ${svc_pkgs_CFLAGS})
