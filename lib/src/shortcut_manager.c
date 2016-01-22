@@ -14,15 +14,13 @@
  * limitations under the License.
  *
 */
-
+#include <openssl/md5.h>
+#include <gio/gio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <libgen.h>
 
 #include <aul.h>
 #include <dlog.h>
@@ -31,48 +29,44 @@
 #include <vconf.h>
 #include <vconf-keys.h>
 
-#include <packet.h>
-#include <com-core.h>
-#include <com-core_packet.h>
-
 #include "shortcut.h"
 #include "shortcut_private.h"
 #include "shortcut_manager.h"
 
 #define SHORTCUT_PKGNAME_LEN 512
 
-#define SHORTCUT_IS_WIDGET_SIZE(size)           (!!((size) & WIDGET_SIZE_DEFAULT))
-#define SHORTCUT_IS_EASY_MODE_WIDGET_SIZE(size) (!!((size) & WIDGET_SIZE_EASY_DEFAULT))
+#define PROVIDER_BUS_NAME "org.tizen.data_provider_service"
+#define PROVIDER_OBJECT_PATH "/org/tizen/data_provider_service"
+#define PROVIDER_SHORTCUT_INTERFACE_NAME "org.tizen.data_provider_shortcut_service"
 
-int errno;
+#define DBUS_SERVICE_DBUS "org.freedesktop.DBus"
+#define DBUS_PATH_DBUS "/org/freedesktop/DBus"
+#define DBUS_INTERFACE_DBUS "org.freedesktop.DBus"
 
-static inline int make_connection(void);
+static char *_bus_name = NULL;
+static GDBusConnection *_gdbus_conn = NULL;
+static int monitor_id = 0;
 
-static struct info {
-	const char *dbfile;
-	sqlite3 *handle;
-	int server_fd;
-	int client_fd;
-	const char *socket_file;
-	struct {
-		int (*request_cb)(const char *appid, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, int allow_duplicate, void *data);
-		void *data;
-	} server_cb;
-	int initialized;
-	int db_opened;
-	guint timer_id;
-} s_info = {
-	.server_fd = -1,
-	.client_fd = -1,
-	.socket_file = "/tmp/.shortcut.service",
-	.dbfile = DB_PATH,
-	.handle = NULL,
-	.initialized = 0,
-	.db_opened = 0,
-	.timer_id = 0,
+static const char *dbfile = DB_PATH;
+static sqlite3 *handle = NULL;
+static int db_opened = 0;
+
+struct result_cb_item {
+	result_internal_cb_t result_internal_cb;
+	result_cb_t result_cb;
+	void *data;
 };
 
-static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct packet *packet)
+typedef struct _shortcut_cb_info {
+	int (*request_cb)(const char *appid, const char *name, int type, const char *content, const char *icon, pid_t pid, double period, int allow_duplicate, void *data);
+	void *data;
+} shortcut_cb_info;
+
+static shortcut_cb_info _callback_info;
+static int shortcut_dbus_init();
+static char *_shortcut_get_pkgname_by_pid(void);
+
+static void _add_shortcut_notify(GVariant *parameters)
 {
 	const char *appid;
 	const char *name;
@@ -80,177 +74,93 @@ static struct packet *add_shortcut_handler(pid_t pid, int handle, const struct p
 	const char *content;
 	const char *icon;
 	int allow_duplicate;
-	int ret = SHORTCUT_ERROR_NONE;
 	int sender_pid;
 
-	if (!packet)
-		return NULL;
-
-	if (packet_get(packet, "ississi", &sender_pid, &appid, &name, &type, &content, &icon, &allow_duplicate) != 7) {
-		ErrPrint("Invalid packet\n");
-		return NULL;
-	}
-
-	DbgPrint("appid[%s], name[%s], type[0x%x], content[%s], icon[%s] allow_duplicate[%d]\n", appid, name, type, content, icon, allow_duplicate);
-
-	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(appid, name, type, content, icon, sender_pid, -1.0f, allow_duplicate, s_info.server_cb.data);
-	else
-		ret = SHORTCUT_ERROR_NOT_SUPPORTED;
-
-	if (ret != SHORTCUT_ERROR_NONE)
-		ErrPrint("ret [%d]\n", ret);
-
-	return packet_create_reply(packet, "i", ret);
+	g_variant_get(parameters, "(ississi)", &sender_pid, &appid, &name, &type, &content, &icon, &allow_duplicate);
+	_callback_info.request_cb(appid, name, type, content, icon, sender_pid, -1.0f, allow_duplicate, _callback_info.data);
 }
 
-
-
-static struct packet *add_shortcut_widget_handler(pid_t pid, int handle, const struct packet *packet)
+static void _add_shortcut_widget_notify(GVariant *parameters)
 {
-	const char *widget_id;
+	const char *appid;
 	const char *name;
 	int type;
 	const char *content;
 	const char *icon;
-	double period;
 	int allow_duplicate;
-	int ret = SHORTCUT_ERROR_NONE;
 	int sender_pid;
+	double period;
 
-	if (!packet)
-		return NULL;
-
-	if (packet_get(packet, "ississdi", &sender_pid, &widget_id, &name, &type, &content, &icon, &period, &allow_duplicate) != 8) {
-		ErrPrint("Invalid packet\n");
-		return NULL;
-	}
-
-	DbgPrint("widget_id[%s], name[%s], type[0x%x], content[%s], icon[%s], period[%lf], allow_duplicate[%d]\n", widget_id, name, type, content, icon, period, allow_duplicate);
-
-	if (s_info.server_cb.request_cb)
-		ret = s_info.server_cb.request_cb(widget_id, name, type, content, icon, sender_pid, period, allow_duplicate, s_info.server_cb.data);
-	else
-		ret = 0;
-
-	if (ret != SHORTCUT_ERROR_NONE)
-		ErrPrint("ret [%d]\n", ret);
-
-	return packet_create_reply(packet, "i", ret);
+	g_variant_get(parameters, "(ississdi)", &sender_pid, &appid, &name, &type, &content, &icon, &period, &allow_duplicate);
+	_callback_info.request_cb(appid, name, type, content, icon, sender_pid, period, allow_duplicate, _callback_info.data);
 }
 
-int shortcut_is_master_ready(void)
+static void _handle_shortcut_notify(GDBusConnection *connection,
+		const gchar     *sender_name,
+		const gchar     *object_path,
+		const gchar     *interface_name,
+		const gchar     *signal_name,
+		GVariant        *parameters,
+		gpointer         user_data)
 {
-	int ret = -1, is_master_started = 0;
-
-	ret = vconf_get_bool(VCONFKEY_MASTER_STARTED, &is_master_started);
-	if (ret == 0 && is_master_started == 1) {
-		ErrPrint("the master has been started");
-	} else {
-		is_master_started = 0;
-		ErrPrint("the master has been stopped");
-	}
-
-	return is_master_started;
+	DbgPrint("signal_name: %s", signal_name);
+	if (g_strcmp0(signal_name, "add_shortcut_notify") == 0)
+		_add_shortcut_notify(parameters);
+	else if (g_strcmp0(signal_name, "add_shortcut_widget_notify") == 0)
+		_add_shortcut_widget_notify(parameters);
 }
 
-static void master_started_cb(keynode_t *node, void *user_data)
-{
-	int state = 0;
+static int _dbus_init(void) {
+	int ret = SHORTCUT_ERROR_NONE;
+	GError *error = NULL;
 
-	if (vconf_get_bool(VCONFKEY_MASTER_STARTED, &state) < 0)
-		ErrPrint("Unable to get \"%s\"\n", VCONFKEY_MASTER_STARTED);
-
-	if (state == 1 && make_connection() == SHORTCUT_ERROR_NONE)
-		(void)vconf_ignore_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb);
-}
-
-static gboolean timeout_cb(void *data)
-{
-	int ret;
-
-	ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
-	if (ret < 0)
-		ErrPrint("Failed to add vconf for service state [%d]\n", ret);
-	else
-		DbgPrint("vconf is registered\n");
-
-	master_started_cb(NULL, NULL);
-
-	s_info.timer_id = 0;
-	return FALSE;
-}
-
-
-
-static int disconnected_cb(int handle, void *data)
-{
-	if (s_info.client_fd == handle) {
-		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
-		return 0;
-	}
-
-	if (s_info.server_fd == handle) {
-		if (!s_info.timer_id) {
-			s_info.server_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
-			s_info.timer_id = g_timeout_add(1000, timeout_cb, NULL);
-			if (!s_info.timer_id)
-				ErrPrint("Unable to add timer\n");
+	_gdbus_conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	if (_gdbus_conn == NULL) {
+		ret = SHORTCUT_ERROR_IO_ERROR;
+		if (error != NULL) {
+			ErrPrint("Failed to get dbus [%s]", error->message);
+			g_error_free(error);
 		}
-		return 0;
+		goto out;
 	}
+out:
+	if (!_gdbus_conn)
+		g_object_unref(_gdbus_conn);
 
-	return 0;
-}
-
-static inline int make_connection(void)
-{
-	int ret;
-	struct packet *packet;
-	static struct method service_table[] = {
-		{
-			.cmd = "add_shortcut",
-			.handler = add_shortcut_handler,
-		},
-		{
-			.cmd = "add_shortcut_widget",
-			.handler = add_shortcut_widget_handler,
-		},
-	};
-
-	if (s_info.initialized == 0) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	s_info.server_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-	if (s_info.server_fd < 0) {
-		ErrPrint("Failed to make a connection to the master\n");
-		return SHORTCUT_ERROR_COMM;
-	}
-
-	packet = packet_create_noack("service_register", "");
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		return SHORTCUT_ERROR_FAULT;
-	}
-
-	ret = com_core_packet_send_only(s_info.server_fd, packet);
-	DbgPrint("Service register sent: %d\n", ret);
-	packet_destroy(packet);
-	if (ret != 0) {
-		com_core_packet_client_fini(s_info.server_fd);
-		s_info.server_fd = -1;
-		ret = SHORTCUT_ERROR_COMM;
-	} else {
-		ret = SHORTCUT_ERROR_NONE;
-	}
-
-	DbgPrint("Server FD: %d\n", s_info.server_fd);
 	return ret;
 }
 
+static int shortcut_dbus_init() {
+	int ret = SHORTCUT_ERROR_NONE;
+	int id = 0;
 
+	if (_gdbus_conn == NULL) {
+		ret = _dbus_init();
+		if (ret == SHORTCUT_ERROR_NONE) {
+			DbgPrint("get dbus connection success");
+			id = g_dbus_connection_signal_subscribe(
+					_gdbus_conn,
+					PROVIDER_BUS_NAME,
+					PROVIDER_SHORTCUT_INTERFACE_NAME,	/*    interface */
+					NULL,					/*    member */
+					PROVIDER_OBJECT_PATH,			/*    path */
+					NULL,					/*    arg0 */
+					G_DBUS_SIGNAL_FLAGS_NONE,
+					_handle_shortcut_notify,
+					NULL,
+					NULL);
+
+			DbgPrint("subscribe id : %d", id);
+			if (id == 0) {
+				ret = SHORTCUT_ERROR_IO_ERROR;
+				ErrPrint("Failed to _register_noti_dbus_interface");
+			} else {
+				monitor_id = id;
+			}
+		}
+	}
+	return ret;
+}
 
 static char *_shortcut_get_pkgname_by_pid(void)
 {
@@ -295,123 +205,154 @@ static char *_shortcut_get_pkgname_by_pid(void)
 	return dup_pkgname;
 }
 
+/*
+ * implement user request
+ */
+int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd) {
+	GError *err = NULL;
+	GDBusMessage *msg = NULL;
 
+	msg = g_dbus_message_new_method_call(
+			PROVIDER_BUS_NAME,
+			PROVIDER_OBJECT_PATH,
+			PROVIDER_SHORTCUT_INTERFACE_NAME,
+			cmd);
+	if (!msg) {
+		ErrPrint("Can't allocate new method call");
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	if (body != NULL)
+		g_dbus_message_set_body(msg, body);
+	*reply = g_dbus_connection_send_message_with_reply_sync(
+			_gdbus_conn,
+			msg,
+			G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+			-1,
+			NULL,
+			NULL,
+			&err);
+
+	if (!*reply) {
+		if (err != NULL) {
+			ErrPrint("No reply. error = %s", err->message);
+			g_error_free(err);
+		}
+		//		if (notification_ipc_is_master_ready() == 1)
+		//			return NOTIFICATION_ERROR_PERMISSION_DENIED;
+		//		else
+		return SHORTCUT_ERROR_COMM;
+	}
+	ErrPrint("_send_sync_noti done !!");
+	return SHORTCUT_ERROR_NONE;
+
+}
+
+int _send_service_register()
+{
+	GVariant *body = NULL;
+	GDBusMessage *reply = NULL;
+	int result = SHORTCUT_ERROR_NONE;
+
+	result = _send_sync_noti(NULL, &reply, "shortcut_service_register");
+	if (result == SHORTCUT_ERROR_NONE) {
+		body = g_dbus_message_get_body(reply);
+		g_variant_get(body, "(i)", &result);
+	}
+
+	ErrPrint("_send_service_register done = %s", _bus_name);
+	return result;
+}
+
+static void _send_message_with_reply_sync_cb(GDBusConnection *connection,
+		GAsyncResult *res,
+		gpointer user_data)
+{
+	GVariant *body = NULL;
+	int result = 0;
+	GError *err = NULL;
+	struct result_cb_item *cb_item = (struct result_cb_item *)user_data;
+	GDBusMessage *reply = g_dbus_connection_send_message_with_reply_finish(
+			connection,
+			res,
+			&err);
+	body = g_dbus_message_get_body(reply);
+	g_variant_get(body, "(i)", &result);
+
+	if (cb_item->result_internal_cb)
+		result = cb_item->result_internal_cb(result, getpid(), cb_item->data);
+	else if (cb_item->result_cb)
+		result = cb_item->result_cb(result, cb_item->data);
+}
+
+int _send_async_noti(GVariant *body, struct result_cb_item *cb_item, char *cmd)
+{
+	GDBusMessage *msg = NULL;
+	msg = g_dbus_message_new_method_call(
+			PROVIDER_BUS_NAME,
+			PROVIDER_OBJECT_PATH,
+			PROVIDER_SHORTCUT_INTERFACE_NAME,
+			cmd);
+	if (!msg) {
+		ErrPrint("Can't allocate new method call");
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	if (body != NULL)
+		g_dbus_message_set_body(msg, body);
+
+	g_dbus_connection_send_message_with_reply(
+			_gdbus_conn,
+			msg,
+			G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+			-1,
+			NULL,
+			NULL,
+			(GAsyncReadyCallback)_send_message_with_reply_sync_cb,
+			cb_item);
+
+	DbgPrint("_send_async_noti done !!");
+	return SHORTCUT_ERROR_NONE;
+}
 
 EAPI int shortcut_set_request_cb(shortcut_request_cb request_cb, void *data)
 {
+	int ret = shortcut_dbus_init();
+	if (ret != SHORTCUT_ERROR_NONE) {
+		ErrPrint("Can't init dbus %d", ret);
+		return ret;
+	}
+
 	if (request_cb == NULL)
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
 
-	s_info.server_cb.request_cb = request_cb;
-	s_info.server_cb.data = data;
-
-	if (s_info.server_fd < 0) {
-		int ret;
-
-		ret = vconf_notify_key_changed(VCONFKEY_MASTER_STARTED, master_started_cb, NULL);
-		if (ret < 0) {
-			ErrPrint("Failed to add vconf for service state [%d]\n", ret);
-			return SHORTCUT_ERROR_COMM;
-		} else {
-			DbgPrint("vconf is registered\n");
-		}
-
-		master_started_cb(NULL, NULL);
-	}
-
-	return SHORTCUT_ERROR_NONE;
-}
-
-
-struct result_cb_item {
-	result_internal_cb_t result_internal_cb;
-	result_cb_t result_cb;
-	void *data;
-};
-
-static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, void *data)
-{
-	struct result_cb_item *item = data;
-	int ret;
-
-	if (!packet) {
-		ErrPrint("Packet is not valid\n");
-		ret = SHORTCUT_ERROR_FAULT;
-	} else if (packet_get(packet, "i", &ret) != 1) {
-		ErrPrint("Packet is not valid\n");
-		ret = SHORTCUT_ERROR_INVALID_PARAMETER;
-	}
-
+	ret = _send_service_register();
 	if (ret != SHORTCUT_ERROR_NONE) {
-		DbgPrint("Packet reply [%d]\n", ret);
-		if (ret == SHORTCUT_ERROR_PERMISSION_DENIED)
-			ret = SHORTCUT_ERROR_NONE;
+		ErrPrint("Can't init dbus %d", ret);
+		return ret;
 	}
 
-	if (item->result_internal_cb)
-		ret = item->result_internal_cb(ret, pid, item->data);
-	else if (item->result_cb)
-		ret = item->result_cb(ret, item->data);
-	else
-		ret = SHORTCUT_ERROR_NONE;
+	_callback_info.request_cb = request_cb;
+	_callback_info.data = data;
 
-	free(item);
-	return ret;
-}
-
-
-EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content, const char *icon, int allow_duplicate, result_internal_cb_t result_cb, void *data)
-{
-	/*Deprecated API */
 	return SHORTCUT_ERROR_NONE;
 }
 
-EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_internal_cb_t result_cb, void *data)
+EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri,
+		const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 {
-	/*Deprecated API */
-	return SHORTCUT_ERROR_NONE;
-}
-
-
-
-EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri, const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
-{
-	struct packet *packet;
 	struct result_cb_item *item;
 	char *appid = NULL;
-	int ret;
-	static struct method service_table[] = {
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
+	int ret = SHORTCUT_ERROR_NONE;
+	GVariant *body = NULL;
 
-	if (ADD_TO_HOME_IS_DYNAMICBOX(type)) {
-		ErrPrint("Invalid type used for adding a shortcut\n");
-		return SHORTCUT_ERROR_INVALID_PARAMETER;
+	ret = shortcut_dbus_init();
+	if (ret != SHORTCUT_ERROR_NONE) {
+		ErrPrint("Can't init dbus %d", ret);
+		return ret;
 	}
 
 	appid = _shortcut_get_pkgname_by_pid();
-
-	if (!s_info.initialized) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	if (s_info.client_fd < 0) {
-		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0) {
-			if (appid)
-				free(appid);
-
-			if (shortcut_is_master_ready() == 1)
-				return SHORTCUT_ERROR_PERMISSION_DENIED;
-			else
-				return SHORTCUT_ERROR_COMM;
-		}
-	}
-
 	item = malloc(sizeof(*item));
 	if (!item) {
 		if (appid)
@@ -434,117 +375,72 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 	if (!icon)
 		icon = "";
 
+	body = g_variant_new("(ississi)", getpid(), appid, name, type, uri, icon, allow_duplicate);
+	ret = _send_async_noti(body, item, "add_shortcut");
 
-	packet = packet_create("add_shortcut", "ississi", getpid(), appid, name, type, uri, icon, allow_duplicate);
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		if (appid)
-			free(appid);
-
-		if (item)
-			free(item);
-
-		return SHORTCUT_ERROR_FAULT;
-	}
-
-	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
-	packet_destroy(packet);
-	if (ret < 0) {
-		if (item)
-			free(item);
-
-		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
-		return SHORTCUT_ERROR_COMM;
-	}
-
-	return SHORTCUT_ERROR_NONE;
-}
-
-
-EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e size, const char *widget_id, const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
-{
-	struct packet *packet;
-	struct result_cb_item *item;
-	char *appid = NULL;
-	int ret;
-	int err = SHORTCUT_ERROR_NONE;
-	static struct method service_table[] = {
-		{
-			.cmd = NULL,
-			.handler = NULL,
-		},
-	};
-
-	if (name == NULL) {
-		ErrPrint("AppID is null\n");
-		err = SHORTCUT_ERROR_INVALID_PARAMETER;
-		goto out;
-	}
-
-	if (!SHORTCUT_IS_WIDGET_SIZE(size)) {
-		ErrPrint("Invalid type used for adding a widget\n");
-		err = SHORTCUT_ERROR_INVALID_PARAMETER;
-		goto out;
-	}
-
-	appid = _shortcut_get_pkgname_by_pid();
-
-	if (!s_info.initialized) {
-		s_info.initialized = 1;
-		com_core_add_event_callback(CONNECTOR_DISCONNECTED, disconnected_cb, NULL);
-	}
-
-	if (s_info.client_fd < 0) {
-		s_info.client_fd = com_core_packet_client_init(s_info.socket_file, 0, service_table);
-		if (s_info.client_fd < 0) {
-			err = SHORTCUT_ERROR_COMM;
-			goto out;
-		}
-	}
-
-	item = malloc(sizeof(*item));
-	if (!item) {
-		ErrPrint("Heap: %d\n", errno);
-		err = SHORTCUT_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
-
-	item->result_internal_cb = NULL;
-	item->result_cb = result_cb;
-	item->data = data;
-
-	packet = packet_create("add_shortcut_widget", "ississdi", getpid(), widget_id, name, size, NULL, icon, period, allow_duplicate);
-	if (!packet) {
-		ErrPrint("Failed to build a packet\n");
-		free(item);
-		err = SHORTCUT_ERROR_FAULT;
-		goto out;
-	}
-
-	ret = com_core_packet_async_send(s_info.client_fd, packet, 0.0f, shortcut_send_cb, item);
-	if (ret < 0) {
-		packet_destroy(packet);
-		free(item);
-		com_core_packet_client_fini(s_info.client_fd);
-		s_info.client_fd = SHORTCUT_ERROR_INVALID_PARAMETER;
-		err =  SHORTCUT_ERROR_COMM;
-		goto out;
-	}
-out:
 	if (appid)
 		free(appid);
 
-	return err;
+	return ret;
+}
+
+EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e size, const char *widget_id,
+		const char *icon, double period, int allow_duplicate, result_cb_t result_cb, void *data)
+{
+	struct result_cb_item *item;
+	char *appid = NULL;
+	int ret = SHORTCUT_ERROR_NONE;
+	GVariant *body = NULL;
+
+	ret = shortcut_dbus_init();
+	if (ret != SHORTCUT_ERROR_NONE) {
+		ErrPrint("Can't init dbus %d", ret);
+		return ret;
+	}
+
+	appid = _shortcut_get_pkgname_by_pid();
+	item = malloc(sizeof(*item));
+	if (!item) {
+		if (appid)
+			free(appid);
+
+		ErrPrint("Heap: %d\n", errno);
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	item->result_cb = result_cb;
+	item->result_internal_cb = NULL;
+	item->data = data;
+
+	body = g_variant_new("(ississdi)", getpid(), widget_id, name, size, NULL, icon, period, allow_duplicate);
+	ret = _send_async_noti(body, item, "add_shortcut_widget");
+
+	if (appid)
+		free(appid);
+
+	return ret;
+}
+
+EAPI int add_to_home_shortcut(const char *appid, const char *name, int type, const char *content,
+		const char *icon, int allow_duplicate, result_internal_cb_t result_cb, void *data)
+{
+	/*Deprecated API */
+	return SHORTCUT_ERROR_NONE;
+}
+
+EAPI int add_to_home_dynamicbox(const char *appid, const char *name, int type, const char *content, const char *icon, double period, int allow_duplicate, result_internal_cb_t result_cb, void *data)
+{
+	/*Deprecated API */
+	return SHORTCUT_ERROR_NONE;
 }
 
 static inline int open_db(void)
 {
 	int ret;
 
-	ret = db_util_open(s_info.dbfile, &s_info.handle, DB_UTIL_REGISTER_HOOK_METHOD);
+	ret = db_util_open(dbfile, &handle, DB_UTIL_REGISTER_HOOK_METHOD);
 	if (ret != SQLITE_OK) {
-		DbgPrint("Failed to open a %s\n", s_info.dbfile);
+		DbgPrint("Failed to open a %s\n", dbfile);
 		return SHORTCUT_ERROR_IO_ERROR;
 	}
 
@@ -563,29 +459,29 @@ static inline int get_i18n_name(const char *lang, int id, char **name, char **ic
 	int ret = 0;
 	int status;
 
-	status = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+	status = sqlite3_prepare_v2(handle, query, -1, &stmt, NULL);
 	if (status != SQLITE_OK) {
-		ErrPrint("Failed to prepare stmt: %s\n", sqlite3_errmsg(s_info.handle));
+		ErrPrint("Failed to prepare stmt: %s\n", sqlite3_errmsg(handle));
 		return -EFAULT;
 	}
 
 	status = sqlite3_bind_int(stmt, 1, id);
 	if (status != SQLITE_OK) {
-		ErrPrint("Failed to bind id: %s\n", sqlite3_errmsg(s_info.handle));
+		ErrPrint("Failed to bind id: %s\n", sqlite3_errmsg(handle));
 		ret = -EFAULT;
 		goto out;
 	}
 
 	status = sqlite3_bind_text(stmt, 2, lang, -1, SQLITE_TRANSIENT);
 	if (status != SQLITE_OK) {
-		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(s_info.handle));
+		ErrPrint("Failed to bind lang: %s\n", sqlite3_errmsg(handle));
 		ret = -EFAULT;
 		goto out;
 	}
 
 	DbgPrint("id: %d, lang: %s\n", id, lang);
 	if (SQLITE_ROW != sqlite3_step(stmt)) {
-		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(s_info.handle));
+		ErrPrint("Failed to do step: %s\n", sqlite3_errmsg(handle));
 		ret = -ENOENT;
 		goto out;
 	}
@@ -674,10 +570,10 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 	if (list_cb == NULL)
 		return SHORTCUT_ERROR_INVALID_PARAMETER;
 
-	if (!s_info.db_opened)
-		s_info.db_opened = (open_db() == 0);
+	if (!db_opened)
+		db_opened = (open_db() == 0);
 
-	if (!s_info.db_opened) {
+	if (!db_opened) {
 		ErrPrint("Failed to open a DB\n");
 		return SHORTCUT_ERROR_IO_ERROR;
 	}
@@ -690,25 +586,25 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 
 	if (package_name) {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service WHERE appid = ?";
-		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+		ret = sqlite3_prepare_v2(handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
-			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
+			ErrPrint("prepare: %s\n", sqlite3_errmsg(handle));
 			free(language);
 			return SHORTCUT_ERROR_IO_ERROR;
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, package_name, -1, SQLITE_TRANSIENT);
 		if (ret != SQLITE_OK) {
-			ErrPrint("bind text: %s\n", sqlite3_errmsg(s_info.handle));
+			ErrPrint("bind text: %s\n", sqlite3_errmsg(handle));
 			sqlite3_finalize(stmt);
 			free(language);
 			return SHORTCUT_ERROR_IO_ERROR;
 		}
 	} else {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service";
-		ret = sqlite3_prepare_v2(s_info.handle, query, -1, &stmt, NULL);
+		ret = sqlite3_prepare_v2(handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
-			ErrPrint("prepare: %s\n", sqlite3_errmsg(s_info.handle));
+			ErrPrint("prepare: %s\n", sqlite3_errmsg(handle));
 			free(language);
 			return SHORTCUT_ERROR_IO_ERROR;
 		}
