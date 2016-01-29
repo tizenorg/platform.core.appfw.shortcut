@@ -342,11 +342,8 @@ static int shortcut_send_cb(pid_t pid, int handle, const struct packet *packet, 
 		ret = SHORTCUT_ERROR_INVALID_PARAMETER;
 	}
 
-	if (ret != SHORTCUT_ERROR_NONE) {
+	if (ret != SHORTCUT_ERROR_NONE)
 		DbgPrint("Packet reply [%d]\n", ret);
-		if (ret == SHORTCUT_ERROR_PERMISSION_DENIED)
-			ret = SHORTCUT_ERROR_NONE;
-	}
 
 	if (item->result_internal_cb)
 		ret = item->result_internal_cb(ret, pid, item->data);
