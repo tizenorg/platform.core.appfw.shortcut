@@ -214,6 +214,9 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  *
  * #include <stdio.h>
  * #include <shortcut.h>
+ * #include <storage.h>
+ *
+ * #define TIZEN_PATH_MAX 1024
  *
  * static int result_cb(int ret, int pid, void *data)
  * {
@@ -226,9 +229,13 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  *
  * static int app_create(void *data)
  * {
+ * 	char *image_root = NULL;
+ * 	char image_path[TIZEN_PATH_MAX] = {0, };
+ * 	storage_get_root_directory(STORAGE_TYPE_INTERNAL, &image_root);
+ * 	snprintf(image_path, TIZEN_PATH_MAX, "%s/Images/alter_icon.png", image_root);
  * 	shortcut_add_to_home_widget("alter_name",
  * 					WIDGET_SIZE_1x1, "org.tizen.testwidget",
- * 					"/opt/media/Pictures/alter_icon.png", -1.0f, 0, result_cb, NULL);
+ * 					image_path, -1.0f, 0, result_cb, NULL);
  * 	return 0;
  * }
  *
