@@ -259,11 +259,14 @@ static int _send_sync_shortcut(GVariant *body, GDBusMessage **reply, char *cmd)
 	g_object_unref(msg);
 
 	if (!*reply) {
+		ret = SHORTCUT_ERROR_COMM;
 		if (err != NULL) {
-			ErrPrint("No reply. error = %s", err->message);
+			ErrPrint("No reply. cmd = %s,  error = %s", cmd, err->message);
+			if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+				ret = SHORTCUT_ERROR_PERMISSION_DENIED;
 			g_error_free(err);
 		}
-		return SHORTCUT_ERROR_COMM;
+		return ret;
 	}
 
 	if (g_dbus_message_to_gerror(*reply, &err)) {
