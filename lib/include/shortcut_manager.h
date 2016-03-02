@@ -214,6 +214,10 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  *
  * #include <stdio.h>
  * #include <shortcut.h>
+ * #include <tzplatform_config.h>
+ *
+ * #define PATH_FMT_RO_MEDIA_ROOT tzplatform_getenv(TZ_SYS_MEDIA)
+ * #define TIZEN_PATH_MAX 1024
  *
  * static int result_cb(int ret, int pid, void *data)
  * {
@@ -226,9 +230,11 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  *
  * static int app_create(void *data)
  * {
+ * 	char image_path[TIZEN_PATH_MAX] = {0, };
+ * 	snprintf(image_path, TIZEN_PATH_MAX, "%s/Pictures/alter_icon.png", PATH_FMT_RO_MEDIA_ROOT);
  * 	shortcut_add_to_home_widget("alter_name",
  * 					WIDGET_SIZE_1x1, "org.tizen.testwidget",
- * 					"/opt/media/Pictures/alter_icon.png", -1.0f, 0, result_cb, NULL);
+ * 					image_path, -1.0f, 0, result_cb, NULL);
  * 	return 0;
  * }
  *

@@ -17,6 +17,11 @@
 
 #include <Elementary.h>
 #include <shortcut.h>
+#include <tzplatform_config.h>
+
+#define PATH_FMT_RO_ICONS_ROOT tzplatform_getenv(TZ_SYS_RO_ICONS)
+#define PATH_FMT_USER_SHARE_ROOT tzplatform_getenv(TZ_USER_SHARE)
+#define TIZEN_PATH_MAX 1024
 
 static int result_cb(struct shortcut_icon *handle, int ret, void *data)
 {
@@ -31,6 +36,7 @@ static Eina_Bool test_main(void *data)
 	int ret;
 	char filename[256];
 	int type;
+	char path[TIZEN_PATH_MAX] = {0, };
 
 	idx++;
 
@@ -41,14 +47,15 @@ static Eina_Bool test_main(void *data)
 	}
 
 	printf("Test: %d\n", idx);
-	ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, DEFAULT_ICON_PART, "/usr/share/icons/default/small/org.tizen.music-player.png", NULL, NULL);
+	snprintf(path, TIZEN_PATH_MAX, "%s/default/small/org.tizen.music-player.png", PATH_FMT_RO_ICONS_ROOT);
+	ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_IMAGE, DEFAULT_ICON_PART, path, NULL, NULL);
 	printf("NAME set_info: %d\n", ret);
 
 	snprintf(filename, sizeof(filename), "App Name %d", idx);
 	ret = shortcut_icon_request_set_info(handle, NULL, SHORTCUT_ICON_TYPE_TEXT, DEFAULT_NAME_PART, filename, NULL, NULL);
 	printf("TEXT set_info: %d\n", ret);
 
-	snprintf(filename, sizeof(filename), "/opt/usr/share/live_magazine/always/out%d.png", idx);
+	snprintf(filename, sizeof(filename), "%s/live_magazine/always/out%d.png", PATH_FMT_USER_SHARE_ROOT, idx);
 
 	switch (idx % 7) {
 	case 0: type = DYNAMICBOX_TYPE_1x1; break;
