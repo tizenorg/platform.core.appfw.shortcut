@@ -365,6 +365,13 @@ static void do_upgrade_db_schema(void)
 	case -ENOSYS:
 		db_create_version();
 		/* Need to create version table */
+		if (set_version(1) < 0)
+			ErrPrint("Failed to set version\n");
+
+		/* Need to set version */
+		alter_shortcut_name();
+		alter_shortcut_service();
+		break;
 	case -ENOENT:
 		if (set_version(1) < 0)
 			ErrPrint("Failed to set version\n");
@@ -372,11 +379,15 @@ static void do_upgrade_db_schema(void)
 		/* Need to set version */
 		alter_shortcut_name();
 		alter_shortcut_service();
+		alter_shortcut_icon();
+		if (update_version(2) < 0)
+			ErrPrint("Failed to update version\n");
+		break;
 	case 1:
 		alter_shortcut_icon();
 		if (update_version(2) < 0)
 			ErrPrint("Failed to update version\n");
-
+		break;
 	case 2:
 		break;
 	default:
