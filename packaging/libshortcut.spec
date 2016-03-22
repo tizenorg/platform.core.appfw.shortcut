@@ -94,6 +94,7 @@ chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db-journal
 %postun -n %{name} -p /sbin/ldconfig
 
 %files -n libshortcut
+%license LICENSE
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
