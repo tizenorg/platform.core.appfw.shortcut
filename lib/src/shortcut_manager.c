@@ -270,8 +270,12 @@ static int _send_sync_shortcut(GVariant *body, GDBusMessage **reply, char *cmd)
 	}
 
 	if (g_dbus_message_to_gerror(*reply, &err)) {
-		ret = err->code;
-		ErrPrint("_send_sync_shortcut error %s", err->message);
+		if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+			ret = SHORTCUT_ERROR_PERMISSION_DENIED;
+		else
+			ret = err->code;
+
+		ErrPrint("_send_sync_shortcut error %s err code: %d", err->message, ret);
 		g_error_free(err);
 		return ret;
 	}
@@ -316,9 +320,13 @@ static void _send_message_with_reply_sync_cb(GDBusConnection *connection,
 		result = SHORTCUT_ERROR_COMM;
 
 	} else if (g_dbus_message_to_gerror(reply, &err)) {
-		result = err->code;
+		if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+			result = SHORTCUT_ERROR_PERMISSION_DENIED;
+		else
+			result = err->code;
+
+		ErrPrint("_send_message_with_reply_sync_cb error %s err code: %d", err->message, result);
 		g_error_free(err);
-		ErrPrint("_send_async_noti error %s", err->message);
 	}
 
 	if (cb_item->result_internal_cb)
@@ -581,10 +589,11 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 	if (result == SHORTCUT_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
 		g_variant_get(reply_body, "(ia(v))", &count, &iter);
-
+		DbgPrint("shortcut count : %d", count);
 		while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
-			g_variant_get(reply_body, "(&s&s&s&s&s)",
+			g_variant_get(iter_body, "(&s&s&s&s&s)",
 				&shortcut.package_name, &shortcut.icon, &shortcut.name, &shortcut.extra_key, &shortcut.extra_data);
+			DbgPrint("call calback : %s", shortcut.package_name);
 			list_cb(shortcut.package_name, shortcut.icon, shortcut.name, shortcut.extra_key, shortcut.extra_data, data);
 		}
 		g_variant_iter_free(iter);
