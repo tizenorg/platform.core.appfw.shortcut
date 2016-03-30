@@ -86,7 +86,7 @@ enum shortcut_internal_type {
 	DYNAMICBOX_TYPE_UNKNOWN	  = 0x1FFF0000,	/**< Error */
 };
 
-#define SHORTCUT_ERROR (shortcut_error_quark ())
+#define SHORTCUT_ERROR (shortcut_error_quark())
 GQuark shortcut_error_quark(void);
 
 
