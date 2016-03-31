@@ -46,8 +46,7 @@ static GDBusConnection *_gdbus_conn = NULL;
 static int monitor_id = 0;
 static int provider_monitor_id = 0;
 
-static const GDBusErrorEntry dbus_error_entries[] =
-{
+static const GDBusErrorEntry dbus_error_entries[] = {
 	{SHORTCUT_ERROR_INVALID_PARAMETER, "org.freedesktop.Shortcut.Error.INVALID_PARAMETER"},
 	{SHORTCUT_ERROR_OUT_OF_MEMORY,     "org.freedesktop.Shortcut.Error.OUT_OF_MEMORY"},
 	{SHORTCUT_ERROR_IO_ERROR,          "org.freedesktop.Shortcut.Error.IO_ERROR"},
@@ -75,10 +74,10 @@ static shortcut_cb_info _callback_info;
 static int _dbus_init();
 static char *_shortcut_get_pkgname_by_pid(void);
 
-EXPORT_API GQuark shortcut_error_quark (void)
+EXPORT_API GQuark shortcut_error_quark(void)
 {
 	static volatile gsize quark_volatile = 0;
-	g_dbus_error_register_error_domain ("shortcut-error-quark",
+	g_dbus_error_register_error_domain("shortcut-error-quark",
 			&quark_volatile,
 			dbus_error_entries,
 			G_N_ELEMENTS(dbus_error_entries));
@@ -599,7 +598,7 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 		g_variant_iter_free(iter);
 	}
 
-	if(reply)
+	if (reply)
 		g_object_unref(reply);
 
 	return count;

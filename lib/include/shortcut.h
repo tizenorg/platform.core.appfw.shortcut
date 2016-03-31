@@ -44,7 +44,7 @@ extern "C" {
  * @param[in] pid The process ID of who handle this add_to_home request
  * @param[in] data The callback data
  * @return int @c 0 if there is no error,
-               otherwise errno
+ *	otherwise errno
  * @see add_to_home_shortcut()
  */
 typedef int (*result_internal_cb_t)(int ret, int pid, void *data);
@@ -76,7 +76,7 @@ enum shortcut_internal_type {
 	DYNAMICBOX_TYPE_2x2	  = 0x10040000,	/**< 2x2 */
 	DYNAMICBOX_TYPE_4x1	  = 0x10080000,	/**< 4x1 */
 	DYNAMICBOX_TYPE_4x2	  = 0x10100000,	/**< 4x2 */
-	DYNAMICBOX_TYPE_4x3  	  = 0x10200000,	/**< 4x3 */
+	DYNAMICBOX_TYPE_4x3	  = 0x10200000,	/**< 4x3 */
 	DYNAMICBOX_TYPE_4x4	  = 0x10400000,	/**< 4x4 */
 	DYNAMICBOX_TYPE_4x5	  = 0x11000000,	/**< 4x5 */
 	DYNAMICBOX_TYPE_4x6	  = 0x12000000, /**< 4x6 */
@@ -86,7 +86,7 @@ enum shortcut_internal_type {
 	DYNAMICBOX_TYPE_UNKNOWN	  = 0x1FFF0000,	/**< Error */
 };
 
-#define SHORTCUT_ERROR (shortcut_error_quark ())
+#define SHORTCUT_ERROR (shortcut_error_quark())
 GQuark shortcut_error_quark(void);
 
 

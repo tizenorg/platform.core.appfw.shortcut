@@ -95,7 +95,7 @@ typedef enum shortcut_widget_size {
  *                otherwise it returns an errno
  * @param[in] data The callback data
  * @return int @c 0 if there is no error,
-               otherwise errno
+ *	otherwise errno
  * @see shortcut_add_to_home()
  */
 typedef int (*result_cb_t)(int ret, void *data);
@@ -145,11 +145,11 @@ typedef int (*result_cb_t)(int ret, void *data);
  *
  * static int result_cb(int ret, int pid, void *data)
  * {
- * 	if (ret < 0)
- * 		dlog_print("Failed to add a shortcut: %s\n", perror(ret));
+ *	if (ret < 0)
+ *		dlog_print("Failed to add a shortcut: %s\n", perror(ret));
  *
  *	dlog_print("Processed by the %d\n", pid);
- * 	return 0;
+ *	return 0;
  * }
  *
  * static int app_create(void *data)
@@ -159,14 +159,14 @@ typedef int (*result_cb_t)(int ret, void *data);
  *	char * path = malloc(path_len);
  *	memset(path, 0, path_len);
  *	strncat(path, data_path, path_len);
- *	strncat(path, "Friend.jpg", path_len); 
+ *	strncat(path, "Friend.jpg", path_len);
  *
- * 	shortcut_add_to_home("With friends",
- * 					LAUNCH_BY_URI, "gallery:0000-0000",
- * 					path, 0, result_cb, NULL);
+ *	shortcut_add_to_home("With friends",
+ *					LAUNCH_BY_URI, "gallery:0000-0000",
+ *					path, 0, result_cb, NULL);
  *	free(path);
  *
- * 	return 0;
+ *	return 0;
  * }
  *
  * @endcode
@@ -220,23 +220,23 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  *
  * static int result_cb(int ret, int pid, void *data)
  * {
- * 	if (ret < 0)
- * 		dlog_print("Failed to add a widget: %s\n", perror(ret));
+ *	if (ret < 0)
+ *		dlog_print("Failed to add a widget: %s\n", perror(ret));
  *
  *	dlog_print("Processed by the %d\n", pid);
- * 	return 0;
+ *	return 0;
  * }
  *
  * static int app_create(void *data)
  * {
- * 	char *image_root = NULL;
- * 	char image_path[TIZEN_PATH_MAX] = {0, };
- * 	storage_get_directory(STORAGE_TYPE_INTERNAL, STORAGE_DIRECTORY_IMAGES, &image_root);
- * 	snprintf(image_path, TIZEN_PATH_MAX, "%s/alter_icon.png", image_root);
- * 	shortcut_add_to_home_widget("alter_name",
- * 					WIDGET_SIZE_1x1, "org.tizen.testwidget",
- * 					image_path, -1.0f, 0, result_cb, NULL);
- * 	return 0;
+ *	char *image_root = NULL;
+ *	char image_path[TIZEN_PATH_MAX] = {0, };
+ *	storage_get_directory(STORAGE_TYPE_INTERNAL, STORAGE_DIRECTORY_IMAGES, &image_root);
+ *	snprintf(image_path, TIZEN_PATH_MAX, "%s/alter_icon.png", image_root);
+ *	shortcut_add_to_home_widget("alter_name",
+ *					WIDGET_SIZE_1x1, "org.tizen.testwidget",
+ *					image_path, -1.0f, 0, result_cb, NULL);
+ *	return 0;
  * }
  *
  * @endcode

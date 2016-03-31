@@ -8,7 +8,7 @@
 
 
 
-static sqlite3 * _open_db(void)
+static sqlite3 *_open_db(void)
 {
 	int ret;
 	const char *dbfile = DB_PATH;
@@ -23,7 +23,7 @@ static sqlite3 * _open_db(void)
 	return db;
 }
 
-static int _close_db(sqlite3 ** db)
+static int _close_db(sqlite3 **db)
 {
 	int ret = 0;
 
