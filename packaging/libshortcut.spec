@@ -86,6 +86,8 @@ then
 	'
 fi
 
+chown app_fw:app_fw %{TZ_SYS_DB}/.shortcut_service.db
+chown app_fw:app_fw %{TZ_SYS_DB}/.shortcut_service.db-journal
 chmod 664 %{TZ_SYS_DB}/.shortcut_service.db
 chmod 664 %{TZ_SYS_DB}/.shortcut_service.db-journal
 chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db
