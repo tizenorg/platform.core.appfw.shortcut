@@ -56,15 +56,15 @@ typedef enum _shortcut_type {
 enum shortcut_error_e {
 	SHORTCUT_ERROR_NONE = TIZEN_ERROR_NONE,				/**< Successfully handled */
 	SHORTCUT_ERROR_INVALID_PARAMETER = TIZEN_ERROR_INVALID_PARAMETER,	/**< Shortcut request is not valid, invalid parameter or invalid argument value */
-	SHORTCUT_ERROR_OUT_OF_MEMORY = TIZEN_ERROR_OUT_OF_MEMORY,	/**< Memory is not enough to handle a new request */
-	SHORTCUT_ERROR_IO_ERROR = TIZEN_ERROR_IO_ERROR,		/**< Unable to access the file or DB. Check your resource files */
-	SHORTCUT_ERROR_PERMISSION_DENIED = TIZEN_ERROR_PERMISSION_DENIED,	/**< Has no permission to add a shortcut */
+	SHORTCUT_ERROR_OUT_OF_MEMORY = TIZEN_ERROR_OUT_OF_MEMORY,	/**< Memory is insufficient memory to handle new request */
+	SHORTCUT_ERROR_IO_ERROR = TIZEN_ERROR_IO_ERROR,		/**< Unable to access file or database. Check resource file settings */
+	SHORTCUT_ERROR_PERMISSION_DENIED = TIZEN_ERROR_PERMISSION_DENIED,	/**< Permission denied adding shortcut */
 	SHORTCUT_ERROR_NOT_SUPPORTED = TIZEN_ERROR_NOT_SUPPORTED,	/**< Not supported shortcut */
 	SHORTCUT_ERROR_RESOURCE_BUSY = TIZEN_ERROR_RESOURCE_BUSY,		/**< Receiver is busy, try again later */
 	SHORTCUT_ERROR_NO_SPACE = TIZEN_ERROR_SHORTCUT | 0x0001,	/**< There is no space to add a new shortcut */
 	SHORTCUT_ERROR_EXIST = TIZEN_ERROR_SHORTCUT | 0x0002,		/**< Shortcut is already added */
 	SHORTCUT_ERROR_FAULT = TIZEN_ERROR_SHORTCUT | 0x0004,		/**< Failed to add a shortcut. Unrecoverable error */
-	SHORTCUT_ERROR_COMM = TIZEN_ERROR_SHORTCUT | 0x0040		/**< Connection is not established. or there is a problem in the communication */
+	SHORTCUT_ERROR_COMM = TIZEN_ERROR_SHORTCUT | 0x0040		/**< Connection not established or communication problem */
 };
 
 /**
@@ -119,17 +119,16 @@ typedef int (*result_cb_t)(int ret, void *data);
  * @param[in] data The callback data that is used in the callback function
  *
  * @return #SHORTCUT_ERROR_NONE on success, other value on failure
- * @retval #SHORTCUT_ERROR_NONE Successful
- * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Out of memory
- * @retval #SHORTCUT_ERROR_IO_ERROR I/O error
- * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Permission denied
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY is insufficient memory to handle new request
+ * @retval #SHORTCUT_ERROR_IO_ERROR I/O Unable to access file or database. Check resource file settings
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Permission denied adding shortcut
  * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Not supported
  * @retval #SHORTCUT_ERROR_RESOURCE_BUSY Device or resource busy
  * @retval #SHORTCUT_ERROR_NO_SPACE No space
  * @retval #SHORTCUT_ERROR_EXIST Already exist
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_COMM Connection failed
+ * @retval #SHORTCUT_ERROR_COMM Connection not established or communication problem
  *
  * @pre You have to prepare the callback function.
  *
@@ -196,10 +195,10 @@ extern int shortcut_add_to_home(const char *name, shortcut_type type, const char
  * @return #SHORTCUT_ERROR_NONE on success, other value on failure
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
  * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameter or invalid argument value
- * @retval #SHORTCUT_ERROR_COMM Connection is not established or there is a problem in the communication
- * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle a new request
- * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB  Check your resource files
- * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a widget
+ * @retval #SHORTCUT_ERROR_COMM Connection not established or communication problem
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is insufficient memory to handle new request
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or database. Check resource file settings
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Permission denied adding shortcut
  * @retval #SHORTCUT_ERROR_NOT_SUPPORTED Widget is not supported
  *
  * @pre You have to prepare the callback function.
@@ -275,7 +274,11 @@ typedef int (*shortcut_list_cb)(const char *package_name, const char *icon, cons
  * @return The return type (int)
  * @retval @c N Number of items (call count of the callback function)
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
- * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or database. Check resource file settings
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_COMM Connection not established or communication problem
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is insufficient memory to handle new request
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Permission denied adding shortcut
  * @pre You have to prepare the callback function.
  * @post You have to check the return status from the callback function which is passed by the argument.
  *
@@ -317,7 +320,10 @@ typedef int (*shortcut_request_cb)(const char *package_name, const char *name, i
  *
  * @return #SHORTCUT_ERROR_NONE on success, other value on failure
  * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
- * @retval #SHORTCUT_ERROR_COMM Connection is not established or there is a problem in the communication
+ * @retval #SHORTCUT_ERROR_COMM Connection not established or communication problem
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access file or database. Check resource file settings
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is insufficient memory to handle new request
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Permission denied adding shortcut
  * @pre You have to prepare a callback function.
  *
  * @post If a request is sent from the application, the registered callback will be invoked.
