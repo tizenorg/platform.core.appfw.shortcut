@@ -584,7 +584,7 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 {
 	GDBusMessage *reply = NULL;
 	int result;
-	int count = 0;
+	int ret = 0;
 	GVariant *body;
 	GVariant *reply_body;
 	GVariant *iter_body;
@@ -609,8 +609,8 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 
 	if (result == SHORTCUT_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
-		g_variant_get(reply_body, "(ia(v))", &count, &iter);
-		DbgPrint("shortcut count : %d", count);
+		g_variant_get(reply_body, "(ia(v))", &ret, &iter);
+		DbgPrint("shortcut count : %d", ret);
 		while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
 			g_variant_get(iter_body, "(&s&s&s&s&s)",
 				&shortcut.package_name, &shortcut.icon, &shortcut.name, &shortcut.extra_key, &shortcut.extra_data);
@@ -618,12 +618,14 @@ EAPI int shortcut_get_list(const char *package_name, shortcut_list_cb list_cb, v
 			list_cb(shortcut.package_name, shortcut.icon, shortcut.name, shortcut.extra_key, shortcut.extra_data, data);
 		}
 		g_variant_iter_free(iter);
+	} else {
+		ret = result;
 	}
 
 	if (reply)
 		g_object_unref(reply);
 
-	return count;
+	return ret;
 }
 
 /* End of a file */
