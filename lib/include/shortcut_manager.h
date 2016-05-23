@@ -276,6 +276,10 @@ typedef int (*shortcut_list_cb)(const char *package_name, const char *icon, cons
  * @retval @c N Number of items (call count of the callback function)
  * @retval #SHORTCUT_ERROR_FAULT Unrecoverable error
  * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Invalid parameter or invalid argument value
+ * @retval #SHORTCUT_ERROR_COMM Connection is not established or there is a problem in the communication
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle a new request
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a widget
  * @pre You have to prepare the callback function.
  * @post You have to check the return status from the callback function which is passed by the argument.
  *
