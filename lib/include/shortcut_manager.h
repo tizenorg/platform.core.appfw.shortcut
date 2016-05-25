@@ -322,6 +322,9 @@ typedef int (*shortcut_request_cb)(const char *package_name, const char *name, i
  * @return #SHORTCUT_ERROR_NONE on success, other value on failure
  * @retval #SHORTCUT_ERROR_INVALID_PARAMETER Shortcut request is not valid, invalid parameter or invalid argument value
  * @retval #SHORTCUT_ERROR_COMM Connection is not established or there is a problem in the communication
+ * @retval #SHORTCUT_ERROR_IO_ERROR Unable to access the file or DB. Check your resource files
+ * @retval #SHORTCUT_ERROR_OUT_OF_MEMORY Memory is not enough to handle a new request
+ * @retval #SHORTCUT_ERROR_PERMISSION_DENIED Has no permission to add a widget
  * @pre You have to prepare a callback function.
  *
  * @post If a request is sent from the application, the registered callback will be invoked.
