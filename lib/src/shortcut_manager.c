@@ -339,7 +339,7 @@ static void _send_message_with_reply_sync_cb(GDBusConnection *connection,
 	free(cb_item);
 }
 
-static int _send_async_noti(GVariant *body, struct result_cb_item *cb_item, char *cmd)
+static int _send_async_shortcut(GVariant *body, struct result_cb_item *cb_item, char *cmd)
 {
 	GDBusMessage *msg;
 	msg = g_dbus_message_new_method_call(
@@ -367,7 +367,7 @@ static int _send_async_noti(GVariant *body, struct result_cb_item *cb_item, char
 
 	g_object_unref(msg);
 
-	DbgPrint("_send_async_noti done !!");
+	DbgPrint("_send_async_shortcut done !!");
 	return SHORTCUT_ERROR_NONE;
 }
 
@@ -385,6 +385,16 @@ static void _on_name_vanished(GDBusConnection *connection,
 		gpointer         user_data)
 {
 	DbgPrint("name vanished : %s", name);
+}
+
+static int _check_privilege(void)
+{
+	GDBusMessage *reply = NULL;
+	int ret = SHORTCUT_ERROR_NONE;
+
+	ret = _send_sync_shortcut(NULL, &reply , "check_privilege");
+
+	return ret;
 }
 
 EAPI int shortcut_set_request_cb(shortcut_request_cb request_cb, void *data)
@@ -452,6 +462,10 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 		return ret;
 	}
 
+	ret = _check_privilege();
+	if (ret == SHORTCUT_ERROR_PERMISSION_DENIED)
+		return ret;
+
 	appid = _shortcut_get_pkgname_by_pid();
 	item = malloc(sizeof(struct result_cb_item));
 	if (!item) {
@@ -476,7 +490,8 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 		icon = "";
 
 	body = g_variant_new("(ississi)", getpid(), appid, name, type, uri, icon, allow_duplicate);
-	ret = _send_async_noti(body, item, "add_shortcut");
+
+	ret = _send_async_shortcut(body, item, "add_shortcut");
 	if (ret != SHORTCUT_ERROR_NONE) {
 		free(item);
 		item = NULL;
@@ -514,6 +529,10 @@ EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e si
 		return ret;
 	}
 
+	ret = _check_privilege();
+	if (ret == SHORTCUT_ERROR_PERMISSION_DENIED)
+		return ret;
+
 	appid = _shortcut_get_pkgname_by_pid();
 	item = malloc(sizeof(struct result_cb_item));
 	if (!item) {
@@ -529,7 +548,7 @@ EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e si
 	item->data = data;
 
 	body = g_variant_new("(ississdi)", getpid(), widget_id, name, size, NULL, icon, period, allow_duplicate);
-	ret = _send_async_noti(body, item, "add_shortcut_widget");
+	ret = _send_async_shortcut(body, item, "add_shortcut_widget");
 
 	if (ret != SHORTCUT_ERROR_NONE) {
 		free(item);
