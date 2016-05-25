@@ -433,12 +433,63 @@ EAPI int shortcut_set_request_cb(shortcut_request_cb request_cb, void *data)
 	return SHORTCUT_ERROR_NONE;
 }
 
+static int _check_privilege(void)
+{
+	int ret = SHORTCUT_ERROR_NONE;
+	GError *err = NULL;
+	GDBusMessage *msg;
+	GDBusMessage *reply = NULL;
+
+	msg = g_dbus_message_new_method_call(PROVIDER_BUS_NAME,
+					     PROVIDER_OBJECT_PATH,
+					     PROVIDER_SHORTCUT_INTERFACE_NAME,
+					     "check_privilege");
+
+	if (!msg) {
+		ErrPrint("Can't allocate new method call");
+		return SHORTCUT_ERROR_OUT_OF_MEMORY;
+	}
+
+	reply = g_dbus_connection_send_message_with_reply_sync(
+			_gdbus_conn,
+			msg,
+			G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+			-1,
+			NULL,
+			NULL,
+			&err);
+
+	g_object_unref(msg);
+
+	if (!reply) {
+		ret = SHORTCUT_ERROR_COMM;
+		if (err != NULL) {
+			ErrPrint("No reply. cmd = check_privilege, err = %s", err->message);
+			if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+				ret = SHORTCUT_ERROR_PERMISSION_DENIED;
+			g_error_free(err);
+		}
+		return ret;
+	}
+
+	if (g_dbus_message_to_gerror(reply, &err)) {
+		if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+			ret = SHORTCUT_ERROR_PERMISSION_DENIED;
+
+		ErrPrint("_check_privileage error %s, err code %d", err->message, ret);
+		g_error_free(err);
+		g_object_unref(reply);
+	}
+
+	return ret;
+}
+
 EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *uri,
 		const char *icon, int allow_duplicate, result_cb_t result_cb, void *data)
 {
 	struct result_cb_item *item;
 	char *appid;
-	int ret;
+	int ret = SHORTCUT_ERROR_NONE;
 	GVariant *body;
 
 	if (ADD_TO_HOME_IS_DYNAMICBOX(type)) {
@@ -451,6 +502,10 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 		ErrPrint("Can't init dbus %d", ret);
 		return ret;
 	}
+
+	ret = _check_privilege();
+	if (ret != SHORTCUT_ERROR_NONE)
+		return ret;
 
 	appid = _shortcut_get_pkgname_by_pid();
 	item = malloc(sizeof(struct result_cb_item));
@@ -476,6 +531,7 @@ EAPI int shortcut_add_to_home(const char *name, shortcut_type type, const char *
 		icon = "";
 
 	body = g_variant_new("(ississi)", getpid(), appid, name, type, uri, icon, allow_duplicate);
+
 	ret = _send_async_noti(body, item, "add_shortcut");
 	if (ret != SHORTCUT_ERROR_NONE) {
 		free(item);
@@ -495,7 +551,7 @@ EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e si
 {
 	struct result_cb_item *item;
 	char *appid;
-	int ret;
+	int ret = SHORTCUT_ERROR_NONE;
 	GVariant *body;
 
 	if (name == NULL) {
@@ -513,6 +569,10 @@ EAPI int shortcut_add_to_home_widget(const char *name, shortcut_widget_size_e si
 		ErrPrint("Can't init dbus %d", ret);
 		return ret;
 	}
+
+	ret = _check_privilege();
+	if (ret != SHORTCUT_ERROR_NONE)
+		return ret;
 
 	appid = _shortcut_get_pkgname_by_pid();
 	item = malloc(sizeof(struct result_cb_item));
