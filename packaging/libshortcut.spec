@@ -86,8 +86,8 @@ then
 	'
 fi
 
-chmod 664 %{TZ_SYS_DB}/.shortcut_service.db
-chmod 664 %{TZ_SYS_DB}/.shortcut_service.db-journal
+chmod 666 %{TZ_SYS_DB}/.shortcut_service.db
+chmod 666 %{TZ_SYS_DB}/.shortcut_service.db-journal
 chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db
 chsmack -a User::Home %{TZ_SYS_DB}/.shortcut_service.db-journal
 
