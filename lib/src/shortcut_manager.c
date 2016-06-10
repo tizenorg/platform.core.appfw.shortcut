@@ -287,7 +287,7 @@ static int _send_service_register()
 	GDBusMessage *reply = NULL;
 	int result;
 
-	result = _send_sync_shortcut(NULL, &reply, "shortcut_service_register");
+	result = _send_sync_shortcut(g_variant_new("(i)", getuid()), &reply, "shortcut_service_register");
 	ErrPrint("_send_service_register done");
 	return result;
 }
