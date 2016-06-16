@@ -16,8 +16,10 @@ static sqlite3 *_open_db(void)
 
 	ret = db_util_open(dbfile, &db, 0);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		DbgPrint("Failed to open a %s\n", dbfile);
 		return NULL;
+		/* LCOV_EXCL_STOP */
 	}
 
 	return db;
@@ -32,8 +34,10 @@ static int _close_db(sqlite3 **db)
 
 	ret = db_util_close(*db);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		DbgPrint("DB close error(%d)", ret);
 		return SHORTCUT_ERROR_IO_ERROR;
+		/* LCOV_EXCL_STOP */
 	}
 
 	*db = NULL;
@@ -41,7 +45,7 @@ static int _close_db(sqlite3 **db)
 	return SHORTCUT_ERROR_NONE;
 }
 
-
+/* LCOV_EXCL_START */
 /*!
  * \note this function will returns allocated(heap) string
  */
@@ -118,6 +122,7 @@ out:
 	sqlite3_finalize(stmt);
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 static inline char *_cur_locale(void)
 {
@@ -166,49 +171,60 @@ EAPI int shortcut_db_get_list(const char *package_name, GList **shortcut_list)
 
 	handle = _open_db();
 	if (!handle) {
+		/* LCOV_EXCL_START */
 		ErrPrint("Failed to open a DB\n");
 		return SHORTCUT_ERROR_IO_ERROR;
+		/* LCOV_EXCL_STOP */
 	}
 
 	language = _cur_locale();
 	if (!language) {
+		/* LCOV_EXCL_START */
 		ErrPrint("Locale is not valid\n");
 		_close_db(&handle);
 		return SHORTCUT_ERROR_FAULT;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (package_name) {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service WHERE appid = ?";
 		ret = sqlite3_prepare_v2(handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(handle));
 			free(language);
 			_close_db(&handle);
 			return SHORTCUT_ERROR_IO_ERROR;
+			/* LCOV_EXCL_STOP */
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, package_name, -1, SQLITE_TRANSIENT);
 		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
 			ErrPrint("bind text: %s\n", sqlite3_errmsg(handle));
 			sqlite3_finalize(stmt);
 			free(language);
 			_close_db(&handle);
 			return SHORTCUT_ERROR_IO_ERROR;
+			/* LCOV_EXCL_STOP */
 		}
 	} else {
 		query = "SELECT id, appid, name, extra_key, extra_data, icon FROM shortcut_service";
 		ret = sqlite3_prepare_v2(handle, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
 			ErrPrint("prepare: %s\n", sqlite3_errmsg(handle));
 			free(language);
 			_close_db(&handle);
 			return SHORTCUT_ERROR_IO_ERROR;
+			/* LCOV_EXCL_STOP */
 		}
 	}
 
 	cnt = 0;
 	*shortcut_list = NULL;
 	while (SQLITE_ROW == sqlite3_step(stmt)) {
+		/* LCOV_EXCL_START */
 		id = sqlite3_column_int(stmt, 0);
 
 		package_name = (const char *)sqlite3_column_text(stmt, 1);
@@ -268,6 +284,7 @@ EAPI int shortcut_db_get_list(const char *package_name, GList **shortcut_list)
 
 		free(i18n_icon);
 		i18n_icon = NULL;
+		/* LCOV_EXCL_STOP */
 	}
 
 	sqlite3_reset(stmt);
