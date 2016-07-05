@@ -74,10 +74,26 @@ static shortcut_cb_info _callback_info;
 static int _dbus_init();
 static char *_shortcut_get_pkgname_by_pid(void);
 
+#define SHORTCUT_ERROR_QUARK "shortcut-error-quark"
+
 EXPORT_API GQuark shortcut_error_quark(void)
 {
 	static volatile gsize quark_volatile = 0;
-	g_dbus_error_register_error_domain("shortcut-error-quark",
+	static char *domain_name = NULL;
+
+	/* This is for preventing crash when notification api is used in ui-gadget     */
+	/* ui-gadget libraries can be unloaded when it is needed and the static string */
+	/* parameter to g_dbus_error_register_error_domain may cause crash.             */
+	GQuark quark = g_quark_try_string(SHORTCUT_ERROR_QUARK);
+
+	if (quark == 0) {
+		if (domain_name == NULL)
+			domain_name = strdup(SHORTCUT_ERROR_QUARK);
+	} else {
+		domain_name = SHORTCUT_ERROR_QUARK;
+	}
+
+	g_dbus_error_register_error_domain(domain_name,
 			&quark_volatile,
 			dbus_error_entries,
 			G_N_ELEMENTS(dbus_error_entries));
